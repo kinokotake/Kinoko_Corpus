@@ -1,1 +1,84 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🍄 KINOKO 本地化语料库</title>
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; max-width: 900px; margin: 0 auto; padding: 20px; background-color: #f7f9fc; color: #333; }
+        h1 { text-align: center; color: #d63384; }
+        .search-container { text-align: center; margin-bottom: 30px; }
+        #searchInput { width: 80%; padding: 15px; font-size: 18px; border: 2px solid #e1e4e8; border-radius: 8px; outline: none; box-shadow: 0 4px 6px rgba(0,0,0,0.05); }
+        #searchInput:focus { border-color: #d63384; }
+        #status { text-align: center; color: #666; margin-bottom: 20px; }
+        .result-item { background: white; padding: 15px; border-radius: 8px; margin-bottom: 15px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); border-left: 5px solid #d63384; }
+        .source-tag { font-size: 12px; color: #fff; background: #6c757d; padding: 4px 8px; border-radius: 4px; display: inline-block; margin-bottom: 10px; }
+        .content { font-size: 16px; line-height: 1.6; word-break: break-all; }
+        .highlight { background-color: #ffeeba; color: #d63384; font-weight: bold; padding: 0 2px; border-radius: 2px; }
+    </style>
+</head>
+<body>
+    <h1>🍄 KINOKO 本地化在线检索系统</h1>
+    
+    <div class="search-container">
+        <input type="text" id="searchInput" placeholder="输入日语或中文关键词开始搜索 (如：お嬢様)...">
+    </div>
+    
+    <div id="status">正在读取语料库，请稍候...</div>
+    <div id="results"></div>
 
+    <script>
+        let corpusData = [];
+
+        // 读取打包好的语料数据
+        fetch('data.json')
+            .then(response => response.json())
+            .then(data => {
+                corpusData = data;
+                document.getElementById('status').innerText = `加载成功！当前语料库共包含 ${data.length} 条数据。`;
+            })
+            .catch(err => {
+                document.getElementById('status').innerText = '加载数据失败，请确保已经生成了 data.json 文件并且成功上传！';
+            });
+
+        // 实时搜索功能
+        document.getElementById('searchInput').addEventListener('input', function(e) {
+            const keyword = e.target.value.trim();
+            const resultsDiv = document.getElementById('results');
+            resultsDiv.innerHTML = '';
+
+            if (keyword === '') {
+                document.getElementById('status').innerText = `当前语料库共包含 ${corpusData.length} 条数据。`;
+                return;
+            }
+
+            // 搜索时不区分大小写
+            const lowerKeyword = keyword.toLowerCase();
+            const filtered = corpusData.filter(item => 
+                item.text.toLowerCase().includes(lowerKeyword)
+            ).slice(0, 100); // 只显示前100条，防止浏览器卡死
+
+            if (filtered.length === 0) {
+                document.getElementById('status').innerText = '没有找到相关结果 😭';
+                return;
+            }
+
+            document.getElementById('status').innerText = `为您找到相关结果 ${filtered.length} 条 (最多展示100条)：`;
+
+            filtered.forEach(item => {
+                // 替换关键词为高亮样式
+                const regex = new RegExp(`(${keyword})`, 'gi');
+                const highlightedText = item.text.replace(regex, '<span class="highlight">$1</span>');
+
+                const div = document.createElement('div');
+                div.className = 'result-item';
+                div.innerHTML = `
+                    <div class="source-tag">📂 来源文件: ${item.source}</div>
+                    <div class="content">${highlightedText}</div>
+                `;
+                resultsDiv.appendChild(div);
+            });
+        });
+    </script>
+</body>
+</html>
