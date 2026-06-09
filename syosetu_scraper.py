@@ -90,7 +90,6 @@ def main():
         return
         
     # 测试只抓前 5 章
-    chapters = chapters[:5]
     all_corpus_data = []
     
     for i, (title, url) in enumerate(chapters):

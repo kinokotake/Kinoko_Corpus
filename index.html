@@ -89,6 +89,58 @@
                 const highlightedText = item.text.replace(regex, '<span class="highlight">$1</span>');
 
                 // 智能获取上下文：只有当上一句/下一句属于同一本书/同一个文件时，才显示
+                       let corpusData = [];
+
+        fetch('data.json')
+            .then(response => response.json())
+            .then(data => {
+                corpusData = data;
+                document.getElementById('status').innerText = `加载成功！当前语料库共包含 ${data.length} 条数据。`;
+            })
+            .catch(err => {
+                document.getElementById('status').innerText = '加载数据失败，请确保已经生成了 data.json 文件并且成功上传！';
+            });
+
+        function escapeRegExp(string) {
+            return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+        }
+
+        document.getElementById('searchInput').addEventListener('input', function(e) {
+            const keyword = e.target.value.trim();
+            const resultsDiv = document.getElementById('results');
+            resultsDiv.innerHTML = '';
+
+            if (keyword === '') {
+                document.getElementById('status').innerText = `当前语料库共包含 ${corpusData.length} 条数据。`;
+                return;
+            }
+
+            const lowerKeyword = keyword.toLowerCase();
+            const matchedIndices = [];
+
+            for (let i = 0; i < corpusData.length; i++) {
+                if (corpusData[i].text.toLowerCase().includes(lowerKeyword)) {
+                    matchedIndices.push(i);
+                    if (matchedIndices.length >= 100) break; 
+                }
+            }
+
+            if (matchedIndices.length === 0) {
+                document.getElementById('status').innerText = '没有找到相关结果 😭';
+                return;
+            }
+
+            document.getElementById('status').innerText = `为您找到相关结果 ${matchedIndices.length} 条 (最多展示100条)：`;
+
+            const safeKeyword = escapeRegExp(keyword);
+            const regex = new RegExp(`(${safeKeyword})`, 'gi');
+
+            matchedIndices.forEach(index => {
+                const item = corpusData[index];
+                // 高亮核心文本
+                const highlightedText = item.text.replace(regex, '<span class="highlight">$1</span>');
+
+                // 只提取相邻句子的纯文本（不再显示冗余的网址等）
                 let prevContext = '';
                 if (index > 0 && corpusData[index-1].source === item.source) {
                     prevContext = `<div class="context">⬆️ ${corpusData[index-1].text}</div>`;
@@ -99,15 +151,22 @@
                     nextContext = `<div class="context">⬇️ ${corpusData[index+1].text}</div>`;
                 }
 
+                // 如果有额外信息（章节、说话人），以浅色小字显示在来源旁边
+                const metaTag = item.meta ? `<span style="font-size: 12px; color: #666; margin-left: 10px;">🏷️ ${item.meta}</span>` : '';
+
                 const div = document.createElement('div');
                 div.className = 'result-item';
                 div.innerHTML = `
-                    <div class="source-tag">📂 来源文件: ${item.source}</div>
+                    <div style="margin-bottom: 12px;">
+                        <span class="source-tag">📂 ${item.source}</span>${metaTag}
+                    </div>
                     ${prevContext}
                     <div class="matched-line">🎯 ${highlightedText}</div>
                     ${nextContext}
                 `;
                 resultsDiv.appendChild(div);
+            });
+        });
             });
         });
     </script>
