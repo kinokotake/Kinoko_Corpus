@@ -13,13 +13,11 @@
         #status { text-align: center; color: #666; margin-bottom: 20px; }
         
         .result-item { background: white; padding: 20px; border-radius: 8px; margin-bottom: 20px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); border-left: 5px solid #d63384; }
-        .source-tag { font-size: 13px; color: #fff; background: #6c757d; padding: 4px 10px; border-radius: 4px; display: inline-block; margin-bottom: 15px; }
+        .source-tag { font-size: 13px; color: #fff; background: #6c757d; padding: 4px 10px; border-radius: 4px; display: inline-block; margin-bottom: 5px; }
+        .meta-tag { font-size: 12px; color: #666; margin-left: 10px; display: inline-block; }
         
-        /* 上下文样式 */
         .context { font-size: 14px; color: #888; padding-left: 15px; border-left: 3px solid #e9ecef; margin: 8px 0; line-height: 1.5; }
-        /* 命中句子的样式 */
         .matched-line { font-size: 17px; color: #111; font-weight: 500; margin: 12px 0; line-height: 1.6; }
-        /* 高亮关键词 */
         .highlight { background-color: #ffeeba; color: #d63384; font-weight: bold; padding: 0 4px; border-radius: 3px; box-shadow: 0 1px 2px rgba(0,0,0,0.1); }
     </style>
 </head>
@@ -36,61 +34,6 @@
     <script>
         let corpusData = [];
 
-        // 读取打包好的语料数据
-        fetch('data.json')
-            .then(response => response.json())
-            .then(data => {
-                corpusData = data;
-                document.getElementById('status').innerText = `加载成功！当前语料库共包含 ${data.length} 条数据。`;
-            })
-            .catch(err => {
-                document.getElementById('status').innerText = '加载数据失败，请确保已经生成了 data.json 文件并且成功上传！';
-            });
-
-        // 避免输入特殊符号导致正则崩溃的保护函数
-        function escapeRegExp(string) {
-            return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-        }
-
-        // 实时搜索功能
-        document.getElementById('searchInput').addEventListener('input', function(e) {
-            const keyword = e.target.value.trim();
-            const resultsDiv = document.getElementById('results');
-            resultsDiv.innerHTML = '';
-
-            if (keyword === '') {
-                document.getElementById('status').innerText = `当前语料库共包含 ${corpusData.length} 条数据。`;
-                return;
-            }
-
-            const lowerKeyword = keyword.toLowerCase();
-            const matchedIndices = [];
-
-            // 找出所有命中的行号 (最多100个)
-            for (let i = 0; i < corpusData.length; i++) {
-                if (corpusData[i].text.toLowerCase().includes(lowerKeyword)) {
-                    matchedIndices.push(i);
-                    if (matchedIndices.length >= 100) break; 
-                }
-            }
-
-            if (matchedIndices.length === 0) {
-                document.getElementById('status').innerText = '没有找到相关结果 😭';
-                return;
-            }
-
-            document.getElementById('status').innerText = `为您找到相关结果 ${matchedIndices.length} 条 (最多展示100条)：`;
-
-            const safeKeyword = escapeRegExp(keyword);
-            const regex = new RegExp(`(${safeKeyword})`, 'gi');
-
-            matchedIndices.forEach(index => {
-                const item = corpusData[index];
-                const highlightedText = item.text.replace(regex, '<span class="highlight">$1</span>');
-
-                // 智能获取上下文：只有当上一句/下一句属于同一本书/同一个文件时，才显示
-                       let corpusData = [];
-
         fetch('data.json')
             .then(response => response.json())
             .then(data => {
@@ -119,7 +62,8 @@
             const matchedIndices = [];
 
             for (let i = 0; i < corpusData.length; i++) {
-                if (corpusData[i].text.toLowerCase().includes(lowerKeyword)) {
+                // 确保有文本内容才搜索，防止报错崩溃
+                if (corpusData[i] && corpusData[i].text && corpusData[i].text.toLowerCase().includes(lowerKeyword)) {
                     matchedIndices.push(i);
                     if (matchedIndices.length >= 100) break; 
                 }
@@ -137,22 +81,19 @@
 
             matchedIndices.forEach(index => {
                 const item = corpusData[index];
-                // 高亮核心文本
                 const highlightedText = item.text.replace(regex, '<span class="highlight">$1</span>');
 
-                // 只提取相邻句子的纯文本（不再显示冗余的网址等）
                 let prevContext = '';
-                if (index > 0 && corpusData[index-1].source === item.source) {
+                if (index > 0 && corpusData[index-1] && corpusData[index-1].source === item.source && corpusData[index-1].text) {
                     prevContext = `<div class="context">⬆️ ${corpusData[index-1].text}</div>`;
                 }
 
                 let nextContext = '';
-                if (index < corpusData.length - 1 && corpusData[index+1].source === item.source) {
+                if (index < corpusData.length - 1 && corpusData[index+1] && corpusData[index+1].source === item.source && corpusData[index+1].text) {
                     nextContext = `<div class="context">⬇️ ${corpusData[index+1].text}</div>`;
                 }
 
-                // 如果有额外信息（章节、说话人），以浅色小字显示在来源旁边
-                const metaTag = item.meta ? `<span style="font-size: 12px; color: #666; margin-left: 10px;">🏷️ ${item.meta}</span>` : '';
+                const metaTag = item.meta ? `<span class="meta-tag">🏷️ ${item.meta}</span>` : '';
 
                 const div = document.createElement('div');
                 div.className = 'result-item';
@@ -165,8 +106,6 @@
                     ${nextContext}
                 `;
                 resultsDiv.appendChild(div);
-            });
-        });
             });
         });
     </script>
