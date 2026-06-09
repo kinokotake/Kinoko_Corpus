@@ -8,7 +8,6 @@
         body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; max-width: 900px; margin: 0 auto; padding: 20px; background-color: #f7f9fc; color: #333; }
         h1 { text-align: center; color: #d63384; margin-bottom: 20px; }
         
-        /* 分类切换按钮样式 */
         .tab-container { display: flex; justify-content: center; gap: 15px; margin-bottom: 20px; }
         .tab-btn { padding: 10px 25px; font-size: 16px; font-weight: bold; border: 2px solid #d63384; border-radius: 30px; background: transparent; color: #d63384; cursor: pointer; transition: all 0.3s ease; outline: none; }
         .tab-btn.active { background: #d63384; color: white; box-shadow: 0 4px 8px rgba(214, 51, 132, 0.3); }
@@ -20,21 +19,26 @@
         #status { text-align: center; color: #666; margin-bottom: 20px; font-weight: 500; }
         
         .result-item { background: white; padding: 20px; border-radius: 8px; margin-bottom: 20px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); border-left: 5px solid #d63384; }
-        /* 技能库的卡片颜色区分 */
         .result-item.skill-card { border-left-color: #0d6efd; }
         
         .source-tag { font-size: 13px; color: #fff; background: #6c757d; padding: 4px 10px; border-radius: 4px; display: inline-block; margin-bottom: 5px; }
         .meta-tag { font-size: 12px; color: #666; margin-left: 10px; display: inline-block; }
         
-        .context { font-size: 14px; color: #888; padding-left: 15px; border-left: 3px solid #e9ecef; margin: 8px 0; line-height: 1.5; }
-        .matched-line { font-size: 17px; color: #111; font-weight: 500; margin: 12px 0; line-height: 1.6; }
-        .highlight { background-color: #ffeeba; color: #d63384; font-weight: bold; padding: 0 4px; border-radius: 3px; box-shadow: 0 1px 2px rgba(0,0,0,0.1); }
+        /* 核心目标句样式 */
+        .matched-line { font-size: 17px; color: #111; font-weight: bold; margin: 15px 0; line-height: 1.6; padding-left: 10px; border-left: 3px solid #d63384; }
+        .highlight { background-color: #ffeeba; color: #d63384; padding: 0 4px; border-radius: 3px; box-shadow: 0 1px 2px rgba(0,0,0,0.1); }
+
+        /* 折叠上下文面板样式 */
+        .context-details { background: #f8f9fa; border-radius: 6px; padding: 5px 15px; margin: 5px 0; border: 1px solid #e9ecef; }
+        .context-details summary { cursor: pointer; color: #6c757d; font-size: 13px; font-weight: bold; outline: none; padding: 5px 0; user-select: none; transition: color 0.2s; }
+        .context-details summary:hover { color: #d63384; }
+        .context-box { margin-top: 10px; padding-top: 10px; border-top: 1px dashed #dee2e6; max-height: 300px; overflow-y: auto; }
+        .context-line { margin-bottom: 8px; font-size: 14px; color: #555; line-height: 1.6; }
     </style>
 </head>
 <body>
     <h1>🍄 KINOKO 本地化在线检索系统</h1>
     
-    <!-- 分类切换区 -->
     <div class="tab-container">
         <button class="tab-btn active" data-mode="dialogue">💬 剧情台词库</button>
         <button class="tab-btn" data-mode="skill">⚔️ 游戏技能库</button>
@@ -49,9 +53,8 @@
 
     <script>
         let corpusData = [];
-        let currentMode = 'dialogue'; // 默认模式为剧情库
+        let currentMode = 'dialogue';
 
-        // 读取打包好的语料数据
         fetch('data.json')
             .then(response => response.json())
             .then(data => {
@@ -62,27 +65,15 @@
                 document.getElementById('status').innerText = '加载数据失败，请确保已经生成了 data.json 文件并且成功上传！';
             });
 
-        // 切换模式逻辑
         const tabBtns = document.querySelectorAll('.tab-btn');
         const searchInput = document.getElementById('searchInput');
 
         tabBtns.forEach(btn => {
             btn.addEventListener('click', (e) => {
-                // 更改按钮样式
                 tabBtns.forEach(b => b.classList.remove('active'));
                 e.target.classList.add('active');
-                
-                // 更改当前模式
                 currentMode = e.target.getAttribute('data-mode');
-                
-                // 更改输入框提示语
-                if (currentMode === 'skill') {
-                    searchInput.placeholder = "输入技能名称、属性或效果关键词 (如：攻撃、奥義)...";
-                } else {
-                    searchInput.placeholder = "输入日语或中文关键词开始搜索 (如：お嬢様)...";
-                }
-                
-                // 切换后重新触发搜索
+                searchInput.placeholder = currentMode === 'skill' ? "输入技能名称、属性或效果关键词 (如：攻撃、奥義)..." : "输入日语或中文关键词开始搜索 (如：お嬢様)...";
                 performSearch();
             });
         });
@@ -101,6 +92,35 @@
             document.getElementById('status').innerText = `当前【${currentMode === 'skill' ? '技能库' : '剧情库'}】共包含 ${count} 条数据。`;
         }
 
+        // 核心引擎：动态获取长篇上下文（约500字）
+        function buildExtendedContext(baseIndex, direction, sourceStr) {
+            let contextLines = [];
+            let charCount = 0;
+            let currIndex = baseIndex + direction;
+            
+            while (currIndex >= 0 && currIndex < corpusData.length) {
+                let item = corpusData[currIndex];
+                // 边界保护：必须是同一本书/文件，且不能跨越到技能库
+                if (!item || item.source !== sourceStr || !item.text) break;
+                if (item.source.includes("FEH技能") || item.type === "skill_desc") break;
+
+                // 根据方向插入数组
+                if (direction === -1) {
+                    contextLines.unshift(item.text); // 前文插在前面
+                } else {
+                    contextLines.push(item.text);    // 后文插在后面
+                }
+                
+                charCount += item.text.length;
+                if (charCount >= 500) break; // 达到约500字阈值即停止
+                
+                currIndex += direction;
+            }
+            
+            if (contextLines.length === 0) return '';
+            return contextLines.map(line => `<div class="context-line">${line}</div>`).join('');
+        }
+
         function performSearch() {
             const keyword = searchInput.value.trim();
             const resultsDiv = document.getElementById('results');
@@ -114,19 +134,14 @@
             const lowerKeyword = keyword.toLowerCase();
             const matchedIndices = [];
 
-            // 数据过滤与检索
             for (let i = 0; i < corpusData.length; i++) {
                 const item = corpusData[i];
                 if (!item || !item.text) continue;
 
-                // 核心：判断当前条目是技能还是剧情
                 const isSkill = item.source.includes("FEH技能") || item.type === "skill_desc";
-                
-                // 如果模式不匹配，直接跳过
                 if (currentMode === 'skill' && !isSkill) continue;
                 if (currentMode === 'dialogue' && isSkill) continue;
 
-                // 检索关键词
                 if (item.text.toLowerCase().includes(lowerKeyword)) {
                     matchedIndices.push(i);
                     if (matchedIndices.length >= 100) break; 
@@ -147,15 +162,19 @@
                 const item = corpusData[index];
                 const highlightedText = item.text.replace(regex, '<span class="highlight">$1</span>');
 
-                // 针对剧情库，渲染上下文
-                let prevContext = '';
-                let nextContext = '';
+                let prevHtml = '';
+                let nextHtml = '';
+
+                // 如果是剧情库，激活 500字上下文折叠面板
                 if (currentMode === 'dialogue') {
-                    if (index > 0 && corpusData[index-1] && corpusData[index-1].source === item.source && corpusData[index-1].text) {
-                        prevContext = `<div class="context">⬆️ ${corpusData[index-1].text}</div>`;
+                    const prevText = buildExtendedContext(index, -1, item.source);
+                    if (prevText) {
+                        prevHtml = `<details class="context-details"><summary>▶ 点击展开上文 (约500字)</summary><div class="context-box">${prevText}</div></details>`;
                     }
-                    if (index < corpusData.length - 1 && corpusData[index+1] && corpusData[index+1].source === item.source && corpusData[index+1].text) {
-                        nextContext = `<div class="context">⬇️ ${corpusData[index+1].text}</div>`;
+                    
+                    const nextText = buildExtendedContext(index, 1, item.source);
+                    if (nextText) {
+                        nextHtml = `<details class="context-details"><summary>▶ 点击展开下文 (约500字)</summary><div class="context-box">${nextText}</div></details>`;
                     }
                 }
 
@@ -168,9 +187,9 @@
                     <div style="margin-bottom: 12px;">
                         <span class="source-tag" style="${currentMode==='skill' ? 'background:#0d6efd;' : ''}">📂 ${item.source}</span>${metaTag}
                     </div>
-                    ${prevContext}
+                    ${prevHtml}
                     <div class="matched-line">🎯 ${highlightedText}</div>
-                    ${nextContext}
+                    ${nextHtml}
                 `;
                 resultsDiv.appendChild(div);
             });
