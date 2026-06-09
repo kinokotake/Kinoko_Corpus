@@ -6,13 +6,23 @@
     <title>🍄 KINOKO 本地化语料库</title>
     <style>
         body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; max-width: 900px; margin: 0 auto; padding: 20px; background-color: #f7f9fc; color: #333; }
-        h1 { text-align: center; color: #d63384; }
+        h1 { text-align: center; color: #d63384; margin-bottom: 20px; }
+        
+        /* 分类切换按钮样式 */
+        .tab-container { display: flex; justify-content: center; gap: 15px; margin-bottom: 20px; }
+        .tab-btn { padding: 10px 25px; font-size: 16px; font-weight: bold; border: 2px solid #d63384; border-radius: 30px; background: transparent; color: #d63384; cursor: pointer; transition: all 0.3s ease; outline: none; }
+        .tab-btn.active { background: #d63384; color: white; box-shadow: 0 4px 8px rgba(214, 51, 132, 0.3); }
+        .tab-btn:hover { transform: translateY(-2px); }
+
         .search-container { text-align: center; margin-bottom: 30px; }
-        #searchInput { width: 80%; padding: 15px; font-size: 18px; border: 2px solid #e1e4e8; border-radius: 8px; outline: none; box-shadow: 0 4px 6px rgba(0,0,0,0.05); }
+        #searchInput { width: 80%; padding: 15px; font-size: 18px; border: 2px solid #e1e4e8; border-radius: 8px; outline: none; box-shadow: 0 4px 6px rgba(0,0,0,0.05); transition: border 0.3s; }
         #searchInput:focus { border-color: #d63384; }
-        #status { text-align: center; color: #666; margin-bottom: 20px; }
+        #status { text-align: center; color: #666; margin-bottom: 20px; font-weight: 500; }
         
         .result-item { background: white; padding: 20px; border-radius: 8px; margin-bottom: 20px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); border-left: 5px solid #d63384; }
+        /* 技能库的卡片颜色区分 */
+        .result-item.skill-card { border-left-color: #0d6efd; }
+        
         .source-tag { font-size: 13px; color: #fff; background: #6c757d; padding: 4px 10px; border-radius: 4px; display: inline-block; margin-bottom: 5px; }
         .meta-tag { font-size: 12px; color: #666; margin-left: 10px; display: inline-block; }
         
@@ -24,6 +34,12 @@
 <body>
     <h1>🍄 KINOKO 本地化在线检索系统</h1>
     
+    <!-- 分类切换区 -->
+    <div class="tab-container">
+        <button class="tab-btn active" data-mode="dialogue">💬 剧情台词库</button>
+        <button class="tab-btn" data-mode="skill">⚔️ 游戏技能库</button>
+    </div>
+    
     <div class="search-container">
         <input type="text" id="searchInput" placeholder="输入日语或中文关键词开始搜索 (如：お嬢様)...">
     </div>
@@ -33,37 +49,85 @@
 
     <script>
         let corpusData = [];
+        let currentMode = 'dialogue'; // 默认模式为剧情库
 
+        // 读取打包好的语料数据
         fetch('data.json')
             .then(response => response.json())
             .then(data => {
                 corpusData = data;
-                document.getElementById('status').innerText = `加载成功！当前语料库共包含 ${data.length} 条数据。`;
+                updateStatus();
             })
             .catch(err => {
                 document.getElementById('status').innerText = '加载数据失败，请确保已经生成了 data.json 文件并且成功上传！';
             });
 
+        // 切换模式逻辑
+        const tabBtns = document.querySelectorAll('.tab-btn');
+        const searchInput = document.getElementById('searchInput');
+
+        tabBtns.forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                // 更改按钮样式
+                tabBtns.forEach(b => b.classList.remove('active'));
+                e.target.classList.add('active');
+                
+                // 更改当前模式
+                currentMode = e.target.getAttribute('data-mode');
+                
+                // 更改输入框提示语
+                if (currentMode === 'skill') {
+                    searchInput.placeholder = "输入技能名称、属性或效果关键词 (如：攻撃、奥義)...";
+                } else {
+                    searchInput.placeholder = "输入日语或中文关键词开始搜索 (如：お嬢様)...";
+                }
+                
+                // 切换后重新触发搜索
+                performSearch();
+            });
+        });
+
         function escapeRegExp(string) {
             return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
         }
 
-        document.getElementById('searchInput').addEventListener('input', function(e) {
-            const keyword = e.target.value.trim();
+        function updateStatus() {
+            let count = 0;
+            corpusData.forEach(item => {
+                const isSkill = item.source.includes("FEH技能") || item.type === "skill_desc";
+                if (currentMode === 'skill' && isSkill) count++;
+                if (currentMode === 'dialogue' && !isSkill) count++;
+            });
+            document.getElementById('status').innerText = `当前【${currentMode === 'skill' ? '技能库' : '剧情库'}】共包含 ${count} 条数据。`;
+        }
+
+        function performSearch() {
+            const keyword = searchInput.value.trim();
             const resultsDiv = document.getElementById('results');
             resultsDiv.innerHTML = '';
 
             if (keyword === '') {
-                document.getElementById('status').innerText = `当前语料库共包含 ${corpusData.length} 条数据。`;
+                updateStatus();
                 return;
             }
 
             const lowerKeyword = keyword.toLowerCase();
             const matchedIndices = [];
 
+            // 数据过滤与检索
             for (let i = 0; i < corpusData.length; i++) {
-                // 确保有文本内容才搜索，防止报错崩溃
-                if (corpusData[i] && corpusData[i].text && corpusData[i].text.toLowerCase().includes(lowerKeyword)) {
+                const item = corpusData[i];
+                if (!item || !item.text) continue;
+
+                // 核心：判断当前条目是技能还是剧情
+                const isSkill = item.source.includes("FEH技能") || item.type === "skill_desc";
+                
+                // 如果模式不匹配，直接跳过
+                if (currentMode === 'skill' && !isSkill) continue;
+                if (currentMode === 'dialogue' && isSkill) continue;
+
+                // 检索关键词
+                if (item.text.toLowerCase().includes(lowerKeyword)) {
                     matchedIndices.push(i);
                     if (matchedIndices.length >= 100) break; 
                 }
@@ -83,23 +147,26 @@
                 const item = corpusData[index];
                 const highlightedText = item.text.replace(regex, '<span class="highlight">$1</span>');
 
+                // 针对剧情库，渲染上下文
                 let prevContext = '';
-                if (index > 0 && corpusData[index-1] && corpusData[index-1].source === item.source && corpusData[index-1].text) {
-                    prevContext = `<div class="context">⬆️ ${corpusData[index-1].text}</div>`;
-                }
-
                 let nextContext = '';
-                if (index < corpusData.length - 1 && corpusData[index+1] && corpusData[index+1].source === item.source && corpusData[index+1].text) {
-                    nextContext = `<div class="context">⬇️ ${corpusData[index+1].text}</div>`;
+                if (currentMode === 'dialogue') {
+                    if (index > 0 && corpusData[index-1] && corpusData[index-1].source === item.source && corpusData[index-1].text) {
+                        prevContext = `<div class="context">⬆️ ${corpusData[index-1].text}</div>`;
+                    }
+                    if (index < corpusData.length - 1 && corpusData[index+1] && corpusData[index+1].source === item.source && corpusData[index+1].text) {
+                        nextContext = `<div class="context">⬇️ ${corpusData[index+1].text}</div>`;
+                    }
                 }
 
                 const metaTag = item.meta ? `<span class="meta-tag">🏷️ ${item.meta}</span>` : '';
+                const cardClass = currentMode === 'skill' ? 'result-item skill-card' : 'result-item';
 
                 const div = document.createElement('div');
-                div.className = 'result-item';
+                div.className = cardClass;
                 div.innerHTML = `
                     <div style="margin-bottom: 12px;">
-                        <span class="source-tag">📂 ${item.source}</span>${metaTag}
+                        <span class="source-tag" style="${currentMode==='skill' ? 'background:#0d6efd;' : ''}">📂 ${item.source}</span>${metaTag}
                     </div>
                     ${prevContext}
                     <div class="matched-line">🎯 ${highlightedText}</div>
@@ -107,7 +174,9 @@
                 `;
                 resultsDiv.appendChild(div);
             });
-        });
+        }
+
+        searchInput.addEventListener('input', performSearch);
     </script>
 </body>
 </html>
