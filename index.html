@@ -46,6 +46,14 @@
         .game-badge { display: inline-block; padding: 2px 10px; border-radius: 12px; font-size: 12px; font-weight: bold; }
         .game-badge.feh  { background: #e8f0fe; color: #1a56db; }
         .game-badge.pka  { background: #fce8f7; color: #9c27b0; }
+        .game-badge.kr   { background: #fff0d4; color: #b85c00; }
+        .game-badge.gbf  { background: #e8f4ff; color: #0055a5; }
+        .game-badge.memo { background: #f3e8ff; color: #7c3aed; }
+        .game-badge.opbr { background: #e8fff5; color: #0e7c5a; }
+        .game-badge.fgo     { background: #fff0f0; color: #cc0000; }
+        .game-badge.pricone { background: #fdf0ff; color: #6d28d9; }
+        .game-badge.ae      { background: #e6fff9; color: #005f52; }
+        .game-badge.jojo    { background: #fffbe8; color: #97650d; }
         .skill-type-badge { display: inline-block; padding: 2px 9px; background: #e9ecef; color: #495057; border-radius: 4px; font-size: 12px; font-weight: bold; }
         .sp-badge { display: inline-block; padding: 2px 9px; background: #fff3cd; color: #856404; border-radius: 4px; font-size: 12px; font-weight: bold; }
 
@@ -80,6 +88,14 @@
         <button class="gf-btn active" data-game="all">全部游戏 <span class="gf-count" id="cnt-all"></span></button>
         <button class="gf-btn" data-game="feh">⚔️ FEH <span class="gf-count" id="cnt-feh"></span></button>
         <button class="gf-btn" data-game="pka">👻 ファンキルオルタナ <span class="gf-count" id="cnt-pka"></span></button>
+        <button class="gf-btn" data-game="kr">🏯 キングダムラン <span class="gf-count" id="cnt-kr"></span></button>
+        <button class="gf-btn" data-game="gbf">🌊 グラブル <span class="gf-count" id="cnt-gbf"></span></button>
+        <button class="gf-btn" data-game="memo">🪦 メメントモリ <span class="gf-count" id="cnt-memo"></span></button>
+        <button class="gf-btn" data-game="opbr">☠️ ワンピースBR <span class="gf-count" id="cnt-opbr"></span></button>
+        <button class="gf-btn" data-game="fgo">⚡ FGO <span class="gf-count" id="cnt-fgo"></span></button>
+        <button class="gf-btn" data-game="pricone">💎 プリコネ <span class="gf-count" id="cnt-pricone"></span></button>
+        <button class="gf-btn" data-game="ae">🌟 アナザーエデン <span class="gf-count" id="cnt-ae"></span></button>
+        <button class="gf-btn" data-game="jojo">👊 ジョジョSS <span class="gf-count" id="cnt-jojo"></span></button>
     </div>
 
     <div class="search-container">
@@ -107,8 +123,16 @@
 
     /* ── 游戏来源识别 ── */
     function getGame(source) {
-        if (source.includes('feh_skills')) return 'feh';
-        if (source.includes('pk_alterna')) return 'pka';
+        if (source.includes('feh_skills'))    return 'feh';
+        if (source.includes('pk_alterna'))    return 'pka';
+        if (source.includes('kingdom_ran'))   return 'kr';
+        if (source.includes('granblue'))      return 'gbf';
+        if (source.includes('mememori'))      return 'memo';
+        if (source.includes('one_piece_br'))  return 'opbr';
+        if (source.includes('fgo'))           return 'fgo';
+        if (source.includes('pricone'))       return 'pricone';
+        if (source.includes('another_eden'))  return 'ae';
+        if (source.includes('jojo_ss'))       return 'jojo';
         return 'other';
     }
 
@@ -119,11 +143,12 @@
     /* ── 动态更新筛选按钮计数 ── */
     function updateCounts() {
         const skills = corpusData.filter(isSkillItem);
-        const feh  = skills.filter(d => getGame(d.source) === 'feh').length;
-        const pka  = skills.filter(d => getGame(d.source) === 'pka').length;
+        const keys = ['feh','pka','kr','gbf','memo','opbr','fgo','pricone','ae','jojo'];
         document.getElementById('cnt-all').textContent = `(${skills.length})`;
-        document.getElementById('cnt-feh').textContent = `(${feh})`;
-        document.getElementById('cnt-pka').textContent = `(${pka})`;
+        keys.forEach(k => {
+            const el = document.getElementById('cnt-' + k);
+            if (el) el.textContent = `(${skills.filter(d => getGame(d.source) === k).length})`;
+        });
     }
 
     function updateStatus() {
@@ -180,53 +205,91 @@
     function parseSkill(text, source) {
         const game = getGame(source);
         const nameMatch = text.match(/^【(.+?)】/);
-        const name = nameMatch ? nameMatch[1] : text.slice(0, 15);
+        const fullName = nameMatch ? nameMatch[1] : text.slice(0, 15);
 
         if (game === 'feh') {
             const spMatch = text.match(/\(SP:\s*(\d+)\)/);
             const sp = spMatch ? spMatch[1] : '';
             let info = text.replace(/^【.+?】/, '').replace(/\(SP:\s*\d+\)\s*/, '').trim();
             info = info.replace(/\|+\s*$/, '').trim();
-            return { game, name, sp, info, levels: {}, effect: '', target: '', tags: '' };
+            return { game, name: fullName, charName: '', skillName: fullName, sp, info, levels: {}, effect: '', target: '', tags: [], infoFields: [] };
         }
 
-        // PK_Alterna
-        const typeMatch = text.match(/種別：(\S+)/);
+        if (game === 'pka') {
+            const typeMatch = text.match(/種別：(\S+)/);
+            const type = typeMatch ? typeMatch[1] : '';
+            const levels = {};
+            const lvRe = / Lv(\d+)：(.+?)(?= Lv\d+：| タグ：|$)/g;
+            let m;
+            while ((m = lvRe.exec(text)) !== null) levels[m[1]] = m[2].trim();
+            let effect = '';
+            if (!Object.keys(levels).length) {
+                const em = text.match(/ 効果：(.+?)(?= 対象：| タグ：|$)/);
+                if (em) effect = em[1].trim();
+            }
+            const targetM = text.match(/ 対象：(.+?)(?= タグ：|$)/);
+            const target = targetM ? targetM[1].trim() : '';
+            const tagM = text.match(/ タグ：(.+?)$/);
+            const rawTags = tagM ? tagM[1].trim() : '';
+            const tags = rawTags ? rawTags.split(/[、,]/).filter(Boolean) : [];
+            return { game, name: fullName, charName: '', skillName: fullName, type, levels, effect, target, tags, infoFields: [] };
+        }
+
+        // Generic handler for all other games
+        const nameParts = fullName.split(/：/);
+        const charName  = nameParts.length > 1 ? nameParts[0] : '';
+        const skillName = nameParts.length > 1 ? nameParts.slice(1).join('：') : fullName;
+
+        const typeMatch = text.match(/種別：([^\s効果]+)/);
         const type = typeMatch ? typeMatch[1] : '';
 
-        const levels = {};
-        const lvRe = / Lv(\d+)：(.+?)(?= Lv\d+：| タグ：|$)/g;
-        let m;
-        while ((m = lvRe.exec(text)) !== null) {
-            levels[m[1]] = m[2].trim();
+        let effectMatch = text.match(/ (?:効果|解説)：(.+)$/);
+        if (!effectMatch) effectMatch = text.match(/【説明】(.+?)(?:【効果】|$)/);
+        const effect = effectMatch ? effectMatch[1].trim() : '';
+
+        const INFO_PATTERNS = [
+            ['ランク', /ランク：(\S+)/],
+            ['MP',    /\bMP：(\d+)/],
+            ['威力',  /威力：([^\s効]+)/],
+            ['備考',  /備考：([^効]+?)(?= 効果：|$)/],
+            ['国',    /国：(\S+)/],
+            ['兵種',  /兵種：(\S+)/],
+            ['所属',  /所属：(\S+)/],
+        ];
+        const infoFields = [];
+        for (const [label, re] of INFO_PATTERNS) {
+            const m = text.match(re);
+            if (m) infoFields.push({ label, value: m[1].trim() });
         }
 
-        let effect = '';
-        if (Object.keys(levels).length === 0) {
-            const em = text.match(/ 効果：(.+?)(?= 対象：| タグ：|$)/);
-            if (em) effect = em[1].trim();
-        }
-
-        const targetM = text.match(/ 対象：(.+?)(?= タグ：|$)/);
-        const target = targetM ? targetM[1].trim() : '';
-
-        const tagM = text.match(/ タグ：(.+?)$/);
-        const rawTags = tagM ? tagM[1].trim() : '';
-        const tags = rawTags ? rawTags.split(/[、,]/).filter(Boolean) : [];
-
-        return { game, name, type, levels, effect, target, tags };
+        return { game, name: fullName, charName, skillName, type, levels: {}, effect, target: '', tags: [], infoFields };
     }
 
     /* ── 渲染技能卡片 ── */
     function renderSkillCard(item, regex) {
         const p = parseSkill(item.text, item.source);
 
-        const gameBadgeHtml = {
-            feh:  '<span class="game-badge feh">FEH</span>',
-            pka:  '<span class="game-badge pka">ファンキルオルタナ</span>',
-        }[p.game] || '';
+        const GAME_LABELS = {
+            feh:  'FEH',
+            pka:  'ファンキルオルタナ',
+            kr:   'キングダムラン',
+            gbf:  'グラブル',
+            memo: 'メメントモリ',
+            opbr: 'ワンピースBR',
+            fgo:     'FGO',
+            pricone: 'プリコネ',
+            ae:      'アナザーエデン',
+            jojo: 'ジョジョSS',
+        };
+        const label = GAME_LABELS[p.game] || p.game;
+        const gameBadgeHtml = p.game !== 'other'
+            ? `<span class="game-badge ${p.game}">${label}</span>` : '';
 
-        const nameHtml = `<span class="skill-name">【${hl(p.name, regex)}】</span>`;
+        // For games with charName:skillName format, show character tag
+        const charTag = p.charName
+            ? `<span class="skill-info-label">${hl(p.charName, regex)}</span>` : '';
+
+        const nameHtml = `<span class="skill-name">【${hl(p.skillName, regex)}】</span>`;
         const typeBadge = p.type ? `<span class="skill-type-badge">${p.type}</span>` : '';
         const spBadge = p.sp ? `<span class="sp-badge">SP: ${p.sp}</span>` : '';
 
@@ -234,7 +297,7 @@
 
         if (p.game === 'feh') {
             bodyHtml = `<div class="skill-effect-row">${hl(fmtEffect(p.info), regex)}</div>`;
-        } else {
+        } else if (p.game === 'pka') {
             const lvKeys = Object.keys(p.levels).sort((a, b) => +a - +b);
             if (lvKeys.length > 0) {
                 const rows = lvKeys.map(lv =>
@@ -246,21 +309,27 @@
                 bodyHtml = `<div class="skill-levels">${rows}</div>`;
             } else if (p.effect) {
                 bodyHtml = `<div class="skill-effect-row">${hl(fmtEffect(p.effect), regex)}</div>`;
-                if (p.target) {
-                    bodyHtml += `<div class="skill-info-row"><span class="skill-info-label">対象</span><span>${hl(p.target, regex)}</span></div>`;
-                }
+                if (p.target) bodyHtml += `<div class="skill-info-row"><span class="skill-info-label">対象</span><span>${hl(p.target, regex)}</span></div>`;
             }
-
             if (p.tags.length > 0) {
                 const chips = p.tags.map(t => `<span class="skill-tag-chip">${hl(t, regex)}</span>`).join('');
                 bodyHtml += `<div class="skill-tags">${chips}</div>`;
+            }
+        } else {
+            // Generic: effect text + info fields
+            if (p.effect) bodyHtml = `<div class="skill-effect-row">${hl(fmtEffect(p.effect), regex)}</div>`;
+            if (p.infoFields && p.infoFields.length) {
+                const fields = p.infoFields.map(f =>
+                    `<span class="skill-info-label">${f.label}</span><span>${hl(f.value, regex)}</span>`
+                ).join(' ');
+                bodyHtml += `<div class="skill-info-row">${fields}</div>`;
             }
         }
 
         return `
             <div class="result-item skill-card">
                 <div class="skill-header">
-                    ${gameBadgeHtml}${nameHtml}${typeBadge}${spBadge}
+                    ${gameBadgeHtml}${charTag}${nameHtml}${typeBadge}${spBadge}
                 </div>
                 ${bodyHtml}
             </div>`;
