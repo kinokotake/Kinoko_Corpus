@@ -149,8 +149,7 @@
     function getVoiceCategory(sit) {
         if (!sit) return '';
         if (sit.startsWith('召喚'))                              return '召喚';
-        if (sit.startsWith('レベルアップ') || sit.startsWith('霊衣開放')) return '強化時のセリフ';
-        if (sit.startsWith('霊基再臨'))                          return '霊基再臨のセリフ';
+        if (sit.startsWith('レベルアップ') || sit.startsWith('霊衣開放') || sit.startsWith('霊基再臨')) return '強化時のセリフ';
         if (sit.startsWith('開始'))                              return 'バトル開始';
         if (sit.startsWith('コマンドカード'))                    return 'コマンドカード';
         if (sit.startsWith('宝具'))                              return '宝具発動';
