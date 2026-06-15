@@ -148,20 +148,30 @@
 
     function getVoiceCategory(sit) {
         if (!sit) return '';
-        if (sit.startsWith('召喚'))                              return '召喚';
-        if (sit.startsWith('レベルアップ') || sit.startsWith('霊衣開放') || sit.startsWith('霊基再臨')) return '強化時のセリフ';
-        if (sit.startsWith('開始'))                              return 'バトル開始';
-        if (sit.startsWith('コマンドカード'))                    return 'コマンドカード';
-        if (sit.startsWith('宝具'))                              return '宝具発動';
-        if (sit.startsWith('スキル'))                            return 'スキル発動';
-        if (sit.startsWith('エクストラアタック'))                return 'エクストラアタック';
-        if (sit.startsWith('アタック'))                          return '通常攻撃';
-        if (sit.startsWith('HP低下'))                            return 'HP低下';
-        if (sit.startsWith('戦闘不能'))                          return '戦闘不能';
-        if (sit.startsWith('勝利'))                              return '勝利';
-        if (sit.startsWith('会話'))                              return '会話';
-        if (sit.startsWith('絆'))                                return '絆のセリフ';
-        if (sit === '誕生日')                                    return '誕生日';
+        // 召喚・加入
+        if (sit.startsWith('召喚') || sit.startsWith('仮加入') || sit.startsWith('仮召喚') ||
+            sit.startsWith('仮契約') || sit.startsWith('正式加入') || sit.startsWith('期間限定加入'))
+            return '召喚';
+        // 強化時のセリフ
+        if (sit.startsWith('レベルアップ') || sit.startsWith('霊基再臨') || sit.startsWith('霊衣開放'))
+            return '強化時のセリフ';
+        // バトル時のセリフ
+        if (sit.startsWith('開始') || sit.startsWith('バトル開始') || sit.startsWith('戦闘開始') ||
+            sit.startsWith('コマンドカード') || sit.startsWith('カード選択') ||
+            sit.startsWith('カード1') || sit.startsWith('カード2') || sit.startsWith('カード3') ||
+            sit.startsWith('コマンド') ||
+            sit.startsWith('宝具カード') || sit.startsWith('宝具') ||
+            sit.startsWith('スキル') ||
+            sit.startsWith('アタック') || sit.startsWith('エクストラアタック') || sit.startsWith('EXアタック') ||
+            sit.startsWith('ダメージ') || sit.startsWith('ダメ―ジ') || sit.startsWith('HP低下') ||
+            sit.startsWith('戦闘不能') || sit.startsWith('勝利'))
+            return 'バトル時のセリフ';
+        // マイルームボイス
+        if (sit.startsWith('会話') || sit.startsWith('絆') || sit === '誕生日' ||
+            sit.startsWith('嫌いなこと') || sit.startsWith('好きなこと') ||
+            sit.startsWith('聖杯') || sit.startsWith('霊衣について') ||
+            sit.startsWith('ウィークリー') || sit.startsWith('エクストラミッション'))
+            return 'マイルームボイス';
         return sit;
     }
 
@@ -526,7 +536,7 @@
                 const servant = vm ? vm[1] : '';
                 const situation = vm ? vm[2] : '';
                 const category = getVoiceCategory(situation);
-                metaTag = category ? `<span class="meta-tag">🎤 ${category}</span>` : '';
+                metaTag = category ? `<span class="meta-tag">🏷️ ${category}</span>` : '';
 
                 // 上下文：同一从者+同一场景类别的其他台词
                 const relIdxs = (fgoVoiceIdx[servant] && fgoVoiceIdx[servant][category]) || [];
