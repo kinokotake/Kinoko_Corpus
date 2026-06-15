@@ -53,7 +53,7 @@ for root, dirs, files in os.walk('.'):
                                         metadata_parts = []
                                         if 'chapter' in obj: metadata_parts.append(f"章节: {obj['chapter']}")
                                         if 'speaker' in obj: metadata_parts.append(f"说话人: {obj['speaker']}")
-                                        if 'type' in obj and obj['type'] != 'skill_desc': metadata_parts.append(f"类型: {obj['type']}")
+                                        if obj.get('type') and obj['type'] != 'skill_desc': metadata_parts.append(f"类型: {obj['type']}")
                                         meta_str = " | ".join(metadata_parts) if metadata_parts else ""
                                         item_type = obj.get('type', '')
                                         corpus.append({"source": source_name, "text": main_text, "meta": meta_str, "type": item_type})
