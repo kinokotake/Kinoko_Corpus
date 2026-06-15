@@ -21,10 +21,28 @@
         .gf-btn:hover { transform: translateY(-1px); }
         .gf-count { font-size: 12px; opacity: 0.75; }
 
-        /* ── 搜索框 ── */
-        .search-container { text-align: center; margin-bottom: 24px; }
-        #searchInput { width: 80%; padding: 15px; font-size: 18px; border: 2px solid #e1e4e8; border-radius: 8px; outline: none; box-shadow: 0 4px 6px rgba(0,0,0,0.05); transition: border 0.3s; }
+        /* ── 多关键词筛选 ── */
+        .search-container { margin-bottom: 24px; }
+        #filterChips { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 10px; min-height: 0; }
+        .fchip { display: inline-flex; align-items: center; gap: 5px; padding: 4px 10px 4px 12px; border-radius: 16px; font-size: 14px; font-weight: 500; }
+        .fchip.include { background: #d4edda; color: #155724; border: 1px solid #b8ddc4; }
+        .fchip.exclude { background: #f8d7da; color: #721c24; border: 1px solid #f1b0b7; }
+        .fchip-label { max-width: 200px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        .fchip-del { cursor: pointer; font-size: 16px; line-height: 1; opacity: 0.55; margin-left: 2px; }
+        .fchip-del:hover { opacity: 1; }
+        .filter-row { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+        #searchInput { flex: 1; min-width: 180px; padding: 12px 15px; font-size: 16px; border: 2px solid #e1e4e8; border-radius: 8px; outline: none; box-shadow: 0 2px 4px rgba(0,0,0,0.05); transition: border 0.3s; }
         #searchInput:focus { border-color: #d63384; }
+        .filter-opts { display: flex; align-items: center; gap: 10px; font-size: 14px; white-space: nowrap; }
+        .fmode-lbl { display: flex; align-items: center; gap: 3px; cursor: pointer; }
+        .fmode-lbl input[type=radio] { accent-color: #d63384; }
+        .toggle-btn { padding: 7px 11px; border: 1.5px solid #adb5bd; border-radius: 6px; background: white; font-weight: bold; cursor: pointer; font-size: 13px; transition: all 0.2s; line-height: 1; }
+        .toggle-btn.active { background: #d63384; color: white; border-color: #d63384; }
+        .filter-btns { display: flex; gap: 6px; white-space: nowrap; }
+        .btn-clear-all { padding: 8px 14px; border: 1.5px solid #adb5bd; border-radius: 6px; background: white; color: #555; cursor: pointer; font-size: 14px; transition: all 0.2s; }
+        .btn-clear-all:hover { background: #f8d7da; border-color: #dc3545; color: #dc3545; }
+        .btn-add-filter { padding: 8px 16px; border: none; border-radius: 6px; background: #0d6efd; color: white; cursor: pointer; font-size: 14px; font-weight: bold; transition: background 0.2s; }
+        .btn-add-filter:hover { background: #0b5ed7; }
         #status { text-align: center; color: #666; margin-bottom: 20px; font-weight: 500; }
 
         /* ── 剧情卡片 ── */
@@ -99,7 +117,19 @@
     </div>
 
     <div class="search-container">
-        <input type="text" id="searchInput" placeholder="输入日语或中文关键词开始搜索 (如：お嬢様)...">
+        <div id="filterChips"></div>
+        <div class="filter-row">
+            <input type="text" id="searchInput" placeholder="输入关键词，按回车或点击「增加筛选」...">
+            <div class="filter-opts">
+                <label class="fmode-lbl"><input type="radio" name="fmode" value="include" checked> 包含</label>
+                <label class="fmode-lbl"><input type="radio" name="fmode" value="exclude"> 不包含</label>
+                <button id="btnCase" class="toggle-btn" title="区分大小写">Aa</button>
+            </div>
+            <div class="filter-btns">
+                <button id="btnClear" class="btn-clear-all">消除全部</button>
+                <button id="btnAdd" class="btn-add-filter">增加筛选</button>
+            </div>
+        </div>
     </div>
 
     <div id="status">正在读取语料库，请稍候...</div>
@@ -109,6 +139,8 @@
     let corpusData = [];
     let currentMode = 'dialogue';
     let currentGame = 'all';
+    let filters = [];       // [{kw, mode:'include'|'exclude', cs:bool}]
+    let caseSensitive = false;
 
     fetch('data.json')
         .then(r => r.json())
@@ -152,6 +184,7 @@
     }
 
     function updateStatus() {
+        if (filters.length) return;
         let items = corpusData.filter(d => currentMode === 'skill' ? isSkillItem(d) : !isSkillItem(d));
         if (currentMode === 'skill' && currentGame !== 'all') {
             items = items.filter(d => getGame(d.source) === currentGame);
@@ -159,6 +192,50 @@
         document.getElementById('status').innerText =
             `当前【${currentMode === 'skill' ? '技能库' : '剧情库'}】共包含 ${items.length} 条数据。`;
     }
+
+    /* ── 筛选chip渲染 ── */
+    function renderChips() {
+        const container = document.getElementById('filterChips');
+        container.innerHTML = '';
+        filters.forEach((f, i) => {
+            const chip = document.createElement('span');
+            chip.className = `fchip ${f.mode}`;
+            const icon = f.mode === 'include' ? '🔍' : '🚫';
+            const csNote = f.cs ? ' <sup style="font-size:10px">Aa</sup>' : '';
+            chip.innerHTML = `${icon} <span class="fchip-label">"${f.kw}"${csNote}</span><span class="fchip-del" data-i="${i}">×</span>`;
+            chip.querySelector('.fchip-del').addEventListener('click', () => {
+                filters.splice(i, 1);
+                renderChips();
+                performSearch();
+            });
+            container.appendChild(chip);
+        });
+    }
+
+    function addFilter() {
+        const kw = document.getElementById('searchInput').value.trim();
+        if (!kw) return;
+        const mode = document.querySelector('input[name="fmode"]:checked').value;
+        filters.push({ kw, mode, cs: caseSensitive });
+        document.getElementById('searchInput').value = '';
+        renderChips();
+        performSearch();
+    }
+
+    document.getElementById('btnAdd').addEventListener('click', addFilter);
+    document.getElementById('searchInput').addEventListener('keydown', e => {
+        if (e.key === 'Enter') addFilter();
+    });
+    document.getElementById('btnClear').addEventListener('click', () => {
+        filters = [];
+        renderChips();
+        document.getElementById('results').innerHTML = '';
+        updateStatus();
+    });
+    document.getElementById('btnCase').addEventListener('click', () => {
+        caseSensitive = !caseSensitive;
+        document.getElementById('btnCase').classList.toggle('active', caseSensitive);
+    });
 
     /* ── Tab 切换 ── */
     document.querySelectorAll('.tab-btn').forEach(btn => {
@@ -351,15 +428,16 @@
 
     /* ── 主搜索逻辑 ── */
     function performSearch() {
-        const keyword = document.getElementById('searchInput').value.trim();
         const resultsDiv = document.getElementById('results');
         resultsDiv.innerHTML = '';
-        if (!keyword) { updateStatus(); return; }
+        if (!filters.length) { updateStatus(); return; }
 
-        const lower = keyword.toLowerCase();
-        const regex = keyword ? new RegExp(`(${escapeRegExp(keyword)})`, 'gi') : null;
+        // Build highlight regex from all include-filters (case-insensitive union)
+        const incFilters = filters.filter(f => f.mode === 'include');
+        const hlParts = incFilters.map(f => escapeRegExp(f.kw));
+        const regex = hlParts.length ? new RegExp(`(${hlParts.join('|')})`, 'gi') : null;
+
         const matched = [];
-
         for (let i = 0; i < corpusData.length; i++) {
             const d = corpusData[i];
             if (!d || !d.text) continue;
@@ -367,7 +445,16 @@
             if (currentMode === 'skill' && !skill) continue;
             if (currentMode === 'dialogue' && skill) continue;
             if (currentMode === 'skill' && currentGame !== 'all' && getGame(d.source) !== currentGame) continue;
-            if (d.text.toLowerCase().includes(lower)) {
+
+            let ok = true;
+            for (const f of filters) {
+                const hay    = f.cs ? d.text : d.text.toLowerCase();
+                const needle = f.cs ? f.kw  : f.kw.toLowerCase();
+                const found  = hay.includes(needle);
+                if (f.mode === 'include' && !found) { ok = false; break; }
+                if (f.mode === 'exclude' && found)  { ok = false; break; }
+            }
+            if (ok) {
                 matched.push(i);
                 if (matched.length >= 100) break;
             }
@@ -380,7 +467,6 @@
         document.getElementById('status').innerText = `为您找到相关结果 ${matched.length} 条 (最多展示100条)：`;
 
         const frag = document.createDocumentFragment();
-
         matched.forEach(idx => {
             const item = corpusData[idx];
 
@@ -392,7 +478,7 @@
             }
 
             // 剧情卡片
-            const highlightedText = item.text.replace(regex, '<span class="highlight">$1</span>');
+            const highlightedText = regex ? item.text.replace(regex, '<span class="highlight">$1</span>') : item.text;
             const prevHtml = (() => {
                 const t = buildContext(idx, -1, item.source);
                 return t ? `<details class="context-details"><summary>▶ 点击展开上文 (约500字)</summary><div class="context-box">${t}</div></details>` : '';
@@ -417,8 +503,6 @@
 
         resultsDiv.appendChild(frag);
     }
-
-    document.getElementById('searchInput').addEventListener('input', performSearch);
     </script>
 </body>
 </html>
