@@ -43,6 +43,37 @@
         .btn-clear-all:hover { background: #f8d7da; border-color: #dc3545; color: #dc3545; }
         .btn-add-filter { padding: 8px 16px; border: none; border-radius: 6px; background: #0d6efd; color: white; cursor: pointer; font-size: 14px; font-weight: bold; transition: background 0.2s; }
         .btn-add-filter:hover { background: #0b5ed7; }
+
+        /* ── 网址自动抓取面板 ── */
+        .scrape-panel { background: white; border: 1.5px solid #e1e4e8; border-radius: 10px; margin-bottom: 18px; padding: 0 16px; }
+        .scrape-panel summary { cursor: pointer; padding: 14px 0; font-weight: bold; color: #0d6efd; outline: none; user-select: none; }
+        .scrape-panel summary:hover { color: #0b5ed7; }
+        .scrape-hint { font-size: 12px; color: #888; margin: -4px 0 10px; line-height: 1.6; }
+        .scrape-body { padding: 4px 0 16px; }
+        .scrape-row { display: flex; gap: 8px; margin-bottom: 10px; }
+        #scrapeUrl { flex: 1; padding: 10px 14px; font-size: 14px; border: 2px solid #e1e4e8; border-radius: 8px; outline: none; }
+        #scrapeUrl:focus { border-color: #0d6efd; }
+        .btn-scrape { padding: 10px 20px; border: none; border-radius: 8px; background: #0d6efd; color: white; font-weight: bold; cursor: pointer; white-space: nowrap; }
+        .btn-scrape:hover { background: #0b5ed7; }
+        .btn-scrape:disabled { opacity: 0.6; cursor: not-allowed; }
+        .scrape-status { font-size: 13px; color: #666; margin-bottom: 8px; min-height: 18px; }
+        .scrape-preview { max-height: 320px; overflow-y: auto; border: 1px solid #f0f0f0; border-radius: 6px; }
+        .scrape-item { padding: 6px 10px; font-size: 13px; line-height: 1.5; border-bottom: 1px solid #f5f5f5; }
+        .scrape-item:last-child { border-bottom: none; }
+        .scrape-item label { display: flex; gap: 8px; align-items: flex-start; cursor: pointer; }
+        .scrape-actions { display: flex; gap: 10px; margin-top: 12px; }
+        .btn-scrape-merge, .btn-scrape-export { padding: 9px 16px; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; font-size: 13px; }
+        .btn-scrape-merge { background: #198754; color: white; }
+        .btn-scrape-merge:hover { background: #157347; }
+        .btn-scrape-export { background: #6c757d; color: white; }
+        .btn-scrape-export:hover { background: #5a6268; }
+        .scrape-settings { margin-top: 4px; }
+        .scrape-settings summary { padding: 6px 0; font-size: 12px; font-weight: normal; color: #888; }
+        .scrape-settings-body { display: flex; gap: 8px; padding: 6px 0 2px; }
+        #customProxyInput { flex: 1; padding: 7px 10px; font-size: 12px; border: 1.5px solid #e1e4e8; border-radius: 6px; outline: none; }
+        .btn-save-proxy { padding: 7px 14px; border: 1.5px solid #adb5bd; border-radius: 6px; background: white; color: #555; cursor: pointer; font-size: 12px; }
+        .btn-save-proxy:hover { background: #f0f0f0; }
+
         #status { text-align: center; color: #666; margin-bottom: 20px; font-weight: 500; }
 
         /* ── 剧情卡片 ── */
@@ -100,6 +131,34 @@
         <button class="tab-btn active" data-mode="dialogue">💬 剧情台词库</button>
         <button class="tab-btn" data-mode="skill">⚔️ 游戏技能库</button>
     </div>
+
+    <details class="scrape-panel">
+        <summary>🔗 粘贴网址自动抓取技能文本</summary>
+        <div class="scrape-body">
+            <div class="scrape-hint">
+                支持 kamigame.jp / gamerch.com / altema.jp / gamewith.jp / game-info.wiki 等已适配网站，其余网址将尝试通用表格识别兜底。
+                受浏览器跨域限制，抓取需经第三方公共代理转发，这些免费代理目前都不太稳定，可能较慢或偶尔失败，失败时换个代理或稍后重试即可。抓取结果仅在<b>本次浏览器会话</b>内可搜索，刷新页面即丢失；
+                如需永久收录进语料库，请点击「导出 JSONL」下载后发给维护者提交。
+            </div>
+            <div class="scrape-row">
+                <input type="text" id="scrapeUrl" placeholder="粘贴技能图鉴页面网址，例如 https://kamigame.jp/xxx/index.html">
+                <button id="btnScrape" class="btn-scrape">开始抓取</button>
+            </div>
+            <details class="scrape-settings">
+                <summary>⚙️ 自定义跨域代理（公共代理不稳定时可填，可选）</summary>
+                <div class="scrape-settings-body">
+                    <input type="text" id="customProxyInput" placeholder="例如自建的 Cloudflare Worker：https://your-worker.workers.dev/?{url}　（{url} 会被替换为目标网址，留空则自动尝试公共代理）">
+                    <button id="btnSaveProxy" class="btn-save-proxy">保存</button>
+                </div>
+            </details>
+            <div id="scrapeStatus" class="scrape-status"></div>
+            <div id="scrapePreview" class="scrape-preview"></div>
+            <div id="scrapeActions" class="scrape-actions" style="display:none;">
+                <button id="btnScrapeMerge" class="btn-scrape-merge">✅ 添加到本次会话技能库</button>
+                <button id="btnScrapeExport" class="btn-scrape-export">⬇️ 导出为 JSONL</button>
+            </div>
+        </div>
+    </details>
 
     <!-- 游戏分类筛选（仅技能库显示） -->
     <div id="gameFilter">
@@ -309,6 +368,213 @@
             updateStatus();
             performSearch();
         });
+    });
+
+    /* ══════════ 网址自动抓取技能文本 ══════════ */
+    const PROXY_STORAGE_KEY = 'kinoko_custom_proxy';
+    const customProxyInput = document.getElementById('customProxyInput');
+    customProxyInput.value = localStorage.getItem(PROXY_STORAGE_KEY) || '';
+    document.getElementById('btnSaveProxy').addEventListener('click', () => {
+        localStorage.setItem(PROXY_STORAGE_KEY, customProxyInput.value.trim());
+        const btn = document.getElementById('btnSaveProxy');
+        const old = btn.textContent;
+        btn.textContent = '✓ 已保存';
+        setTimeout(() => { btn.textContent = old; }, 1500);
+    });
+
+    function buildCustomProxyUrl(template, targetUrl) {
+        return template.includes('{url}')
+            ? template.replace('{url}', encodeURIComponent(targetUrl))
+            : template + encodeURIComponent(targetUrl);
+    }
+
+    function getProxyBuilders() {
+        const builders = [];
+        const custom = (localStorage.getItem(PROXY_STORAGE_KEY) || '').trim();
+        if (custom) builders.push(u => buildCustomProxyUrl(custom, u));
+        builders.push(u => `https://api.allorigins.win/raw?url=${encodeURIComponent(u)}`);
+        builders.push(u => `https://corsproxy.io/?url=${encodeURIComponent(u)}`);
+        return builders;
+    }
+
+    async function fetchHtmlViaProxy(url) {
+        let lastErr;
+        for (const build of getProxyBuilders()) {
+            try {
+                const resp = await fetch(build(url));
+                if (!resp.ok) throw new Error('HTTP ' + resp.status);
+                const html = await resp.text();
+                if (html && html.length > 200) return html;
+            } catch (e) { lastErr = e; }
+        }
+        throw lastErr || new Error('所有跨域代理均请求失败');
+    }
+
+    const KNOWN_SKILL_LABELS = new Set([
+        'スキル', 'スキル1', 'スキル2', 'スキル3', 'スキル4', 'スキル5',
+        '宝具', 'リーダースキル', 'リンクスキル', 'コマンドスキル', 'アビリティ',
+        'ブレイクスキル', '必殺技', '特技', 'わざ', 'EXアビリティ', 'パッシブスキル',
+        'アクティブスキル', '通常攻撃', '奥義', '秘奥義', '固有スキル', 'オートスキル',
+    ]);
+
+    function scrapeCleanText(t) { return (t || '').replace(/\s+/g, ' ').trim(); }
+
+    function extractPageName(doc) {
+        const h1 = doc.querySelector('h1');
+        if (!h1) return '';
+        let raw = scrapeCleanText(h1.textContent);
+        raw = raw.replace(/【[^】]*】\s*/g, '');
+        raw = raw.replace(/の(?:性能)?評価.*|の強化.*|のセリフ.*|の(?:台詞|ボイス).*|とは.*$|｜.*/, '').trim();
+        return raw;
+    }
+
+    function parseTablesGeneric(doc, pageName, strict) {
+        const items = [];
+        doc.querySelectorAll('table').forEach(table => {
+            table.querySelectorAll('tr').forEach(row => {
+                const cells = row.querySelectorAll('td, th');
+                if (cells.length < 2) return;
+                const label = scrapeCleanText(cells[0].textContent);
+                const desc = scrapeCleanText(cells[1].textContent);
+                if (!label || !desc || desc.length < 6) return;
+                if (strict) {
+                    if (!KNOWN_SKILL_LABELS.has(label)) return;
+                } else {
+                    if (label.length > 12 || desc.length < 10 || /^\d+$/.test(label)) return;
+                }
+                const prefix = pageName ? `【${pageName}：${label}】` : `【${label}】`;
+                items.push(`${prefix} 効果：${desc}`);
+            });
+        });
+        return items;
+    }
+
+    function parseGamewithSkillDiv(doc, pageName) {
+        const items = [];
+        doc.querySelectorAll('div[class*="skill_table"], div[class*="skill-table"]').forEach(block => {
+            const headerEl = block.querySelector('th, .skill-table-header, h3, h4');
+            const header = headerEl ? scrapeCleanText(headerEl.textContent) : '';
+            const descCells = block.querySelectorAll('td, p');
+            const desc = Array.from(descCells).map(c => scrapeCleanText(c.textContent)).filter(t => t.length >= 8).join(' ');
+            if (!header || !desc) return;
+            const prefix = pageName ? `【${pageName}：${header}】` : `【${header}】`;
+            items.push(`${prefix} 効果：${desc}`);
+        });
+        return items;
+    }
+
+    function parseDivHeaderBlocks(doc, pageName) {
+        const items = [];
+        doc.querySelectorAll('h2, h3, h4').forEach(h => {
+            const label = scrapeCleanText(h.textContent);
+            if (!label || label.length > 20) return;
+            let sib = h.nextElementSibling, hops = 0;
+            while (sib && hops < 3) {
+                const txt = scrapeCleanText(sib.textContent);
+                if (txt && txt.length >= 12) {
+                    items.push(`【${pageName ? pageName + '：' : ''}${label}】 効果：${txt}`);
+                    break;
+                }
+                sib = sib.nextElementSibling;
+                hops++;
+            }
+        });
+        return items;
+    }
+
+    function parseSkillsFromHtml(html, url) {
+        const doc = new DOMParser().parseFromString(html, 'text/html');
+        const pageName = extractPageName(doc);
+        let host = '';
+        try { host = new URL(url).hostname; } catch (e) {}
+
+        let raw = [];
+        if (host.includes('kamigame.jp') || host.includes('gamerch.com') ||
+            host.includes('game-info.wiki') || host.includes('altema.jp')) {
+            raw = parseTablesGeneric(doc, pageName, true);
+        } else if (host.includes('gamewith.jp')) {
+            raw = parseGamewithSkillDiv(doc, pageName);
+        }
+        if (raw.length === 0) raw = parseTablesGeneric(doc, pageName, false);
+        if (raw.length === 0) raw = parseDivHeaderBlocks(doc, pageName);
+
+        const seen = new Set();
+        const uniq = raw.filter(t => { if (seen.has(t)) return false; seen.add(t); return true; });
+
+        return uniq.map(text => ({
+            source: `${host || '未知网址'}（网页抓取）`,
+            text,
+            type: 'skill_desc',
+            meta: '',
+        }));
+    }
+
+    let scrapeResults = [];
+
+    async function runScrape() {
+        const url = document.getElementById('scrapeUrl').value.trim();
+        const statusEl = document.getElementById('scrapeStatus');
+        const previewEl = document.getElementById('scrapePreview');
+        const actionsEl = document.getElementById('scrapeActions');
+        previewEl.innerHTML = '';
+        actionsEl.style.display = 'none';
+        scrapeResults = [];
+
+        if (!url || !/^https?:\/\//i.test(url)) {
+            statusEl.textContent = '请输入有效的 http(s) 网址';
+            return;
+        }
+        statusEl.textContent = '⏳ 正在抓取，请稍候（跨域代理转发可能较慢）...';
+        document.getElementById('btnScrape').disabled = true;
+
+        try {
+            const html = await fetchHtmlViaProxy(url);
+            const items = parseSkillsFromHtml(html, url);
+            if (!items.length) {
+                statusEl.textContent = '⚠️ 未能识别出技能文本，该网页结构暂不支持。';
+                return;
+            }
+            scrapeResults = items;
+            statusEl.textContent = `✅ 识别出 ${items.length} 条技能文本（已自动去重），请人工核查后再添加/导出：`;
+            previewEl.innerHTML = items.map((it, i) =>
+                `<div class="scrape-item"><label><input type="checkbox" class="scrape-chk" data-i="${i}" checked> ${it.text}</label></div>`
+            ).join('');
+            actionsEl.style.display = 'flex';
+        } catch (e) {
+            statusEl.textContent = '❌ 抓取失败：' + (e.message || e) + '（可能是目标网站或代理拒绝访问，可尝试更换网址或稍后重试）';
+        } finally {
+            document.getElementById('btnScrape').disabled = false;
+        }
+    }
+
+    document.getElementById('btnScrape').addEventListener('click', runScrape);
+    document.getElementById('scrapeUrl').addEventListener('keydown', e => {
+        if (e.key === 'Enter') runScrape();
+    });
+
+    document.getElementById('btnScrapeMerge').addEventListener('click', () => {
+        const checked = Array.from(document.querySelectorAll('.scrape-chk:checked')).map(c => +c.dataset.i);
+        const toAdd = checked.map(i => scrapeResults[i]);
+        if (!toAdd.length) return;
+        corpusData = corpusData.concat(toAdd);
+        updateCounts();
+        updateStatus();
+        document.getElementById('scrapeStatus').textContent =
+            `✅ 已添加 ${toAdd.length} 条到本次会话的技能库（切到⚔️技能库标签搜索角色名/技能名即可查看；刷新页面后失效，需永久保存请用「导出 JSONL」）。`;
+    });
+
+    document.getElementById('btnScrapeExport').addEventListener('click', () => {
+        const checked = Array.from(document.querySelectorAll('.scrape-chk:checked')).map(c => +c.dataset.i);
+        const toExport = checked.map(i => scrapeResults[i]);
+        if (!toExport.length) return;
+        const lines = toExport.map(it => JSON.stringify({ source: it.source, type: it.type, text: it.text })).join('\n');
+        const blob = new Blob([lines], { type: 'application/jsonl' });
+        const a = document.createElement('a');
+        a.href = URL.createObjectURL(blob);
+        a.download = `scraped_skills_${Date.now()}.jsonl`;
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
     });
 
     /* ── 工具函数 ── */
