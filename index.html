@@ -62,7 +62,10 @@
         .scrape-item:last-child { border-bottom: none; }
         .scrape-item label { display: flex; gap: 8px; align-items: flex-start; cursor: pointer; }
         .scrape-actions { display: flex; gap: 10px; margin-top: 12px; }
-        .btn-scrape-merge, .btn-scrape-export { padding: 9px 16px; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; font-size: 13px; }
+        .btn-scrape-merge, .btn-scrape-export, .btn-scrape-save { padding: 9px 16px; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; font-size: 13px; }
+        .btn-scrape-save { background: #0d6efd; color: white; }
+        .btn-scrape-save:hover { background: #0b5ed7; }
+        .btn-scrape-save:disabled { background: #8fb8f6; cursor: not-allowed; }
         .btn-scrape-merge { background: #198754; color: white; }
         .btn-scrape-merge:hover { background: #157347; }
         .btn-scrape-export { background: #6c757d; color: white; }
@@ -70,9 +73,11 @@
         .scrape-settings { margin-top: 4px; }
         .scrape-settings summary { padding: 6px 0; font-size: 12px; font-weight: normal; color: #888; }
         .scrape-settings-body { display: flex; gap: 8px; padding: 6px 0 2px; }
-        #customProxyInput { flex: 1; padding: 7px 10px; font-size: 12px; border: 1.5px solid #e1e4e8; border-radius: 6px; outline: none; }
+        #customProxyInput, #ghTokenInput { flex: 1; padding: 7px 10px; font-size: 12px; border: 1.5px solid #e1e4e8; border-radius: 6px; outline: none; }
         .btn-save-proxy { padding: 7px 14px; border: 1.5px solid #adb5bd; border-radius: 6px; background: white; color: #555; cursor: pointer; font-size: 12px; }
         .btn-save-proxy:hover { background: #f0f0f0; }
+        .gh-token-hint { font-size: 11px; color: #999; line-height: 1.6; padding: 0 0 4px; }
+        .gh-token-hint code { background: #f0f0f0; padding: 1px 4px; border-radius: 3px; }
 
         #status { text-align: center; color: #666; margin-bottom: 20px; font-weight: 500; }
 
@@ -138,7 +143,8 @@
             <div class="scrape-hint">
                 支持 kamigame.jp / gamerch.com / altema.jp / gamewith.jp / game-info.wiki 等已适配网站，其余网址将尝试通用表格识别兜底。
                 受浏览器跨域限制，抓取需经第三方公共代理转发，这些免费代理目前都不太稳定，可能较慢或偶尔失败，失败时换个代理或稍后重试即可。抓取结果仅在<b>本次浏览器会话</b>内可搜索，刷新页面即丢失；
-                如需永久收录进语料库，请点击「导出 JSONL」下载后发给维护者提交。
+                如需永久收录进语料库，配置好下方「🔑 GitHub 自动保存设置」后点击「💾 保存到数据库」即可一键写入仓库（几分钟后自动重建生效）；
+                不想配置令牌的话，也可以点击「导出 JSONL」下载后发给维护者提交。
             </div>
             <div class="scrape-row">
                 <input type="text" id="scrapeUrl" placeholder="粘贴技能图鉴页面网址，例如 https://kamigame.jp/xxx/index.html">
@@ -151,9 +157,23 @@
                     <button id="btnSaveProxy" class="btn-save-proxy">保存</button>
                 </div>
             </details>
+            <details class="scrape-settings">
+                <summary>🔑 GitHub 自动保存设置（填入令牌后「保存到数据库」可直接写入仓库，无需再手动发文件）</summary>
+                <div class="scrape-settings-body">
+                    <input type="password" id="ghTokenInput" placeholder="GitHub Fine-grained Personal Access Token">
+                    <button id="btnSaveGhToken" class="btn-save-proxy">保存</button>
+                </div>
+                <div class="gh-token-hint">
+                    在 GitHub 网站「Settings → Developer settings → Fine-grained tokens → Generate new token」创建：
+                    Repository access 选「Only select repositories」并仅勾选本仓库；Permissions 只勾选
+                    <code>Contents: Read and write</code>，其余权限都不要给，万一泄露也只能改这一个仓库的文件。
+                    令牌只保存在你自己浏览器的本地存储里，不会发给任何第三方服务器。
+                </div>
+            </details>
             <div id="scrapeStatus" class="scrape-status"></div>
             <div id="scrapePreview" class="scrape-preview"></div>
             <div id="scrapeActions" class="scrape-actions" style="display:none;">
+                <button id="btnScrapeSave" class="btn-scrape-save">💾 保存到数据库</button>
                 <button id="btnScrapeMerge" class="btn-scrape-merge">✅ 添加到本次会话技能库</button>
                 <button id="btnScrapeExport" class="btn-scrape-export">⬇️ 导出为 JSONL</button>
             </div>
@@ -308,7 +328,7 @@
             chip.className = `fchip ${f.mode}`;
             const icon = f.mode === 'include' ? '🔍' : '🚫';
             const csNote = f.cs ? ' <sup style="font-size:10px">Aa</sup>' : '';
-            chip.innerHTML = `${icon} <span class="fchip-label">"${f.kw}"${csNote}</span><span class="fchip-del" data-i="${i}">×</span>`;
+            chip.innerHTML = `${icon} <span class="fchip-label">"${escapeHtml(f.kw)}"${csNote}</span><span class="fchip-del" data-i="${i}">×</span>`;
             chip.querySelector('.fchip-del').addEventListener('click', () => {
                 filters.splice(i, 1);
                 renderChips();
@@ -386,6 +406,62 @@
         return template.includes('{url}')
             ? template.replace('{url}', encodeURIComponent(targetUrl))
             : template + encodeURIComponent(targetUrl);
+    }
+
+    /* ── GitHub 自动保存（保存到数据库）── */
+    const GH_TOKEN_KEY = 'kinoko_gh_token';
+    const GH_OWNER = 'kinokotake';
+    const GH_REPO = 'Kinoko_Corpus';
+    const GH_SAVE_PATH = '⚔️技能/web_scraped_skills.jsonl';
+
+    const ghTokenInput = document.getElementById('ghTokenInput');
+    ghTokenInput.value = localStorage.getItem(GH_TOKEN_KEY) || '';
+    document.getElementById('btnSaveGhToken').addEventListener('click', () => {
+        localStorage.setItem(GH_TOKEN_KEY, ghTokenInput.value.trim());
+        const btn = document.getElementById('btnSaveGhToken');
+        const old = btn.textContent;
+        btn.textContent = '✓ 已保存';
+        setTimeout(() => { btn.textContent = old; }, 1500);
+    });
+
+    function b64EncodeUtf8(str) { return btoa(unescape(encodeURIComponent(str))); }
+    function b64DecodeUtf8(str) { return decodeURIComponent(escape(atob(str))); }
+
+    function ghContentsUrl(path) {
+        const encodedPath = path.split('/').map(encodeURIComponent).join('/');
+        return `https://api.github.com/repos/${GH_OWNER}/${GH_REPO}/contents/${encodedPath}`;
+    }
+
+    async function ghGetFile(path, token) {
+        const res = await fetch(ghContentsUrl(path), {
+            headers: { Authorization: `Bearer ${token}`, Accept: 'application/vnd.github+json' },
+        });
+        if (res.status === 404) return { sha: null, content: '' };
+        if (!res.ok) {
+            const err = await res.json().catch(() => ({}));
+            throw new Error(`读取仓库文件失败（${res.status}）：${err.message || res.statusText}`);
+        }
+        const data = await res.json();
+        return { sha: data.sha, content: b64DecodeUtf8(data.content.replace(/\n/g, '')) };
+    }
+
+    async function ghPutFile(path, content, message, sha, token) {
+        const body = { message, content: b64EncodeUtf8(content), branch: 'main' };
+        if (sha) body.sha = sha;
+        const res = await fetch(ghContentsUrl(path), {
+            method: 'PUT',
+            headers: {
+                Authorization: `Bearer ${token}`,
+                Accept: 'application/vnd.github+json',
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(body),
+        });
+        if (!res.ok) {
+            const err = await res.json().catch(() => ({}));
+            throw new Error(`写入仓库失败（${res.status}）：${err.message || res.statusText}`);
+        }
+        return res.json();
     }
 
     function getProxyBuilders() {
@@ -537,7 +613,7 @@
             scrapeResults = items;
             statusEl.textContent = `✅ 识别出 ${items.length} 条技能文本（已自动去重），请人工核查后再添加/导出：`;
             previewEl.innerHTML = items.map((it, i) =>
-                `<div class="scrape-item"><label><input type="checkbox" class="scrape-chk" data-i="${i}" checked> ${it.text}</label></div>`
+                `<div class="scrape-item"><label><input type="checkbox" class="scrape-chk" data-i="${i}" checked> ${escapeHtml(it.text)}</label></div>`
             ).join('');
             actionsEl.style.display = 'flex';
         } catch (e) {
@@ -577,12 +653,55 @@
         a.remove();
     });
 
+    document.getElementById('btnScrapeSave').addEventListener('click', async () => {
+        const statusEl = document.getElementById('scrapeStatus');
+        const token = (localStorage.getItem(GH_TOKEN_KEY) || '').trim();
+        if (!token) {
+            statusEl.textContent = '⚠️ 请先在上方「🔑 GitHub 自动保存设置」中填入并保存访问令牌。';
+            return;
+        }
+        const checked = Array.from(document.querySelectorAll('.scrape-chk:checked')).map(c => +c.dataset.i);
+        const toSave = checked.map(i => scrapeResults[i]);
+        if (!toSave.length) {
+            statusEl.textContent = '⚠️ 请至少勾选一条要保存的技能文本。';
+            return;
+        }
+
+        const btn = document.getElementById('btnScrapeSave');
+        btn.disabled = true;
+        const oldText = btn.textContent;
+        btn.textContent = '⏳ 正在保存...';
+        statusEl.textContent = '⏳ 正在写入数据库仓库，请稍候...';
+
+        try {
+            const { sha, content } = await ghGetFile(GH_SAVE_PATH, token);
+            const newLines = toSave.map(it => JSON.stringify({ source: it.source, type: it.type, text: it.text }));
+            const base = content && !content.endsWith('\n') ? content + '\n' : content;
+            const newContent = base + newLines.join('\n') + '\n';
+            await ghPutFile(GH_SAVE_PATH, newContent, `网页抓取：新增 ${toSave.length} 条技能文本`, sha, token);
+
+            corpusData = corpusData.concat(toSave);
+            updateCounts();
+            updateStatus();
+            statusEl.textContent = `✅ 已成功写入仓库 ${toSave.length} 条技能文本！数据库会在几分钟内自动重建，之后刷新页面即可永久检索到（本次会话已可立即搜索）。`;
+        } catch (e) {
+            statusEl.textContent = '❌ 保存失败：' + (e.message || e);
+        } finally {
+            btn.disabled = false;
+            btn.textContent = oldText;
+        }
+    });
+
     /* ── 工具函数 ── */
     function escapeRegExp(s) { return s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'); }
 
+    const HTML_ESCAPE_MAP = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' };
+    function escapeHtml(s) { return (s || '').replace(/[&<>"']/g, c => HTML_ESCAPE_MAP[c]); }
+
     function hl(str, regex) {
-        if (!str || !regex) return str || '';
-        return str.replace(regex, '<span class="highlight">$1</span>');
+        const esc = escapeHtml(str);
+        if (!regex) return esc;
+        return esc.replace(regex, '<span class="highlight">$1</span>');
     }
 
     /* 将 ※ 换成换行+注记 */
@@ -680,25 +799,25 @@
             ? `<span class="skill-info-label">${hl(p.charName, regex)}</span>` : '';
 
         const nameHtml = `<span class="skill-name">【${hl(p.skillName, regex)}】</span>`;
-        const typeBadge = p.type ? `<span class="skill-type-badge">${p.type}</span>` : '';
-        const spBadge = p.sp ? `<span class="sp-badge">SP: ${p.sp}</span>` : '';
+        const typeBadge = p.type ? `<span class="skill-type-badge">${escapeHtml(p.type)}</span>` : '';
+        const spBadge = p.sp ? `<span class="sp-badge">SP: ${escapeHtml(p.sp)}</span>` : '';
 
         let bodyHtml = '';
 
         if (p.game === 'feh') {
-            bodyHtml = `<div class="skill-effect-row">${hl(fmtEffect(p.info), regex)}</div>`;
+            bodyHtml = `<div class="skill-effect-row">${fmtEffect(hl(p.info, regex))}</div>`;
         } else if (p.game === 'pka') {
             const lvKeys = Object.keys(p.levels).sort((a, b) => +a - +b);
             if (lvKeys.length > 0) {
                 const rows = lvKeys.map(lv =>
                     `<div class="skill-level-row">
                         <span class="skill-lv-label">Lv${lv}</span>
-                        <span class="skill-lv-effect">${hl(fmtEffect(p.levels[lv]), regex)}</span>
+                        <span class="skill-lv-effect">${fmtEffect(hl(p.levels[lv], regex))}</span>
                     </div>`
                 ).join('');
                 bodyHtml = `<div class="skill-levels">${rows}</div>`;
             } else if (p.effect) {
-                bodyHtml = `<div class="skill-effect-row">${hl(fmtEffect(p.effect), regex)}</div>`;
+                bodyHtml = `<div class="skill-effect-row">${fmtEffect(hl(p.effect, regex))}</div>`;
                 if (p.target) bodyHtml += `<div class="skill-info-row"><span class="skill-info-label">対象</span><span>${hl(p.target, regex)}</span></div>`;
             }
             if (p.tags.length > 0) {
@@ -707,7 +826,7 @@
             }
         } else {
             // Generic: effect text + info fields
-            if (p.effect) bodyHtml = `<div class="skill-effect-row">${hl(fmtEffect(p.effect), regex)}</div>`;
+            if (p.effect) bodyHtml = `<div class="skill-effect-row">${fmtEffect(hl(p.effect, regex))}</div>`;
             if (p.infoFields && p.infoFields.length) {
                 const fields = p.infoFields.map(f =>
                     `<span class="skill-info-label">${f.label}</span><span>${hl(f.value, regex)}</span>`
@@ -736,7 +855,7 @@
             if (chars >= 500) break;
             i += dir;
         }
-        return lines.length ? lines.map(l => `<div class="context-line">${l}</div>`).join('') : '';
+        return lines.length ? lines.map(l => `<div class="context-line">${escapeHtml(l)}</div>`).join('') : '';
     }
 
     /* ── 主搜索逻辑 ── */
@@ -791,7 +910,7 @@
             }
 
             // 剧情卡片
-            const highlightedText = regex ? item.text.replace(regex, '<span class="highlight">$1</span>') : item.text;
+            const highlightedText = hl(item.text, regex);
 
             const isFgoVoice = item.source && item.source.includes('fgo_voice');
             let metaTag = '', prevHtml = '', nextHtml = '';
@@ -802,25 +921,25 @@
                 const servant = vm ? vm[1] : '';
                 const situation = vm ? vm[2] : '';
                 const category = getVoiceCategory(situation);
-                metaTag = category ? `<span class="meta-tag">🏷️ ${category}</span>` : '';
+                metaTag = category ? `<span class="meta-tag">🏷️ ${escapeHtml(category)}</span>` : '';
 
                 // 上下文：同一从者+同一场景类别的其他台词
                 const relIdxs = (fgoVoiceIdx[servant] && fgoVoiceIdx[servant][category]) || [];
                 const pos = relIdxs.indexOf(idx);
                 if (pos > 0) {
                     const prevLines = relIdxs.slice(Math.max(0, pos - 5), pos)
-                        .map(i => `<div class="context-line">${corpusData[i].text}</div>`).join('');
+                        .map(i => `<div class="context-line">${escapeHtml(corpusData[i].text)}</div>`).join('');
                     const cnt = Math.min(pos, 5);
                     prevHtml = `<details class="context-details"><summary>▶ 点击展开上文 (${cnt}条同类台词)</summary><div class="context-box">${prevLines}</div></details>`;
                 }
                 if (pos >= 0 && pos < relIdxs.length - 1) {
                     const nextLines = relIdxs.slice(pos + 1, pos + 6)
-                        .map(i => `<div class="context-line">${corpusData[i].text}</div>`).join('');
+                        .map(i => `<div class="context-line">${escapeHtml(corpusData[i].text)}</div>`).join('');
                     const cnt = Math.min(relIdxs.length - 1 - pos, 5);
                     nextHtml = `<details class="context-details"><summary>▶ 点击展开下文 (${cnt}条同类台词)</summary><div class="context-box">${nextLines}</div></details>`;
                 }
             } else {
-                metaTag = item.meta ? `<span class="meta-tag">🏷️ ${item.meta}</span>` : '';
+                metaTag = item.meta ? `<span class="meta-tag">🏷️ ${escapeHtml(item.meta)}</span>` : '';
                 prevHtml = (() => {
                     const t = buildContext(idx, -1, item.source);
                     return t ? `<details class="context-details"><summary>▶ 点击展开上文 (约500字)</summary><div class="context-box">${t}</div></details>` : '';
@@ -835,7 +954,7 @@
             div.className = 'result-item';
             div.innerHTML = `
                 <div style="margin-bottom:12px;">
-                    <span class="source-tag">📂 ${item.source}</span>${metaTag}
+                    <span class="source-tag">📂 ${escapeHtml(item.source)}</span>${metaTag}
                 </div>
                 ${prevHtml}
                 <div class="matched-line">🎯 ${highlightedText}</div>
