@@ -267,7 +267,7 @@
         });
     }
 
-    fetch('data.json')
+    fetch('data.json?v=' + Date.now())
         .then(r => r.json())
         .then(data => {
             corpusData = data;
