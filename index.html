@@ -145,9 +145,9 @@
                 <button id="btnScrape" class="btn-scrape">开始抓取</button>
             </div>
             <details class="scrape-settings">
-                <summary>⚙️ 自定义跨域代理（公共代理不稳定时可填，可选）</summary>
+                <summary>⚙️ 自定义跨域代理（推荐自建，比公共代理稳定很多，部署教程见仓库 cloudflare-worker/cors-proxy.js）</summary>
                 <div class="scrape-settings-body">
-                    <input type="text" id="customProxyInput" placeholder="例如自建的 Cloudflare Worker：https://your-worker.workers.dev/?{url}　（{url} 会被替换为目标网址，留空则自动尝试公共代理）">
+                    <input type="text" id="customProxyInput" placeholder="自建的 Cloudflare Worker 地址，例如：https://kinoko-cors.xxx.workers.dev/?url={url}　（留空则自动尝试公共代理，但目前公共代理都不太稳定）">
                     <button id="btnSaveProxy" class="btn-save-proxy">保存</button>
                 </div>
             </details>
