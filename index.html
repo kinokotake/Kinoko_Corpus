@@ -540,12 +540,16 @@
         const h1 = doc.querySelector('h1');
         if (!h1) return '';
         let raw = scrapeCleanText(h1.textContent);
-        // H1が【ゲーム名】コンテンツ名 の形式（game8.jp等）→ 先頭括弧をゲーム識別子として使う
-        const prefixBracket = raw.match(/^【([^】]{2,20})】/);
-        if (prefixBracket) return prefixBracket[1];
         raw = raw.replace(/【[^】]*】\s*/g, '');
         raw = raw.replace(/の(?:性能)?評価.*|の強化.*|のセリフ.*|の(?:台詞|ボイス).*|とは.*$|｜.*/, '').trim();
         return raw;
+    }
+
+    /* H1 先頭の【ゲーム名】をゲーム識別子として取り出す（game8.jp専用） */
+    function extractGame8GameName(doc) {
+        const h1 = doc.querySelector('h1');
+        const raw = h1 ? scrapeCleanText(h1.textContent) : '';
+        return (raw.match(/^【([^】]{2,20})】/) || [])[1] || extractPageName(doc);
     }
 
     /* game8.jp 専用：6列形式の必殺技テーブルを解析 */
@@ -556,7 +560,7 @@
                 const cells = Array.from(row.querySelectorAll('td'));
                 if (cells.length < 5) return;
                 const name = scrapeCleanText(cells[0].textContent);
-                const attr = cells[1].querySelector('img')?.alt || scrapeCleanText(cells[1].textContent);
+                const attr = (cells[1].querySelector('img')?.alt || scrapeCleanText(cells[1].textContent)).replace(/画像$/, '').trim();
                 const tp   = scrapeCleanText(cells[2].textContent);
                 const crit = scrapeCleanText(cells[3].textContent);
                 const eff  = scrapeCleanText(cells[4].textContent);
@@ -629,6 +633,75 @@
         return items;
     }
 
+    /* gamewith.jp カードリストページを検出し、カードのURL+名前リストを返す */
+    function detectGamewithCardList(doc, baseUrl) {
+        const seen = new Set();
+        const cards = [];
+        doc.querySelectorAll('a[href]').forEach(a => {
+            const href = a.getAttribute('href');
+            if (!/\/article\/show\/\d+/.test(href)) return;
+            const fullUrl = href.startsWith('http') ? href : new URL(href, baseUrl).href;
+            if (seen.has(fullUrl)) return;
+            seen.add(fullUrl);
+            // カード名: img の alt 優先、なければリンクテキスト
+            const name = scrapeCleanText(a.querySelector('img')?.alt || a.textContent);
+            if (name && name.length >= 2 && name.length <= 30) cards.push({ name, url: fullUrl });
+        });
+        return cards.length >= 5 ? cards : null; // 5件以上あればリストページとみなす
+    }
+
+    /* gamewith.jp シャドバカード詳細ページから進化前/進化後の効果テキストを抽出 */
+    function parseGamewithShadowverseCard(doc, cardName) {
+        const items = [];
+        const seen = new Set();
+
+        // DOM中で "進化前" / "進化後" のみを含む要素を見つけ、直後の効果テキストを取得
+        doc.querySelectorAll('*').forEach(el => {
+            const label = scrapeCleanText(el.textContent);
+            if (label !== '進化前' && label !== '進化後') return;
+            const key = label + ':' + (el.parentElement?.className || '') + ':' + (el.tagName);
+            if (seen.has(key)) return;
+            seen.add(key);
+
+            // nextElementSiblingを最大15ホップ辿って効果テキストを探す
+            let node = el.nextElementSibling;
+            for (let hops = 0; node && hops < 15; hops++) {
+                const t = scrapeCleanText(node.textContent);
+                // ステータス行（数字+スラッシュ）・空・別セクションはスキップ
+                if (!t || /^[\d\s\/]+$/.test(t)) { node = node.nextElementSibling; continue; }
+                if (t === '進化前' || t === '進化後') break; // 次セクションに到達
+                if (t !== '効果なし') {
+                    items.push(`【${cardName}：${label}】 効果：${t}`);
+                }
+                break;
+            }
+        });
+
+        // 上記で取れなかった場合: ページ全体のテキストから進化前後セクションを正規表現で抽出
+        if (!items.length) {
+            const lines = [];
+            const walk = (el) => {
+                for (const child of el.childNodes) {
+                    if (child.nodeType === 3) { const t = child.textContent.trim(); if (t) lines.push(t); }
+                    else if (child.nodeType === 1 && !['SCRIPT','STYLE','NOSCRIPT'].includes(child.tagName)) walk(child);
+                }
+            };
+            if (doc.body) walk(doc.body);
+            const text = lines.join('\n');
+            const m = text.matchAll(/進化(前|後)\n([\s\S]*?)(?=進化(?:前|後)|$)/g);
+            for (const match of m) {
+                const evoLabel = `進化${match[1]}`;
+                const block = match[2].trim().split('\n')
+                    .map(l => l.trim()).filter(l => l && !/^[\d\/]+$/.test(l) && l !== '効果なし').join(' ');
+                if (block) items.push(`【${cardName}：${evoLabel}】 効果：${block}`);
+            }
+        }
+
+        // 重複除去
+        const dedup = new Set();
+        return items.filter(it => { if (dedup.has(it)) return false; dedup.add(it); return true; });
+    }
+
     function parseSkillsFromHtml(html, url) {
         const doc = new DOMParser().parseFromString(html, 'text/html');
         const pageName = extractPageName(doc);
@@ -642,7 +715,7 @@
         } else if (host.includes('gamewith.jp')) {
             raw = parseGamewithSkillDiv(doc, pageName);
         } else if (host.includes('game8.jp')) {
-            raw = parseGame8SkillTable(doc, pageName);
+            raw = parseGame8SkillTable(doc, extractGame8GameName(doc));
         }
         if (raw.length === 0) raw = parseTablesGeneric(doc, pageName, false);
         if (raw.length === 0) raw = parseDivHeaderBlocks(doc, pageName);
@@ -678,14 +751,47 @@
 
         try {
             const html = await fetchHtmlViaProxy(url);
-            const items = parseSkillsFromHtml(html, url);
-            if (!items.length) {
-                statusEl.textContent = '⚠️ 未能识别出技能文本，该网页结构暂不支持。';
-                return;
+            const doc = new DOMParser().parseFromString(html, 'text/html');
+            let host = '';
+            try { host = new URL(url).hostname; } catch (e) {}
+
+            // カードリストページ検出（gamewith.jp等）→ 各カード詳細ページを順次取得
+            const cardList = host.includes('gamewith.jp') ? detectGamewithCardList(doc, url) : null;
+            if (cardList) {
+                const BATCH_LIMIT = 200;
+                const targets = cardList.slice(0, BATCH_LIMIT);
+                const total = targets.length;
+                statusEl.textContent = `検出：カードリスト ${cardList.length} 件（最大${BATCH_LIMIT}件まで順次抓取中）`;
+                const allItems = [];
+                for (let i = 0; i < targets.length; i++) {
+                    const { name, url: cardUrl } = targets[i];
+                    statusEl.textContent = `⏳ 抓取中 ${i + 1}/${total}：${name}`;
+                    try {
+                        const cardHtml = await fetchHtmlViaProxy(cardUrl);
+                        const cardDoc = new DOMParser().parseFromString(cardHtml, 'text/html');
+                        const cardName = extractPageName(cardDoc) || name;
+                        const cardItems = parseGamewithShadowverseCard(cardDoc, cardName);
+                        cardItems.forEach(text => allItems.push({ source: `${host}（网页抓取）`, text, type: 'skill_desc', meta: '' }));
+                    } catch (_) { /* 個別カード取得失敗はスキップ */ }
+                }
+                if (!allItems.length) {
+                    statusEl.textContent = '⚠️ カード詳細ページから効果テキストを取得できませんでした。';
+                    return;
+                }
+                const seen = new Set();
+                scrapeResults = allItems.filter(it => { if (seen.has(it.text)) return false; seen.add(it.text); return true; });
+                statusEl.textContent = `✅ 识别出 ${scrapeResults.length} 条技能文本（共抓取 ${total} 张卡牌），请人工核查后再添加/导出：`;
+            } else {
+                const items = parseSkillsFromHtml(html, url);
+                if (!items.length) {
+                    statusEl.textContent = '⚠️ 未能识别出技能文本，该网页结构暂不支持。';
+                    return;
+                }
+                scrapeResults = items;
+                statusEl.textContent = `✅ 识别出 ${items.length} 条技能文本（已自动去重），请人工核查后再添加/导出：`;
             }
-            scrapeResults = items;
-            statusEl.textContent = `✅ 识别出 ${items.length} 条技能文本（已自动去重），请人工核查后再添加/导出：`;
-            previewEl.innerHTML = items.map((it, i) =>
+
+            previewEl.innerHTML = scrapeResults.map((it, i) =>
                 `<div class="scrape-item"><label><input type="checkbox" class="scrape-chk" data-i="${i}" checked> ${escapeHtml(it.text)}</label></div>`
             ).join('');
             actionsEl.style.display = 'flex';
