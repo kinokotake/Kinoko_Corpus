@@ -540,9 +540,39 @@
         const h1 = doc.querySelector('h1');
         if (!h1) return '';
         let raw = scrapeCleanText(h1.textContent);
+        // H1が【ゲーム名】コンテンツ名 の形式（game8.jp等）→ 先頭括弧をゲーム識別子として使う
+        const prefixBracket = raw.match(/^【([^】]{2,20})】/);
+        if (prefixBracket) return prefixBracket[1];
         raw = raw.replace(/【[^】]*】\s*/g, '');
         raw = raw.replace(/の(?:性能)?評価.*|の強化.*|のセリフ.*|の(?:台詞|ボイス).*|とは.*$|｜.*/, '').trim();
         return raw;
+    }
+
+    /* game8.jp 専用：6列形式の必殺技テーブルを解析 */
+    function parseGame8SkillTable(doc, pageName) {
+        const items = [];
+        doc.querySelectorAll('table').forEach(table => {
+            Array.from(table.querySelectorAll('tr')).forEach(row => {
+                const cells = Array.from(row.querySelectorAll('td'));
+                if (cells.length < 5) return;
+                const name = scrapeCleanText(cells[0].textContent);
+                const attr = cells[1].querySelector('img')?.alt || scrapeCleanText(cells[1].textContent);
+                const tp   = scrapeCleanText(cells[2].textContent);
+                const crit = scrapeCleanText(cells[3].textContent);
+                const eff  = scrapeCleanText(cells[4].textContent);
+                const type = cells[5] ? scrapeCleanText(cells[5].textContent) : '';
+                // TP が純粋な数字でなければヘッダー行や無効行としてスキップ
+                if (!name || !eff || name.length > 20 || !/^\d+$/.test(tp)) return;
+                const parts = [];
+                if (type) parts.push(`種別：${type}`);
+                if (attr) parts.push(`属性：${attr}`);
+                parts.push(`TP：${tp} クリ：${crit}`);
+                parts.push(`効果：${eff}`);
+                const prefix = pageName ? `【${pageName}：${name}】` : `【${name}】`;
+                items.push(`${prefix} ${parts.join(' ')}`);
+            });
+        });
+        return items;
     }
 
     function parseTablesGeneric(doc, pageName, strict) {
@@ -611,6 +641,8 @@
             raw = parseTablesGeneric(doc, pageName, true);
         } else if (host.includes('gamewith.jp')) {
             raw = parseGamewithSkillDiv(doc, pageName);
+        } else if (host.includes('game8.jp')) {
+            raw = parseGame8SkillTable(doc, pageName);
         }
         if (raw.length === 0) raw = parseTablesGeneric(doc, pageName, false);
         if (raw.length === 0) raw = parseDivHeaderBlocks(doc, pageName);
