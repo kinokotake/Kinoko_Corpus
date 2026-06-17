@@ -905,7 +905,8 @@
     function performSearch() {
         const resultsDiv = document.getElementById('results');
         resultsDiv.innerHTML = '';
-        if (!filters.length) { updateStatus(); return; }
+        // 无关键词时：仅在技能库且已选定具体分类时才展示该分类全部条目；其余情况直接返回
+        if (!filters.length && (currentMode !== 'skill' || currentGame === 'all')) { updateStatus(); return; }
 
         // Build highlight regex from all include-filters (case-insensitive union)
         const incFilters = filters.filter(f => f.mode === 'include');
@@ -936,10 +937,12 @@
         }
 
         if (!matched.length) {
-            document.getElementById('status').innerText = '没有找到相关结果 😭';
+            document.getElementById('status').innerText = filters.length ? '没有找到相关结果 😭' : '当前分类暂无数据。';
             return;
         }
-        document.getElementById('status').innerText = `为您找到相关结果 ${matched.length} 条 (最多展示100条)：`;
+        document.getElementById('status').innerText = filters.length
+            ? `为您找到相关结果 ${matched.length} 条 (最多展示100条)：`
+            : `当前分类共 ${matched.length} 条（最多展示100条）：`;
 
         const frag = document.createDocumentFragment();
         matched.forEach(idx => {
