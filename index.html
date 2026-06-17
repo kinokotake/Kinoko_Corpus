@@ -700,7 +700,7 @@
                 .filter(l => l && l !== '効果なし' && !/^[\d\/\s　]+$/.test(l) && !CARD_META_RE.test(l) && l.length >= 3);
 
             if (effectLines.length > 0) {
-                items.push(`【${cardName}：${label}】 効果：${effectLines.join(' ')}`);
+                items.push(`【シャドウバース：${cardName} ${label}】 効果：${effectLines.join(' ')}`);
             }
         }
 
