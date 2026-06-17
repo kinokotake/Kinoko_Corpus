@@ -765,20 +765,27 @@
             const cardList = host.includes('gamewith.jp') ? detectGamewithCardList(doc, url) : null;
             if (cardList) {
                 const BATCH_LIMIT = 200;
+                const CONCURRENCY = 8;
                 const targets = cardList.slice(0, BATCH_LIMIT);
                 const total = targets.length;
-                statusEl.textContent = `検出：カードリスト ${cardList.length} 件（最大${BATCH_LIMIT}件まで順次抓取中）`;
+                statusEl.textContent = `検出：カードリスト ${cardList.length} 件（最大${BATCH_LIMIT}件まで並列抓取中）`;
                 const allItems = [];
-                for (let i = 0; i < targets.length; i++) {
-                    const { url: cardUrl } = targets[i];
-                    statusEl.textContent = `⏳ 抓取中 ${i + 1}/${total}`;
-                    try {
-                        const cardHtml = await fetchHtmlViaProxy(cardUrl);
-                        const cardDoc = new DOMParser().parseFromString(cardHtml, 'text/html');
-                        const cardName = extractPageName(cardDoc) || `カード${i + 1}`;
-                        const cardItems = parseGamewithShadowverseCard(cardDoc, cardName);
-                        cardItems.forEach(text => allItems.push({ source: `${host}（网页抓取）`, text, type: 'skill_desc', meta: '' }));
-                    } catch (_) { /* 個別カード取得失敗はスキップ */ }
+                for (let i = 0; i < targets.length; i += CONCURRENCY) {
+                    const batchEnd = Math.min(i + CONCURRENCY, total);
+                    statusEl.textContent = `⏳ 抓取中 ${i + 1}–${batchEnd} / ${total}`;
+                    const batchResults = await Promise.allSettled(
+                        targets.slice(i, batchEnd).map(async ({ url: cardUrl }) => {
+                            const cardHtml = await fetchHtmlViaProxy(cardUrl);
+                            const cardDoc = new DOMParser().parseFromString(cardHtml, 'text/html');
+                            const cardName = extractPageName(cardDoc) || cardUrl;
+                            return parseGamewithShadowverseCard(cardDoc, cardName);
+                        })
+                    );
+                    batchResults.forEach(r => {
+                        if (r.status === 'fulfilled') {
+                            r.value.forEach(text => allItems.push({ source: `${host}（网页抓取）`, text, type: 'skill_desc', meta: '' }));
+                        }
+                    });
                 }
                 if (!allItems.length) {
                     statusEl.textContent = '⚠️ 未能从卡牌详情页提取效果文本（页面内容可能需要JS渲染）。请直接粘贴单张卡牌的URL重试。';
