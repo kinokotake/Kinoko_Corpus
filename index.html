@@ -636,6 +636,11 @@
     /* gamewith.jp カードリストページを検出し、カードURLリストを返す
        カード名は各詳細ページのH1から取得するため、ここでは URL のみ収集 */
     function detectGamewithCardList(doc, baseUrl) {
+        // H1に「一覧」を含むページのみカードリストとして判定（詳細ページは除外）
+        const h1 = doc.querySelector('h1');
+        const h1Text = h1 ? scrapeCleanText(h1.textContent) : '';
+        if (!h1Text.includes('一覧')) return null;
+
         let selfPath = '';
         try { selfPath = new URL(baseUrl).pathname; } catch (_) {}
         const seen = new Set();
@@ -648,14 +653,14 @@
                 seen.add(fullUrl);
             } catch (_) {}
         });
-        return seen.size >= 30 ? Array.from(seen).map(url => ({ name: '', url })) : null;
+        return seen.size >= 5 ? Array.from(seen).map(url => ({ name: '', url })) : null;
     }
 
     /* gamewith.jp シャドバカード詳細ページから進化前/進化後の効果テキストを抽出 */
     function parseGamewithShadowverseCard(doc, cardName) {
         const items = [];
         const seen = new Set();
-        const CARD_META_RE = /声優|レアリティ|クラス|タイプ|入手方法|カードパック|収録パック/;
+        const CARD_META_RE = /声優|レアリティ|入手方法|カードパック|収録パック/;
 
         // DOM中で "進化前" / "進化後" のみを含む要素を見つけ、直後の効果テキストを取得
         doc.querySelectorAll('*').forEach(el => {
