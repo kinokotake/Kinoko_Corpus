@@ -658,53 +658,52 @@
 
     /* gamewith.jp シャドバカード詳細ページから進化前/進化後の効果テキストを抽出 */
     function parseGamewithShadowverseCard(doc, cardName) {
-        const items = [];
-        const seen = new Set();
         const CARD_META_RE = /声優|レアリティ|入手方法|カードパック|収録パック/;
 
-        // DOM中で "進化前" / "進化後" のみを含む要素を見つけ、直後の効果テキストを取得
-        doc.querySelectorAll('*').forEach(el => {
-            const label = scrapeCleanText(el.textContent);
-            if (label !== '進化前' && label !== '進化後') return;
-            const key = label + ':' + (el.parentElement?.className || '') + ':' + (el.tagName);
-            if (seen.has(key)) return;
-            seen.add(key);
-
-            // nextElementSiblingを最大15ホップ辿って効果テキストを探す
-            let node = el.nextElementSibling;
-            for (let hops = 0; node && hops < 15; hops++) {
-                const t = scrapeCleanText(node.textContent);
-                // ステータス行（数字+スラッシュ）・空・カードメタ情報はスキップ
-                if (!t || /^[\d\s\/]+$/.test(t) || CARD_META_RE.test(t)) { node = node.nextElementSibling; continue; }
-                if (t === '進化前' || t === '進化後') break; // 次セクションに到達
-                if (t !== '効果なし') {
-                    items.push(`【${cardName}：${label}】 効果：${t}`);
+        // テキストノードを文書順に収集
+        const lines = [];
+        const walk = (el) => {
+            for (const child of el.childNodes) {
+                if (child.nodeType === 3) {
+                    const t = child.textContent.trim();
+                    if (t) lines.push(t);
+                } else if (child.nodeType === 1 && !['SCRIPT', 'STYLE', 'NOSCRIPT'].includes(child.tagName)) {
+                    walk(child);
                 }
-                break;
             }
-        });
+        };
+        if (doc.body) walk(doc.body);
 
-        // 上記で取れなかった場合: ページ全体のテキストから進化前後セクションを正規表現で抽出
-        if (!items.length) {
-            const lines = [];
-            const walk = (el) => {
-                for (const child of el.childNodes) {
-                    if (child.nodeType === 3) { const t = child.textContent.trim(); if (t) lines.push(t); }
-                    else if (child.nodeType === 1 && !['SCRIPT','STYLE','NOSCRIPT'].includes(child.tagName)) walk(child);
-                }
-            };
-            if (doc.body) walk(doc.body);
-            const text = lines.join('\n');
-            const m = text.matchAll(/進化(前|後)\n([\s\S]*?)(?=進化(?:前|後)|$)/g);
-            for (const match of m) {
-                const evoLabel = `進化${match[1]}`;
-                const block = match[2].trim().split('\n')
-                    .map(l => l.trim()).filter(l => l && !/^[\d\/]+$/.test(l) && l !== '効果なし' && !CARD_META_RE.test(l)).join(' ');
-                if (block) items.push(`【${cardName}：${evoLabel}】 効果：${block}`);
+        // 進化前/進化後 の全出現位置を収集
+        const pos = { '進化前': [], '進化後': [] };
+        lines.forEach((l, i) => { if (l === '進化前' || l === '進化後') pos[l].push(i); });
+
+        // 全マーカー位置を昇順でまとめる
+        const allMarkers = [...pos['進化前'], ...pos['進化後']].sort((a, b) => a - b);
+
+        const items = [];
+
+        for (const label of ['進化前', '進化後']) {
+            const arr = pos[label];
+            if (!arr.length) continue;
+
+            // タブボタン(1回目)とセクション見出し(2回目)がある場合は2回目を使用
+            const markerIdx = arr[1] ?? arr[0];
+            const startIdx = markerIdx + 1;
+
+            // 次のマーカー位置まで、なければ最大10行
+            const nextMarker = allMarkers.find(p => p > markerIdx);
+            const endIdx = nextMarker !== undefined ? nextMarker : Math.min(startIdx + 10, lines.length);
+
+            const effectLines = lines.slice(startIdx, endIdx)
+                .map(l => l.trim())
+                .filter(l => l && l !== '効果なし' && !/^[\d\/\s　]+$/.test(l) && !CARD_META_RE.test(l) && l.length >= 3);
+
+            if (effectLines.length > 0) {
+                items.push(`【${cardName}：${label}】 効果：${effectLines.join(' ')}`);
             }
         }
 
-        // 重複除去
         const dedup = new Set();
         return items.filter(it => { if (dedup.has(it)) return false; dedup.add(it); return true; });
     }
