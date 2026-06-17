@@ -648,13 +648,14 @@
                 seen.add(fullUrl);
             } catch (_) {}
         });
-        return seen.size >= 3 ? Array.from(seen).map(url => ({ name: '', url })) : null;
+        return seen.size >= 30 ? Array.from(seen).map(url => ({ name: '', url })) : null;
     }
 
     /* gamewith.jp シャドバカード詳細ページから進化前/進化後の効果テキストを抽出 */
     function parseGamewithShadowverseCard(doc, cardName) {
         const items = [];
         const seen = new Set();
+        const CARD_META_RE = /声優|レアリティ|クラス|タイプ|入手方法|カードパック|収録パック/;
 
         // DOM中で "進化前" / "進化後" のみを含む要素を見つけ、直後の効果テキストを取得
         doc.querySelectorAll('*').forEach(el => {
@@ -668,8 +669,8 @@
             let node = el.nextElementSibling;
             for (let hops = 0; node && hops < 15; hops++) {
                 const t = scrapeCleanText(node.textContent);
-                // ステータス行（数字+スラッシュ）・空・別セクションはスキップ
-                if (!t || /^[\d\s\/]+$/.test(t)) { node = node.nextElementSibling; continue; }
+                // ステータス行（数字+スラッシュ）・空・カードメタ情報はスキップ
+                if (!t || /^[\d\s\/]+$/.test(t) || CARD_META_RE.test(t)) { node = node.nextElementSibling; continue; }
                 if (t === '進化前' || t === '進化後') break; // 次セクションに到達
                 if (t !== '効果なし') {
                     items.push(`【${cardName}：${label}】 効果：${t}`);
@@ -693,7 +694,7 @@
             for (const match of m) {
                 const evoLabel = `進化${match[1]}`;
                 const block = match[2].trim().split('\n')
-                    .map(l => l.trim()).filter(l => l && !/^[\d\/]+$/.test(l) && l !== '効果なし').join(' ');
+                    .map(l => l.trim()).filter(l => l && !/^[\d\/]+$/.test(l) && l !== '効果なし' && !CARD_META_RE.test(l)).join(' ');
                 if (block) items.push(`【${cardName}：${evoLabel}】 効果：${block}`);
             }
         }
