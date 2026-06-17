@@ -633,21 +633,22 @@
         return items;
     }
 
-    /* gamewith.jp カードリストページを検出し、カードのURL+名前リストを返す */
+    /* gamewith.jp カードリストページを検出し、カードURLリストを返す
+       カード名は各詳細ページのH1から取得するため、ここでは URL のみ収集 */
     function detectGamewithCardList(doc, baseUrl) {
+        let selfPath = '';
+        try { selfPath = new URL(baseUrl).pathname; } catch (_) {}
         const seen = new Set();
-        const cards = [];
         doc.querySelectorAll('a[href]').forEach(a => {
-            const href = a.getAttribute('href');
+            const href = a.getAttribute('href') || '';
             if (!/\/article\/show\/\d+/.test(href)) return;
-            const fullUrl = href.startsWith('http') ? href : new URL(href, baseUrl).href;
-            if (seen.has(fullUrl)) return;
-            seen.add(fullUrl);
-            // カード名: img の alt 優先、なければリンクテキスト
-            const name = scrapeCleanText(a.querySelector('img')?.alt || a.textContent);
-            if (name && name.length >= 2 && name.length <= 30) cards.push({ name, url: fullUrl });
+            try {
+                const fullUrl = href.startsWith('http') ? href : new URL(href, baseUrl).href;
+                if (new URL(fullUrl).pathname === selfPath) return; // 自ページは除外
+                seen.add(fullUrl);
+            } catch (_) {}
         });
-        return cards.length >= 5 ? cards : null; // 5件以上あればリストページとみなす
+        return seen.size >= 3 ? Array.from(seen).map(url => ({ name: '', url })) : null;
     }
 
     /* gamewith.jp シャドバカード詳細ページから進化前/進化後の効果テキストを抽出 */
@@ -755,7 +756,7 @@
             let host = '';
             try { host = new URL(url).hostname; } catch (e) {}
 
-            // カードリストページ検出（gamewith.jp等）→ 各カード詳細ページを順次取得
+            // gamewith.jp: まずカードリストか判定し、リストなら一括取得、単体カードページなら直接解析
             const cardList = host.includes('gamewith.jp') ? detectGamewithCardList(doc, url) : null;
             if (cardList) {
                 const BATCH_LIMIT = 200;
@@ -764,23 +765,33 @@
                 statusEl.textContent = `検出：カードリスト ${cardList.length} 件（最大${BATCH_LIMIT}件まで順次抓取中）`;
                 const allItems = [];
                 for (let i = 0; i < targets.length; i++) {
-                    const { name, url: cardUrl } = targets[i];
-                    statusEl.textContent = `⏳ 抓取中 ${i + 1}/${total}：${name}`;
+                    const { url: cardUrl } = targets[i];
+                    statusEl.textContent = `⏳ 抓取中 ${i + 1}/${total}`;
                     try {
                         const cardHtml = await fetchHtmlViaProxy(cardUrl);
                         const cardDoc = new DOMParser().parseFromString(cardHtml, 'text/html');
-                        const cardName = extractPageName(cardDoc) || name;
+                        const cardName = extractPageName(cardDoc) || `カード${i + 1}`;
                         const cardItems = parseGamewithShadowverseCard(cardDoc, cardName);
                         cardItems.forEach(text => allItems.push({ source: `${host}（网页抓取）`, text, type: 'skill_desc', meta: '' }));
                     } catch (_) { /* 個別カード取得失敗はスキップ */ }
                 }
                 if (!allItems.length) {
-                    statusEl.textContent = '⚠️ カード詳細ページから効果テキストを取得できませんでした。';
+                    statusEl.textContent = '⚠️ 未能从卡牌详情页提取效果文本（页面内容可能需要JS渲染）。请直接粘贴单张卡牌的URL重试。';
                     return;
                 }
                 const seen = new Set();
                 scrapeResults = allItems.filter(it => { if (seen.has(it.text)) return false; seen.add(it.text); return true; });
                 statusEl.textContent = `✅ 识别出 ${scrapeResults.length} 条技能文本（共抓取 ${total} 张卡牌），请人工核查后再添加/导出：`;
+            } else if (host.includes('gamewith.jp')) {
+                // 単体カード詳細ページ：進化前/進化後のみ専用パーサで抽出
+                const cardName = extractPageName(doc);
+                const cardItems = parseGamewithShadowverseCard(doc, cardName);
+                if (!cardItems.length) {
+                    statusEl.textContent = '⚠️ 未能从该页面识别进化前/进化后技能文本。请确认粘贴的是单张卡牌的详情页URL。';
+                    return;
+                }
+                scrapeResults = cardItems.map(text => ({ source: `${host}（网页抓取）`, text, type: 'skill_desc', meta: '' }));
+                statusEl.textContent = `✅ 识别出 ${scrapeResults.length} 条技能文本，请人工核查后再添加/导出：`;
             } else {
                 const items = parseSkillsFromHtml(html, url);
                 if (!items.length) {
