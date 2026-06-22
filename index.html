@@ -44,6 +44,24 @@
         .btn-clear-all:hover { background: #f8d7da; border-color: #dc3545; color: #dc3545; }
         .btn-add-filter { padding: 8px 16px; border: none; border-radius: 6px; background: #0d6efd; color: white; cursor: pointer; font-size: 14px; font-weight: bold; transition: background 0.2s; }
         .btn-add-filter:hover { background: #0b5ed7; }
+        .btn-fav-folder { padding: 7px 11px; border: 1.5px solid #adb5bd; border-radius: 6px; background: white; color: #888; cursor: pointer; font-size: 15px; transition: all 0.2s; line-height: 1; }
+        .btn-fav-folder:hover { border-color: #e6a817; color: #e6a817; }
+        .btn-fav-folder.open { background: #fff8e7; border-color: #e6a817; color: #e6a817; }
+        .btn-fav-folder .fav-badge { font-size: 10px; vertical-align: super; }
+
+        /* ── 筛选chip上的收藏星 ── */
+        .fchip-star { cursor: pointer; font-size: 12px; opacity: 0.35; margin-left: 3px; transition: all 0.15s; line-height: 1; vertical-align: middle; }
+        .fchip-star:hover { opacity: 1; color: #e6a817; }
+        .fchip-star.starred { opacity: 1; color: #e6a817; }
+
+        /* ── 收藏词条面板 ── */
+        .fav-section { display: none; align-items: center; gap: 8px; flex-wrap: wrap; margin-top: 8px; padding: 8px 10px; border: 1px dashed #f0d080; border-radius: 8px; background: #fffdf5; }
+        .fav-section.open { display: flex; }
+        .fav-label { font-size: 12px; color: #bbb; white-space: nowrap; }
+        .fav-chip { display: inline-flex; align-items: center; gap: 4px; padding: 3px 10px; border-radius: 14px; font-size: 13px; background: #fff8e7; color: #a07800; border: 1px solid #f0d080; cursor: pointer; transition: all 0.15s; }
+        .fav-chip:hover { background: #fef0c0; border-color: #e6a817; }
+        .fav-chip-del { font-size: 14px; line-height: 1; opacity: 0.4; margin-left: 2px; }
+        .fav-chip-del:hover { opacity: 1; color: #dc3545; }
 
         /* ── 网址自动抓取面板 ── */
         .scrape-panel { background: white; border: 1.5px solid #e1e4e8; border-radius: 10px; margin-bottom: 18px; padding: 0 16px; }
@@ -208,7 +226,11 @@
             <div class="filter-btns">
                 <button id="btnClear" class="btn-clear-all">消除全部</button>
                 <button id="btnAdd" class="btn-add-filter">增加筛选</button>
+                <button id="btnFav" class="btn-fav-folder" title="收藏夹">☆</button>
             </div>
+        </div>
+        <div id="favSection" class="fav-section">
+            <span class="fav-label">收藏：</span>
         </div>
     </div>
 
@@ -369,11 +391,18 @@
             chip.className = `fchip ${f.mode}`;
             const icon = f.mode === 'include' ? '🔍' : '🚫';
             const csNote = f.cs ? ' <sup style="font-size:10px">Aa</sup>' : '';
-            chip.innerHTML = `${icon} <span class="fchip-label">"${escapeHtml(f.kw)}"${csNote}</span><span class="fchip-del" data-i="${i}">×</span>`;
+            const isSaved = favs.includes(f.kw);
+            chip.innerHTML = `${icon} <span class="fchip-label">"${escapeHtml(f.kw)}"${csNote}</span><span class="fchip-star${isSaved ? ' starred' : ''}" data-kw="${escapeHtml(f.kw)}">${isSaved ? '★' : '☆'}</span><span class="fchip-del" data-i="${i}">×</span>`;
             chip.querySelector('.fchip-del').addEventListener('click', () => {
                 filters.splice(i, 1);
                 renderChips();
                 performSearch();
+            });
+            chip.querySelector('.fchip-star').addEventListener('click', e => {
+                const kw = e.currentTarget.dataset.kw;
+                const idx = favs.indexOf(kw);
+                if (idx === -1) { favs.push(kw); } else { favs.splice(idx, 1); }
+                saveFavs(); renderFavs(); renderChips(); updateFavFolderBtn();
             });
             container.appendChild(chip);
         });
@@ -388,6 +417,58 @@
         renderChips();
         performSearch();
     }
+
+    /* ── 收藏词条 ── */
+    const FAV_KEY = 'kinoko_fav_queries';
+    let favs = JSON.parse(localStorage.getItem(FAV_KEY) || '[]');
+
+    function saveFavs() { localStorage.setItem(FAV_KEY, JSON.stringify(favs)); }
+
+    function updateFavFolderBtn() {
+        const btn = document.getElementById('btnFav');
+        const count = favs.length;
+        btn.innerHTML = count > 0 ? `☆<span class="fav-badge">${count}</span>` : '☆';
+    }
+
+    function renderFavs() {
+        const section = document.getElementById('favSection');
+        section.innerHTML = '<span class="fav-label">收藏：</span>';
+        favs.forEach((kw, i) => {
+            const chip = document.createElement('span');
+            chip.className = 'fav-chip';
+            const label = document.createElement('span');
+            label.textContent = kw;
+            const del = document.createElement('span');
+            del.className = 'fav-chip-del';
+            del.dataset.i = i;
+            del.textContent = '×';
+            chip.appendChild(label);
+            chip.appendChild(del);
+            chip.addEventListener('click', e => {
+                if (e.target.classList.contains('fav-chip-del')) {
+                    favs.splice(+e.target.dataset.i, 1);
+                    saveFavs(); renderFavs(); renderChips(); updateFavFolderBtn();
+                } else {
+                    const mode = document.querySelector('input[name="fmode"]:checked').value;
+                    if (!filters.some(f => f.kw === kw && f.mode === mode)) {
+                        filters.push({ kw, mode, cs: caseSensitive });
+                        renderChips(); performSearch();
+                    }
+                }
+            });
+            section.appendChild(chip);
+        });
+        updateFavFolderBtn();
+    }
+
+    document.getElementById('btnFav').addEventListener('click', () => {
+        const section = document.getElementById('favSection');
+        const btn = document.getElementById('btnFav');
+        const isOpen = section.classList.toggle('open');
+        btn.classList.toggle('open', isOpen);
+    });
+
+    renderFavs();
 
     document.getElementById('btnAdd').addEventListener('click', addFilter);
     document.getElementById('searchInput').addEventListener('keydown', e => {
