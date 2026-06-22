@@ -24,7 +24,7 @@
 
         /* ── 多关键词筛选 ── */
         .search-container { margin-bottom: 24px; }
-        #filterChips { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 10px; min-height: 0; padding-top: 8px; }
+        #filterChips { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 10px; min-height: 0; padding-top: 10px; overflow: visible; }
         .fchip { display: inline-flex; align-items: center; gap: 5px; padding: 4px 10px 4px 12px; border-radius: 16px; font-size: 14px; font-weight: 500; position: relative; }
         .fchip.include { background: #d4edda; color: #155724; border: 1px solid #b8ddc4; }
         .fchip.exclude { background: #f8d7da; color: #721c24; border: 1px solid #f1b0b7; }
@@ -50,8 +50,8 @@
         .btn-fav-folder .fav-badge { font-size: 10px; vertical-align: super; }
 
         /* ── 筛选chip右上角收藏星 ── */
-        .fchip-star { position: absolute; top: -8px; right: -5px; cursor: pointer; font-size: 13px; color: #bbb; background: white; border: 1px solid #ddd; border-radius: 50%; width: 18px; height: 18px; display: flex; align-items: center; justify-content: center; line-height: 1; transition: all 0.15s; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
-        .fchip-star:hover { color: #e6a817; border-color: #e6a817; }
+        .fchip-star { position: absolute; top: -10px; right: -8px; cursor: pointer; font-size: 14px; color: #bbb; background: white; border: 1.5px solid #ddd; border-radius: 50%; width: 22px; height: 22px; display: flex; align-items: center; justify-content: center; line-height: 1; transition: all 0.15s; box-shadow: 0 1px 4px rgba(0,0,0,0.15); z-index: 10; }
+        .fchip-star:hover { color: #e6a817; border-color: #e6a817; transform: scale(1.15); }
         .fchip-star.starred { color: #e6a817; border-color: #e6a817; background: #fff8e7; }
 
         /* ── 收藏词条面板 ── */
