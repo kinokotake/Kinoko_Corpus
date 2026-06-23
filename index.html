@@ -137,6 +137,8 @@
         .skill-lv-label { background: #edf2fb; color: #1a56db; font-weight: bold; font-size: 12px; display: flex; align-items: flex-start; justify-content: center; padding: 9px 4px; }
         .skill-lv-effect { padding: 8px 12px; font-size: 14px; line-height: 1.65; color: #222; }
         .effect-note { color: #888; font-size: 13px; }
+        .skill-lv-block + .skill-lv-block { margin-top: 10px; padding-top: 10px; border-top: 1px dashed #ebebeb; }
+        .release-lv { font-size: 11px; color: #aaa; font-style: italic; margin-right: 3px; }
 
         /* 单行效果 / 链接技能 */
         .skill-effect-row { padding: 6px 0; font-size: 15px; line-height: 1.65; color: #222; }
@@ -1010,9 +1012,10 @@
         return esc.replace(regex, '<span class="highlight">$1</span>');
     }
 
-    /* 将 ※ 换成换行+注记 */
+    /* 将 ※ 换成换行+注记；将 解放レベル：N 淡化为小字 */
     function fmtEffect(text) {
         if (!text) return '';
+        text = text.replace(/解放レベル：(-|\d+)/g, '<span class="release-lv">解放Lv:$1</span>');
         return text.replace(/※/g, '<br><span class="effect-note">※</span>');
     }
 
@@ -1132,7 +1135,21 @@
             }
         } else {
             // Generic: effect text + info fields
-            if (p.effect) bodyHtml = `<div class="skill-effect-row">${fmtEffect(hl(p.effect, regex))}</div>`;
+            if (p.effect) {
+                const lvSegs = p.effect.split(/(【Lv\.\d+】)/);
+                if (lvSegs.length > 2) {
+                    // Multi-level: rebuild [header+body] blocks and render separately
+                    const blocks = [];
+                    for (let si = 1; si < lvSegs.length; si += 2)
+                        blocks.push(lvSegs[si] + (lvSegs[si + 1] || ''));
+                    const rows = blocks.map(b =>
+                        `<div class="skill-lv-block">${fmtEffect(hl(b, regex))}</div>`
+                    ).join('');
+                    bodyHtml = `<div class="skill-effect-row">${rows}</div>`;
+                } else {
+                    bodyHtml = `<div class="skill-effect-row">${fmtEffect(hl(p.effect, regex))}</div>`;
+                }
+            }
             if (p.infoFields && p.infoFields.length) {
                 const fields = p.infoFields.map(f =>
                     `<span class="skill-info-label">${f.label}</span><span>${hl(f.value, regex)}</span>`
