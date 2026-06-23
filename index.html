@@ -1019,6 +1019,27 @@
         return text.replace(/※/g, '<br><span class="effect-note">※</span>');
     }
 
+    /* FGO: スキル名[ランク]【CT:N~M】効果... が複数連なる場合に分割 */
+    function splitFgoSkills(effect) {
+        const parts = effect.split(/(【CT:[^】]+】)/);
+        if (parts.length < 5) return null; // 2つ以上のCTマーカーが必要
+        const blocks = [];
+        let prevName = parts[0].trim();
+        for (let i = 1; i < parts.length; i += 2) {
+            const ct = parts[i];
+            const afterCt = i + 1 < parts.length ? parts[i + 1] : '';
+            let thisEffect = afterCt, nextName = '';
+            if (i + 2 < parts.length) {
+                // 次のスキル名[ランク]を末尾から抽出
+                const m = afterCt.match(/^([\s\S]*?)\s+([^\s①-⑳【\(\)（）、。：]+\[[A-Za-z+]{1,5}\])\s*$/);
+                if (m) { thisEffect = m[1]; nextName = m[2]; }
+            }
+            blocks.push(`${prevName}${ct}${thisEffect.trim()}`);
+            prevName = nextName;
+        }
+        return blocks.length > 1 ? blocks : null;
+    }
+
     /* ── 解析技能文本 ── */
     function parseSkill(text, source) {
         const game = getGame(source);
@@ -1147,7 +1168,15 @@
                     ).join('');
                     bodyHtml = `<div class="skill-effect-row">${rows}</div>`;
                 } else {
-                    bodyHtml = `<div class="skill-effect-row">${fmtEffect(hl(p.effect, regex))}</div>`;
+                    const ctBlocks = splitFgoSkills(p.effect);
+                    if (ctBlocks) {
+                        const rows = ctBlocks.map(b =>
+                            `<div class="skill-lv-block">${fmtEffect(hl(b, regex))}</div>`
+                        ).join('');
+                        bodyHtml = `<div class="skill-effect-row">${rows}</div>`;
+                    } else {
+                        bodyHtml = `<div class="skill-effect-row">${fmtEffect(hl(p.effect, regex))}</div>`;
+                    }
                 }
             }
             if (p.infoFields && p.infoFields.length) {
