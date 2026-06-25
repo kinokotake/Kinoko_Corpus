@@ -26,15 +26,17 @@ def clean(t):
 
 
 def clean_effect(cell):
-    """效果字段：保留 HTML 块元素/br 产生的换行，使数据库存储原格式。"""
-    text = cell.get_text(separator='\n')
+    """效果字段：仅以 <br> 换行，行内标签（b/span）不额外插行，保留原排版。"""
+    for br in cell.find_all('br'):
+        br.replace_with('\n')
+    text = cell.get_text(separator='')   # 行内标签不加分隔符
     lines = [re.sub(r'[ \t]+', ' ', line).strip() for line in text.split('\n')]
     return '\n'.join(line for line in lines if line)
 
 
 def get_char_urls():
     resp = requests.get(LIST_URL, headers=HEADERS, timeout=20)
-    soup = BeautifulSoup(resp.content, "html.parser", from_encoding="euc-jp")
+    soup = BeautifulSoup(resp.content.decode("euc-jp", errors="replace"), "html.parser")
     seen = set()
     urls = []
     for a in soup.find_all("a", href=True):
@@ -57,7 +59,7 @@ def scrape_char(url):
         print(f"  SKIP {url}: {e}")
         return []
 
-    soup = BeautifulSoup(resp.content, "html.parser", from_encoding="euc-jp")
+    soup = BeautifulSoup(resp.content.decode("euc-jp", errors="replace"), "html.parser")
     h1 = soup.find("h1")
     page_title = clean(h1.get_text()) if h1 else url.split("/d/")[-1]
     # The h1 on these pages is the wiki title, not the char name
