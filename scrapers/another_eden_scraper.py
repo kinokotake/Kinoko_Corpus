@@ -25,6 +25,13 @@ def clean(t):
     return re.sub(r"\s+", " ", t or "").strip()
 
 
+def clean_effect(cell):
+    """效果字段：保留 HTML 块元素/br 产生的换行，使数据库存储原格式。"""
+    text = cell.get_text(separator='\n')
+    lines = [re.sub(r'[ \t]+', ' ', line).strip() for line in text.split('\n')]
+    return '\n'.join(line for line in lines if line)
+
+
 def get_char_urls():
     resp = requests.get(LIST_URL, headers=HEADERS, timeout=20)
     soup = BeautifulSoup(resp.content, "html.parser", from_encoding="euc-jp")
@@ -103,7 +110,7 @@ def scrape_char(url):
                     if maybe_label and clean(maybe_label[0].get_text()) == "効果":
                         effect_row = rows[i + 2].find_all(["td", "th"])
                         if effect_row:
-                            effect = clean(effect_row[0].get_text())
+                            effect = clean_effect(effect_row[0])
                         i += 3
                     else:
                         i += 1

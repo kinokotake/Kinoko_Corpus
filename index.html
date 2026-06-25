@@ -1012,10 +1012,22 @@
         return esc.replace(regex, '<span class="highlight">$1</span>');
     }
 
-    /* 将 ※ 换成换行+注记；将 解放レベル：N 淡化为小字 */
+    /* 将 ※ 换成换行+注记；将 解放レベル：N 淡化为小字；对 AE 文本补结构断行 */
     function fmtEffect(text) {
         if (!text) return '';
         text = text.replace(/解放レベル：(-|\d+)/g, '<span class="release-lv">解放Lv:$1</span>');
+        if (text.includes('\n')) {
+            // 重新抓取的数据已在数据库存储换行符，直接转为 <br>
+            text = text.split('\n').map(l => l.trim()).filter(Boolean).join('<br>');
+        } else if (/[+＋](?:追加|連携|特殊|後攻)効果|【(?:バフ|デバフ|特殊|解除不可バフ|解除不可デバフ)】/.test(text)) {
+            // アナザーエデン：按结构模式补断行
+            // ① ＋追加効果 / ＋連携効果 等区段标记（半角全角均支持）
+            text = text.replace(/\s*([+＋](?:追加|連携|特殊|後攻)効果)/g, '<br>$1');
+            // ② 连续 【...】【...】 → 在两者之间换行
+            text = text.replace(/】\s*(?=【)/g, '】<br>');
+            // ③ 攻击描述等非括号文字后紧跟条件块
+            text = text.replace(/([^】])\s*(【[^】]*(?:以下の効果|の攻撃時|対象に)[^】]*】)/g, '$1<br>$2');
+        }
         return text.replace(/※/g, '<br><span class="effect-note">※</span>');
     }
 
