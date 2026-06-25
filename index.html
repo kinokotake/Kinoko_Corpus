@@ -1094,8 +1094,8 @@
         const typeMatch = text.match(/種別：([^\s効果]+)/);
         const type = typeMatch ? typeMatch[1] : '';
 
-        let effectMatch = text.match(/ (?:効果|解説)：(.+)$/);
-        if (!effectMatch) effectMatch = text.match(/【説明】(.+?)(?:【効果】|$)/);
+        let effectMatch = text.match(/ (?:効果|解説)：([\s\S]+)$/);
+        if (!effectMatch) effectMatch = text.match(/【説明】([\s\S]+?)(?:【効果】|$)/);
         const effect = effectMatch ? effectMatch[1].trim() : '';
 
         const INFO_PATTERNS = [
