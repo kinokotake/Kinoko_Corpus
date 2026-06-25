@@ -26,6 +26,13 @@ SKIP_WORDS = ["一覧", "ランキング", "情報", "ガチャ", "攻略", "メ
 def clean(t):
     return re.sub(r"\s+", " ", t or "").strip()
 
+def clean_effect(cell):
+    for br in cell.find_all('br'):
+        br.replace_with('\n')
+    text = cell.get_text(separator='')
+    lines = [re.sub(r'[ \t]+', ' ', line).strip() for line in text.split('\n')]
+    return '\n'.join(line for line in lines if line)
+
 
 def get_char_urls():
     resp = requests.get(LIST_URL, headers=HEADERS, timeout=20)
@@ -90,8 +97,8 @@ def scrape_char(char_name, url):
         # First td has skill icon+name again, second td has description
         desc = ""
         for td in tds:
-            txt = clean(td.get_text())
-            if txt and txt != skill_name and len(txt) > 10:
+            txt = clean_effect(td)
+            if txt and clean(txt) != skill_name and len(clean(txt)) > 10:
                 desc = txt
                 break
 

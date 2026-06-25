@@ -14,6 +14,13 @@ HEADERS = {"User-Agent": "Mozilla/5.0", "Accept-Language": "ja"}
 def clean(t):
     return re.sub(r"\s+", " ", t or "").strip()
 
+def clean_effect(cell):
+    for br in cell.find_all('br'):
+        br.replace_with('\n')
+    text = cell.get_text(separator='')
+    lines = [re.sub(r'[ \t]+', ' ', line).strip() for line in text.split('\n')]
+    return '\n'.join(line for line in lines if line)
+
 def main():
     resp = requests.get(URL, headers=HEADERS, timeout=20)
     resp.encoding = "utf-8"
@@ -33,7 +40,7 @@ def main():
         name = clean(cols[0].get_text())
         if not name or name == "スキル名":
             continue
-        effect = clean(cols[1].get_text())
+        effect = clean_effect(cols[1])
         country  = clean(cols[2].get_text()) if len(cols) > 2 else ""
         troop    = clean(cols[3].get_text()) if len(cols) > 3 else ""
         faction  = clean(cols[4].get_text()) if len(cols) > 4 else ""

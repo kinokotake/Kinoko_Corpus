@@ -33,6 +33,13 @@ SKILL_PAGES = [
 def clean(t):
     return re.sub(r"\s+", " ", t or "").strip()
 
+def clean_effect(cell):
+    for br in cell.find_all('br'):
+        br.replace_with('\n')
+    text = cell.get_text(separator='')
+    lines = [re.sub(r'[ \t]+', ' ', line).strip() for line in text.split('\n')]
+    return '\n'.join(line for line in lines if line)
+
 def scrape_knowledge_page(skill_type, url):
     try:
         resp = requests.get(url, headers=HEADERS, timeout=20)
@@ -53,13 +60,13 @@ def scrape_knowledge_page(skill_type, url):
         for sib in heading.find_next_siblings():
             if sib.name in ["h2", "h3"]:
                 break
-            t = clean(sib.get_text())
+            t = clean_effect(sib)
             if t and len(t) > 10:
                 parts.append(t)
             if sum(len(p) for p in parts) > 500:
                 break
         if parts:
-            body = " ".join(parts[:3])
+            body = "\n".join(parts[:3])
             entries.append(f"【{skill_type}：{title}】 解説：{body}")
 
     # Also extract skill tables (type | grade | description)
@@ -71,7 +78,7 @@ def scrape_knowledge_page(skill_type, url):
             cols = row.find_all(["td","th"])
             if len(cols) < 2: continue
             grade = clean(cols[0].get_text())
-            desc  = clean(cols[1].get_text()) if len(cols) > 1 else ""
+            desc  = clean_effect(cols[1]) if len(cols) > 1 else ""
             if grade and desc and len(desc) > 5:
                 entries.append(f"【{skill_type}：{grade}】 効果：{desc}")
 

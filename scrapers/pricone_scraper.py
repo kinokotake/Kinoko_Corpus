@@ -18,6 +18,13 @@ MAX_CHARS = 300  # cap to avoid too many requests
 def clean(t):
     return re.sub(r"\s+", " ", t or "").strip()
 
+def clean_effect(cell):
+    for br in cell.find_all('br'):
+        br.replace_with('\n')
+    text = cell.get_text(separator='')
+    lines = [re.sub(r'[ \t]+', ' ', line).strip() for line in text.split('\n')]
+    return '\n'.join(line for line in lines if line)
+
 def get_char_urls():
     resp = requests.get(LIST_URL, headers=HEADERS, timeout=20)
     resp.encoding = "utf-8"
@@ -53,13 +60,13 @@ def scrape_char(url):
     skills = []
     # Skill data lives in div.pcr_skill_table
     for div in soup.find_all("div", class_="pcr_skill_table"):
-        text = clean(div.get_text())
+        text = clean_effect(div)
         if not text:
             continue
-        # The text starts with the skill name, then 【説明】...【効果】...
-        # Try to extract skill name (text before 【説明】 or 【効果】)
-        name_match = re.match(r"^(.+?)(?:【説明】|【効果】)", text)
-        skill_name = clean(name_match.group(1)) if name_match else text[:30]
+        # Skill name is on the first line, before 【説明】/【効果】
+        first_line = text.split('\n')[0]
+        name_match = re.match(r"^(.+?)(?:【説明】|【効果】)", first_line)
+        skill_name = clean(name_match.group(1)) if name_match else clean(first_line[:30])
 
         prefix = f"【{char_name}：{skill_name}】 " if char_name else f"【{skill_name}】 "
         entry = prefix + text

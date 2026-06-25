@@ -21,6 +21,13 @@ SKILL_LABELS = {"リーダースキル", "リンクスキル", "コマンドス�
 def clean(t):
     return re.sub(r"\s+", " ", t or "").strip()
 
+def clean_effect(cell):
+    for br in cell.find_all('br'):
+        br.replace_with('\n')
+    text = cell.get_text(separator='')
+    lines = [re.sub(r'[ \t]+', ' ', line).strip() for line in text.split('\n')]
+    return '\n'.join(line for line in lines if line)
+
 
 def get_unit_urls():
     resp = requests.get(LIST_URL, headers=HEADERS, timeout=20, verify=False)
@@ -68,7 +75,7 @@ def scrape_unit(unit_name, url):
         desc = ""
         if len(rows) > 1:
             desc_cells = rows[1].find_all(["td", "th"])
-            desc = clean(desc_cells[0].get_text()) if desc_cells else ""
+            desc = clean_effect(desc_cells[0]) if desc_cells else ""
 
         if not skill_name or skill_name == "-" or not desc or desc == "-":
             continue

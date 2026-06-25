@@ -17,6 +17,13 @@ DELAY = 1.2
 def clean(t):
     return re.sub(r"\s+", " ", t or "").strip()
 
+def clean_effect(cell):
+    for br in cell.find_all('br'):
+        br.replace_with('\n')
+    text = cell.get_text(separator='')
+    lines = [re.sub(r'[ \t]+', ' ', line).strip() for line in text.split('\n')]
+    return '\n'.join(line for line in lines if line)
+
 def get_char_urls():
     resp = requests.get(LIST_URL, headers=HEADERS, timeout=20)
     resp.encoding = "utf-8"
@@ -60,7 +67,7 @@ def scrape_char(url):
             if len(cols) < 2:
                 continue
             skill_name = clean(cols[0].get_text())
-            effect     = clean(cols[1].get_text())
+            effect     = clean_effect(cols[1])
             if not skill_name or not effect:
                 continue
             text = f"【{char_name}：{skill_name}】 効果：{effect}"
