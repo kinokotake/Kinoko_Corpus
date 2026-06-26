@@ -13,7 +13,7 @@ from bs4 import BeautifulSoup
 BASE      = "https://appmedia.jp"
 LIST_URL  = f"{BASE}/utaware-lostflag/4664383"
 OUTPUT    = "../⚔️技能/utaware_lostflag_skills.jsonl"
-SOURCE    = "うたわれるものロストフラグスキル大全"
+SOURCE    = "うたわれるもの ロストフラグ"
 HEADERS   = {"User-Agent": "Mozilla/5.0", "Accept-Language": "ja"}
 DELAY     = 1.2
 MAX_CHARS = 400
