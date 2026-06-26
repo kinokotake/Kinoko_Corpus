@@ -3,11 +3,17 @@ import subprocess, sys, os, time
 
 LOG = "../run_all_log.txt"
 SCRAPERS = [
+    "kingdom_ran_scraper.py",
+    "granblue_scraper.py",
+    "feh_skill_scraper.py",
+    "shadowverse_scraper.py",
     "pricone_scraper.py",
     "fgo_scraper.py",
     "one_piece_br_scraper.py",
     "utaware_lostflag_scraper.py",
-    "granblue_scraper.py",
+    "mememori_scraper.py",
+    "another_eden_scraper.py",
+    "jojo_ss_scraper.py",
 ]
 
 os.chdir(os.path.dirname(os.path.abspath(__file__)))
