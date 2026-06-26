@@ -16,7 +16,7 @@ OUTPUT = "../⚔️技能/one_piece_br_skills.jsonl"
 SOURCE = "バウンティラッシュスキル大全"
 HEADERS = {"User-Agent": "Mozilla/5.0", "Accept-Language": "ja"}
 DELAY = 1.2
-MAX_CHARS = 200
+MAX_CHARS = 500
 
 SKIP_WORDS = ["一覧", "ランキング", "情報", "ガチャ", "攻略", "メダル",
               "最強", "リセ", "データベース", "クエスト", "編成", "おすすめ",

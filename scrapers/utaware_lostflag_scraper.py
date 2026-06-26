@@ -16,7 +16,7 @@ OUTPUT    = "../⚔️技能/utaware_lostflag_skills.jsonl"
 SOURCE    = "うたわれるもの ロストフラグ"
 HEADERS   = {"User-Agent": "Mozilla/5.0", "Accept-Language": "ja"}
 DELAY     = 1.2
-MAX_CHARS = 400
+MAX_CHARS = 700
 
 
 def clean(t):

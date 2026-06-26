@@ -13,7 +13,6 @@ OUTPUT = "../⚔️技能/pricone_skills.jsonl"
 SOURCE = "プリコネスキル大全"
 HEADERS = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36", "Accept-Language": "ja"}
 DELAY = 1.5
-MAX_CHARS = 300  # cap to avoid too many requests
 
 def clean(t):
     return re.sub(r"\s+", " ", t or "").strip()
@@ -29,18 +28,27 @@ def get_char_urls():
     resp = requests.get(LIST_URL, headers=HEADERS, timeout=20)
     resp.encoding = "utf-8"
     soup = BeautifulSoup(resp.text, "html.parser")
-    urls = []
+    # Character pages are identified by img[alt=CharName] inside a link
+    # (the evaluation list shows character portrait images with alt=name)
     seen = set()
-    for a in soup.find_all("a", href=True):
+    urls = []
+    for img in soup.find_all("img", alt=True):
+        alt = img.get("alt", "").strip()
+        if not alt or len(alt) > 25:
+            continue
+        a = img.find_parent("a", href=True)
+        if not a:
+            continue
         h = a["href"]
-        # Character pages: /pricone-re/article/show/NNNNN (numeric ID)
-        if re.search(r"/pricone-re/article/show/\d+$", h) and h not in seen:
-            seen.add(h)
-            full = h if h.startswith("http") else BASE + h
+        if not re.search(r"/pricone-re/article/show/\d+$", h):
+            continue
+        if "92923" in h:
+            continue
+        full = h if h.startswith("http") else BASE + h
+        if full not in seen:
+            seen.add(full)
             urls.append(full)
-    # Exclude the list page itself
-    urls = [u for u in urls if "92923" not in u]
-    return urls[:MAX_CHARS]
+    return urls
 
 def scrape_char(url):
     try:
@@ -77,7 +85,7 @@ def scrape_char(url):
 def main():
     print("Getting character list...")
     char_urls = get_char_urls()
-    print(f"Found {len(char_urls)} character pages (cap {MAX_CHARS})")
+    print(f"Found {len(char_urls)} character pages")
 
     all_skills = []
     for i, url in enumerate(char_urls, 1):

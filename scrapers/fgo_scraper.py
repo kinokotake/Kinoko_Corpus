@@ -14,7 +14,7 @@ OUTPUT = "../⚔️技能/fgo_skills.jsonl"
 SOURCE = "FGOサーヴァントスキル大全"
 HEADERS = {"User-Agent": "Mozilla/5.0", "Accept-Language": "ja"}
 DELAY = 1.5
-MAX_SERVANTS = 150
+MAX_SERVANTS = 250
 
 SKILL_LABELS = {"スキル", "宝具", "スキル1", "スキル2", "スキル3", "スキル4", "スキル5"}
 
