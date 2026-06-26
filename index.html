@@ -1070,12 +1070,12 @@
             const typeMatch = text.match(/種別：(\S+)/);
             const type = typeMatch ? typeMatch[1] : '';
             const levels = {};
-            const lvRe = / Lv(\d+)：(.+?)(?= Lv\d+：| タグ：|$)/g;
+            const lvRe = / Lv(\d+)：([\s\S]+?)(?= Lv\d+：| タグ：|$)/g;
             let m;
             while ((m = lvRe.exec(text)) !== null) levels[m[1]] = m[2].trim();
             let effect = '';
             if (!Object.keys(levels).length) {
-                const em = text.match(/ 効果：(.+?)(?= 対象：| タグ：|$)/);
+                const em = text.match(/ 効果：([\s\S]+?)(?= 対象：| タグ：|$)/);
                 if (em) effect = em[1].trim();
             }
             const targetM = text.match(/ 対象：(.+?)(?= タグ：|$)/);
