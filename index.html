@@ -1096,16 +1096,19 @@
 
         let effectMatch = text.match(/ (?:効果|解説)：([\s\S]+)$/);
         if (!effectMatch) effectMatch = text.match(/【説明】([\s\S]+?)(?:【効果】|$)/);
-        const effect = effectMatch ? effectMatch[1].trim() : '';
+        const effect = effectMatch
+            ? effectMatch[1].trim().replace(/\s*所持キャラ：\S+$/, '')
+            : '';
 
         const INFO_PATTERNS = [
-            ['ランク', /ランク：(\S+)/],
-            ['MP',    /\bMP：(\d+)/],
-            ['威力',  /威力：([^\s効]+)/],
-            ['備考',  /備考：([^効]+?)(?= 効果：|$)/],
-            ['国',    /国：(\S+)/],
-            ['兵種',  /兵種：(\S+)/],
-            ['所属',  /所属：(\S+)/],
+            ['ランク',    /ランク：(\S+)/],
+            ['MP',       /\bMP：(\d+)/],
+            ['威力',     /威力：([^\s効]+)/],
+            ['備考',     /備考：([^効]+?)(?= 効果：|$)/],
+            ['国',       /国：(\S+)/],
+            ['兵種',     /兵種：(\S+)/],
+            ['所属',     /所属：(\S+)/],
+            ['所持キャラ', /所持キャラ：(\S+)/],
         ];
         const infoFields = [];
         for (const [label, re] of INFO_PATTERNS) {
