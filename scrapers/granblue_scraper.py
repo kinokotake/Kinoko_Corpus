@@ -40,6 +40,13 @@ def clean_effect(cell):
     lines = [re.sub(r'[ \t]+', ' ', line).strip() for line in text.split('\n')]
     return '\n'.join(line for line in lines if line)
 
+SKIP_TITLES = {"目次", "関連記事", "おすすめ記事", "コメント", "注意事項"}
+
+def is_prose(text):
+    """True if text contains a continuous Japanese run of 15+ chars (real prose)."""
+    return bool(re.search(r"[぀-鿿]{15,}", text))
+
+
 def scrape_knowledge_page(skill_type, url):
     try:
         resp = requests.get(url, headers=HEADERS, timeout=20)
@@ -50,36 +57,35 @@ def scrape_knowledge_page(skill_type, url):
     soup = BeautifulSoup(resp.text, "html.parser")
     entries = []
 
-    # Extract page overview: h2 headings and their following paragraphs
+    # h2/h3 headings with their following prose paragraphs
     for heading in soup.find_all(["h2", "h3"]):
         title = clean(heading.get_text())
-        if not title or len(title) < 2:
+        if not title or len(title) < 2 or title in SKIP_TITLES:
             continue
-        # Collect text from following siblings until next heading
         parts = []
         for sib in heading.find_next_siblings():
             if sib.name in ["h2", "h3"]:
                 break
             t = clean_effect(sib)
-            if t and len(t) > 10:
+            if t and len(t) > 10 and is_prose(t):
                 parts.append(t)
-            if sum(len(p) for p in parts) > 500:
+            if sum(len(p) for p in parts) > 600:
                 break
         if parts:
             body = "\n".join(parts[:3])
-            entries.append(f"【{skill_type}：{title}】 解説：{body}")
+            if is_prose(body):
+                entries.append(f"【{skill_type}：{title}】 解説：{body}")
 
-    # Also extract skill tables (type | grade | description)
+    # Skill tables (grade | description)
     for table in soup.find_all("table"):
         rows = table.find_all("tr")
         if not rows: continue
-        header = [c.get_text(strip=True)[:30] for c in rows[0].find_all(["th","td"])]
         for row in rows[1:]:
             cols = row.find_all(["td","th"])
             if len(cols) < 2: continue
             grade = clean(cols[0].get_text())
             desc  = clean_effect(cols[1]) if len(cols) > 1 else ""
-            if grade and desc and len(desc) > 5:
+            if grade and desc and len(desc) > 5 and is_prose(desc):
                 entries.append(f"【{skill_type}：{grade}】 効果：{desc}")
 
     return entries
