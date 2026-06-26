@@ -70,7 +70,7 @@ def extract_renngeki(table, char_name):
     if not descs:
         return None
     combined = "\n".join(descs)
-    return f"【{char_name}：連撃】 効果：{combined}"
+    return f"【うたわれるもの ロストフラグ：{char_name} 連撃】 効果：{combined}"
 
 
 def extract_tsujou(table, char_name):
@@ -83,7 +83,7 @@ def extract_tsujou(table, char_name):
         # Last column = 効果
         desc = clean_effect(cols[-1])
         if desc and len(desc) > 3:
-            return f"【{char_name}：通常攻撃】 効果：{desc}"
+            return f"【うたわれるもの ロストフラグ：{char_name} 通常攻撃】 効果：{desc}"
     return None
 
 
@@ -100,7 +100,7 @@ def extract_tokusei(table, char_name):
     if not parts:
         return None
     combined = "\n".join(parts)
-    return f"【{char_name}：特性】 効果：{combined}"
+    return f"【うたわれるもの ロストフラグ：{char_name} 特性】 効果：{combined}"
 
 
 def scrape_char(url):

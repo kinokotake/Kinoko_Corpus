@@ -320,11 +320,10 @@
         return 'other';
     }
 
-    /* 不属于10款固定游戏的技能，按 source 字段动态分组（同一爬虫来源归为同一游戏） */
+    /* 不属于10款固定游戏的技能，按 charName 动态分组（文本首段 【GameName：...】 中的 GameName） */
     function getGroupKey(item) {
         const g = getGame(item.source);
         if (g !== 'other') return g;
-        if (item.source && item.source.trim()) return 'dyn:' + item.source.trim();
         const p = parseSkill(item.text, item.source);
         return p.charName ? 'dyn:' + p.charName : 'other';
     }
