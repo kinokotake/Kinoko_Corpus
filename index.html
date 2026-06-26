@@ -1061,9 +1061,17 @@
         if (game === 'feh') {
             const spMatch = text.match(/\(SP:\s*(\d+)\)/);
             const sp = spMatch ? spMatch[1] : '';
-            let info = text.replace(/^【.+?】/, '').replace(/\(SP:\s*\d+\)\s*/, '').trim();
-            info = info.replace(/\|+\s*$/, '').trim();
-            return { game, name: fullName, charName: '', skillName: fullName, sp, info, levels: {}, effect: '', target: '', tags: [], infoFields: [] };
+            let raw = text.replace(/^【.+?】/, '').replace(/\(SP:\s*\d+\)\s*/, '').trim();
+            const infoFields = [];
+            const keiM = raw.match(/【継承】(\S+)/);
+            if (keiM) infoFields.push({ label: '継承', value: keiM[1] });
+            const ikiM = raw.match(/【威力】(\d+)/);
+            if (ikiM) infoFields.push({ label: '威力', value: ikiM[1] });
+            // Remove 【継承】XX【威力】X prefix, split remaining by |
+            let info = raw.replace(/【継承】\S+/g, '').replace(/【威力】\d+/g, '')
+                          .replace(/^\|+/, '').replace(/\|/g, '\n').trim();
+            info = info.replace(/\n{2,}/g, '\n').trim();
+            return { game, name: fullName, charName: '', skillName: fullName, sp, info, levels: {}, effect: '', target: '', tags: [], infoFields };
         }
 
         if (game === 'pka') {
@@ -1170,7 +1178,7 @@
                 bodyHtml += `<div class="skill-tags">${chips}</div>`;
             }
         } else {
-            // Generic: effect text + info fields
+            // Generic: effect text
             if (p.effect) {
                 const lvSegs = p.effect.split(/(【Lv\.\d+】)/);
                 if (lvSegs.length > 2) {
@@ -1194,12 +1202,13 @@
                     }
                 }
             }
-            if (p.infoFields && p.infoFields.length) {
-                const fields = p.infoFields.map(f =>
-                    `<span class="skill-info-label">${f.label}</span><span>${hl(f.value, regex)}</span>`
-                ).join(' ');
-                bodyHtml += `<div class="skill-info-row">${fields}</div>`;
-            }
+        }
+        // infoFields row applies to all games (feh, kr, generic…)
+        if (p.infoFields && p.infoFields.length) {
+            const fields = p.infoFields.map(f =>
+                `<span class="skill-info-label">${f.label}</span><span>${hl(f.value, regex)}</span>`
+            ).join(' ');
+            bodyHtml += `<div class="skill-info-row">${fields}</div>`;
         }
 
         return `
