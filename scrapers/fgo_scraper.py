@@ -28,25 +28,20 @@ def clean_effect(cell):
     lines = [re.sub(r'[ \t]+', ' ', line).strip() for line in text.split('\n')]
     return '\n'.join(line for line in lines if line)
 
+SERVANT_RE = re.compile(
+    r"/fgo/%E6%94%BB%E7%95%A5[^/]+/%E3%82%B5%E3%83%BC%E3%83%B4%E3%82%A1%E3%83%B3%E3%83%88%E4%B8%80%E8%A6%A7/[^/]+/index\.html$"
+)
+
 def get_servant_urls():
     resp = requests.get(LIST_URL, headers=HEADERS, timeout=20)
     resp.encoding = "utf-8"
     soup = BeautifulSoup(resp.text, "html.parser")
-    urls, seen = [], set()
+    seen = set()
+    urls = []
     for a in soup.find_all("a", href=True):
         h = a["href"]
-        # Servant pages: /fgo/page/XXXXXXXX.html or /fgo/攻略データベース/.../index.html
-        if ("/fgo/page/" in h or "/fgo/%E6%94%BB%E7%95%A5" in h) and h not in seen and "index.html" not in h:
-            seen.add(h)
-            full = urljoin(BASE, h)
-            urls.append(full)
-        elif "/fgo/page/" in h and h not in seen:
-            seen.add(h)
-            urls.append(urljoin(BASE, h))
-    # Also try direct servant sub-paths
-    for a in soup.find_all("a", href=True):
-        h = a["href"]
-        if re.search(r"/fgo/.+/index\.html$", h) and h not in seen:
+        # Only collect main servant evaluation pages: .../サーヴァント一覧/[name]/index.html
+        if SERVANT_RE.search(h) and h not in seen:
             seen.add(h)
             urls.append(urljoin(BASE, h))
     return urls[:MAX_SERVANTS]
@@ -62,6 +57,9 @@ def scrape_servant(url):
     h1 = soup.find("h1") or soup.find("h2")
     raw = clean(h1.get_text() if h1 else "")
     raw = re.sub(r"【FGO】\s*", "", raw)  # remove 【FGO】 prefix
+    # Skip voice line collection pages only (title contains "のセリフ" or "のボイス")
+    if re.search(r"のセリフ|のボイス", raw):
+        return []
     servant_name = re.sub(r"の(?:性能)?評価.*|の強化.*|とは.*$|｜.*", "", raw).strip()
 
     skills = []
