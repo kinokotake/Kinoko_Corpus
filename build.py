@@ -70,4 +70,4 @@ for root, dirs, files in os.walk('.'):
 with open('data.json', 'w', encoding='utf-8') as f:
     json.dump(corpus, f, ensure_ascii=False)
 
-print(f"🎉 究极完美版打包完成！一共提取了 {len(corpus)} 条数据入库！")
+print(f"Build complete: {len(corpus)} entries written to data.json")
