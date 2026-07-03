@@ -155,13 +155,58 @@
         .gate-icon { font-size: 48px; margin-bottom: 12px; }
         .gate-title { font-size: 22px; font-weight: bold; color: #d63384; margin-bottom: 8px; }
         .gate-desc { font-size: 14px; color: #666; line-height: 1.8; margin-bottom: 28px; }
-        .gate-input { width: 100%; padding: 12px 16px; font-size: 16px; border: 2px solid #e1e4e8; border-radius: 8px; outline: none; box-sizing: border-box; margin-bottom: 12px; transition: border 0.3s; }
+        .gate-input { width: 100%; padding: 12px 16px; font-size: 15px; border: 2px solid #e1e4e8; border-radius: 8px; outline: none; box-sizing: border-box; margin-bottom: 12px; transition: border 0.3s; font-family: monospace; letter-spacing: 0.5px; }
         .gate-input:focus { border-color: #d63384; }
         .gate-input.shake { animation: gate-shake 0.35s; border-color: #dc3545; }
         .gate-btn { width: 100%; padding: 12px; font-size: 16px; font-weight: bold; background: #d63384; color: white; border: none; border-radius: 8px; cursor: pointer; transition: background 0.2s; }
         .gate-btn:hover { background: #b8296e; }
-        .gate-error { color: #dc3545; font-size: 13px; margin-top: 8px; min-height: 18px; }
+        .gate-btn:disabled { background: #e8a0bc; cursor: not-allowed; }
+        .gate-error { color: #dc3545; font-size: 13px; margin-top: 10px; min-height: 18px; }
         @keyframes gate-shake { 0%,100%{transform:translateX(0)} 25%{transform:translateX(-7px)} 75%{transform:translateX(7px)} }
+
+        /* ── 用户状态徽章 ── */
+        #userBadge { position: fixed; top: 14px; right: 18px; z-index: 500; display: none; align-items: center; gap: 6px; background: white; border: 1.5px solid #e1e4e8; border-radius: 20px; padding: 6px 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.08); font-size: 13px; cursor: pointer; user-select: none; transition: border-color 0.2s; }
+        #userBadge:hover, #userBadge.open { border-color: #d63384; }
+        .badge-name { font-weight: 600; color: #333; }
+        .badge-arrow { color: #bbb; font-size: 10px; margin-left: 2px; }
+        #badgeDropdown { position: fixed; top: 50px; right: 18px; z-index: 501; display: none; background: white; border: 1.5px solid #e1e4e8; border-radius: 10px; box-shadow: 0 4px 20px rgba(0,0,0,0.12); overflow: hidden; min-width: 136px; }
+        #badgeDropdown.open { display: block; }
+        .dd-item { width: 100%; text-align: left; padding: 11px 16px; border: none; background: none; cursor: pointer; font-size: 14px; display: block; transition: background 0.15s; white-space: nowrap; }
+        .dd-item:hover { background: #f8f8f8; }
+        .dd-item.danger { color: #dc3545; border-top: 1px solid #f5f5f5; }
+
+        /* ── 管理员面板 ── */
+        #adminOverlay { position: fixed; inset: 0; z-index: 1000; background: rgba(0,0,0,0.45); display: none; align-items: flex-start; justify-content: center; padding: 40px 16px; overflow-y: auto; }
+        #adminOverlay.open { display: flex; }
+        .admin-card { background: white; border-radius: 16px; box-shadow: 0 8px 40px rgba(0,0,0,0.18); padding: 32px 36px; max-width: 820px; width: 100%; }
+        .admin-hdr { display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; }
+        .admin-hdr h3 { margin: 0; font-size: 18px; color: #333; }
+        .admin-close-btn { background: none; border: none; font-size: 22px; cursor: pointer; color: #aaa; line-height: 1; padding: 0; }
+        .admin-close-btn:hover { color: #333; }
+        .admin-input { padding: 9px 13px; font-size: 14px; border: 1.5px solid #e1e4e8; border-radius: 8px; outline: none; }
+        .admin-input:focus { border-color: #d63384; }
+        .admin-add-row { display: flex; gap: 8px; margin-bottom: 12px; flex-wrap: wrap; align-items: center; }
+        .adm-btn { padding: 9px 18px; font-size: 14px; font-weight: bold; border: none; border-radius: 8px; cursor: pointer; white-space: nowrap; }
+        .adm-btn.primary { background: #d63384; color: white; }
+        .adm-btn.primary:hover { background: #b8296e; }
+        .adm-btn.primary:disabled { background: #e8a0bc; cursor: not-allowed; }
+        .adm-btn.success { background: #198754; color: white; font-size: 13px; padding: 6px 12px; }
+        .adm-btn.muted { background: #6c757d; color: white; font-size: 12px; padding: 5px 10px; }
+        .adm-btn.warn { background: #dc3545; color: white; font-size: 12px; padding: 5px 10px; }
+        #adminNewKey { display: none; margin: 8px 0 18px; padding: 12px 16px; background: #f0fff4; border: 1.5px solid #6fcf97; border-radius: 10px; }
+        .new-key-label { font-size: 12px; color: #276749; margin-bottom: 6px; }
+        .new-key-row { display: flex; gap: 8px; align-items: center; }
+        #newKeyCode { font-family: monospace; font-size: 16px; font-weight: bold; color: #2c7a7b; background: #e6fffa; padding: 5px 14px; border-radius: 6px; flex: 1; letter-spacing: 0.5px; }
+        .admin-table-wrap { overflow-x: auto; margin-top: 4px; }
+        .admin-tbl { width: 100%; border-collapse: collapse; font-size: 13px; }
+        .admin-tbl th { text-align: left; padding: 8px 12px; background: #f8f9fa; color: #555; font-weight: 600; border-bottom: 2px solid #e1e4e8; white-space: nowrap; }
+        .admin-tbl td { padding: 10px 12px; border-bottom: 1px solid #f3f3f3; vertical-align: middle; }
+        .admin-tbl tr:last-child td { border-bottom: none; }
+        .admin-tbl tr:hover td { background: #fafafa; }
+        .key-mono { font-family: monospace; font-size: 12px; color: #999; }
+        .status-pill { display: inline-block; padding: 2px 9px; border-radius: 10px; font-size: 11px; font-weight: 600; }
+        .status-pill.on { background: #d4edda; color: #155724; }
+        .status-pill.off { background: #f8d7da; color: #721c24; }
     </style>
 </head>
 <body>
@@ -177,13 +222,24 @@
                 请输入访问码以继续使用。<br>
                 请向网站维护者申请访问码获得访问权限。
             </div>
-            <input type="password" id="gateInput" class="gate-input" placeholder="访问码" autocomplete="off">
-            <button id="gateBtn" class="gate-btn">验证访问权限</button>
+            <input type="text" id="gateInput" class="gate-input" placeholder="访问码（格式：ki-xxxxxxxxxx）" autocomplete="off" spellcheck="false">
+            <button id="gateBtn" class="gate-btn">登录</button>
             <div id="gateError" class="gate-error"></div>
         </div>
     </div>
 
-    <h1>🍄 KINOKO 本地化在线检索系统</h1>
+    <!-- 用户状态徽章（登录后右上角显示） -->
+    <div id="userBadge">
+        <span>👤</span>
+        <span class="badge-name" id="badgeName"></span>
+        <span class="badge-arrow">▾</span>
+    </div>
+    <div id="badgeDropdown">
+        <button class="dd-item" id="btnAdminPanel">🔧 管理面板</button>
+        <button class="dd-item danger" id="btnLogout">🚪 退出登录</button>
+    </div>
+
+    <h1><span id="kinokoLogo">🍄</span> KINOKO 本地化在线检索系统</h1>
 
     <div class="tab-container">
         <button class="tab-btn active" data-mode="dialogue">💬 剧情台词库</button>
@@ -272,41 +328,313 @@
     <div id="results"></div>
 
     <script>
-    /* ── 访问验证 ──
-       修改访问码：把下面 ACCESS_CODE 改成新密码，所有人下次打开时需重新验证。
-    */
-    (function () {
-        const ACCESS_CODE = atob('a2lub2tvMjAyNQ=='); // kinoko2025
-        const STORE_KEY   = 'kinoko_gate_v1';
-        const gate        = document.getElementById('accessGate');
+    /* ══════════════════════════════════════════════════════════
+       KINOKO 多用户认证系统
+       ──────────────────────────────────────────────────────────
+       WORKER_URL：填入你的 Cloudflare Worker 地址（不带末尾 /）
+       例：https://kinoko-cors.yourname.workers.dev
+       留空则优先从「自定义跨域代理」设置中自动解析。
+       ══════════════════════════════════════════════════════════ */
+    const KINOKO_WORKER_URL = '';
 
-        if (localStorage.getItem(STORE_KEY) === btoa(ACCESS_CODE)) {
-            gate.style.display = 'none';
-            return;
+    var AUTH = (function () {
+        // ── 解析 Worker 地址 ──────────────────────────────────
+        function workerBase() {
+            if (KINOKO_WORKER_URL) return KINOKO_WORKER_URL;
+            const saved = localStorage.getItem('kinoko_custom_proxy') || '';
+            try { if (saved) return new URL(saved).origin; } catch {}
+            return '';
         }
 
-        const input  = document.getElementById('gateInput');
-        const btn    = document.getElementById('gateBtn');
-        const errDiv = document.getElementById('gateError');
+        const SESS_KEY  = 'kinoko_session_v2';
+        const ADMIN_AK  = 'kinoko_admin_ak';   // sessionStorage
 
-        function tryUnlock() {
-            if (input.value === ACCESS_CODE) {
-                localStorage.setItem(STORE_KEY, btoa(ACCESS_CODE));
-                gate.style.display = 'none';
+        const gate      = document.getElementById('accessGate');
+        const badge     = document.getElementById('userBadge');
+        const dropdown  = document.getElementById('badgeDropdown');
+        const adminOvr  = document.getElementById('adminOverlay');
+
+        // ── Session ────────────────────────────────────────────
+        function getSession() { try { return JSON.parse(localStorage.getItem(SESS_KEY)); } catch { return null; } }
+        function saveSession(key, name) { localStorage.setItem(SESS_KEY, JSON.stringify({ key, name })); }
+        function clearSession() { localStorage.removeItem(SESS_KEY); }
+
+        // ── Gate UI ────────────────────────────────────────────
+        function showGate() {
+            gate.style.display = 'flex';
+            badge.style.display = 'none';
+            dropdown.classList.remove('open');
+            badge.classList.remove('open');
+            setTimeout(() => document.getElementById('gateInput').focus(), 60);
+        }
+
+        function hideGate(name) {
+            gate.style.display = 'none';
+            document.getElementById('badgeName').textContent = name;
+            badge.style.display = 'flex';
+        }
+
+        function gateShake(msg) {
+            const inp = document.getElementById('gateInput');
+            document.getElementById('gateError').textContent = msg;
+            inp.classList.remove('shake');
+            void inp.offsetWidth;
+            inp.classList.add('shake');
+            setTimeout(() => inp.classList.remove('shake'), 400);
+            inp.value = '';
+            inp.focus();
+        }
+
+        // ── Worker API ─────────────────────────────────────────
+        async function workerPost(path, body) {
+            const base = workerBase();
+            if (!base) return { ok: false, error: '未配置 Worker 地址，请先在「自定义跨域代理」填写并保存 Worker 地址' };
+            try {
+                const r = await fetch(base + path, {
+                    method:  'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body:    JSON.stringify(body),
+                });
+                return await r.json();
+            } catch (e) { return { ok: false, error: '网络错误：' + e.message }; }
+        }
+
+        async function workerGet(path) {
+            const base = workerBase();
+            if (!base) return { error: '未配置 Worker 地址' };
+            try {
+                const r = await fetch(base + path);
+                return await r.json();
+            } catch (e) { return { error: '网络错误：' + e.message }; }
+        }
+
+        // ── Login ──────────────────────────────────────────────
+        async function tryLogin() {
+            const inp = document.getElementById('gateInput');
+            const btn = document.getElementById('gateBtn');
+            const key = inp.value.trim();
+            if (!key) return;
+
+            btn.disabled = true;
+            btn.textContent = '验证中...';
+            const res = await workerPost('/auth/login', { key });
+            btn.disabled = false;
+            btn.textContent = '登录';
+
+            if (res.ok) {
+                saveSession(key, res.name);
+                hideGate(res.name);
             } else {
-                errDiv.textContent = '访问码不正确，请联系管理员获取。';
-                input.classList.remove('shake');
-                void input.offsetWidth; // restart animation
-                input.classList.add('shake');
-                input.value = '';
-                input.focus();
-                setTimeout(() => input.classList.remove('shake'), 400);
+                gateShake(res.error || '访问码无效，请联系维护者获取');
             }
         }
 
-        btn.addEventListener('click', tryUnlock);
-        input.addEventListener('keydown', e => { if (e.key === 'Enter') tryUnlock(); });
-        setTimeout(() => input.focus(), 50);
+        function logout() {
+            clearSession();
+            sessionStorage.removeItem(ADMIN_AK);
+            showGate();
+        }
+
+        // ── Badge dropdown ─────────────────────────────────────
+        badge.addEventListener('click', () => {
+            dropdown.classList.toggle('open');
+            badge.classList.toggle('open');
+        });
+        document.addEventListener('click', e => {
+            if (!badge.contains(e.target) && !dropdown.contains(e.target)) {
+                dropdown.classList.remove('open');
+                badge.classList.remove('open');
+            }
+        });
+        document.getElementById('btnLogout').addEventListener('click', logout);
+        document.getElementById('btnAdminPanel').addEventListener('click', () => {
+            dropdown.classList.remove('open');
+            badge.classList.remove('open');
+            openAdmin();
+        });
+
+        // ── Gate listeners ─────────────────────────────────────
+        document.getElementById('gateBtn').addEventListener('click', tryLogin);
+        document.getElementById('gateInput').addEventListener('keydown', e => {
+            if (e.key === 'Enter') tryLogin();
+        });
+
+        // ── Activity ping (debounced 2 s) ──────────────────────
+        var _pingTimer = null;
+        function ping(action, q) {
+            var sess = getSession();
+            if (!sess) return;
+            clearTimeout(_pingTimer);
+            _pingTimer = setTimeout(function () {
+                workerPost('/auth/ping', { key: sess.key, action: action, q: q || '' }).catch(function(){});
+            }, 2000);
+        }
+
+        // ── Admin panel ────────────────────────────────────────
+        function openAdmin() {
+            adminOvr.classList.add('open');
+            var ak = sessionStorage.getItem(ADMIN_AK);
+            if (ak) {
+                loadAdminStats(ak);
+            } else {
+                document.getElementById('adminAuthSection').style.display = 'block';
+                document.getElementById('adminContent').style.display = 'none';
+                setTimeout(() => document.getElementById('adminKeyInput').focus(), 60);
+            }
+        }
+
+        function closeAdmin() { adminOvr.classList.remove('open'); }
+
+        async function adminLogin() {
+            var ak = document.getElementById('adminKeyInput').value.trim();
+            if (!ak) return;
+            var res = await workerGet('/admin/stats?ak=' + encodeURIComponent(ak));
+            if (res.error) {
+                document.getElementById('adminAuthErr').textContent = res.error === 'unauthorized' ? '密钥不正确' : res.error;
+                return;
+            }
+            sessionStorage.setItem(ADMIN_AK, ak);
+            document.getElementById('adminAuthSection').style.display = 'none';
+            document.getElementById('adminContent').style.display = 'block';
+            renderAdminUsers(res.users || []);
+        }
+
+        async function loadAdminStats(ak) {
+            document.getElementById('adminAuthSection').style.display = 'none';
+            document.getElementById('adminContent').style.display = 'block';
+            document.getElementById('adminLoading').style.display = 'block';
+            document.getElementById('adminTableWrap').style.display = 'none';
+            var res = await workerGet('/admin/stats?ak=' + encodeURIComponent(ak));
+            document.getElementById('adminLoading').style.display = 'none';
+            if (res.error) {
+                document.getElementById('adminLoading').style.display = 'block';
+                document.getElementById('adminLoading').textContent = '错误：' + res.error;
+                return;
+            }
+            renderAdminUsers(res.users || []);
+        }
+
+        function renderAdminUsers(users) {
+            document.getElementById('adminLoading').style.display = 'none';
+            var wrap = document.getElementById('adminTableWrap');
+            var tbody = document.getElementById('adminTbody');
+            if (!users.length) {
+                wrap.style.display = 'none';
+                document.getElementById('adminLoading').style.display = 'block';
+                document.getElementById('adminLoading').textContent = '暂无用户，请点击「+ 添加用户」创建第一个用户';
+                return;
+            }
+            wrap.style.display = 'block';
+            tbody.innerHTML = users.map(function(u) {
+                var lastSeen = u.last_seen ? u.last_seen.replace('T',' ').replace(/\.\d+Z$/,'') : '-';
+                var cls = u.active ? 'on' : 'off';
+                var label = u.active ? '正常' : '停用';
+                var btnCls = u.active ? 'warn' : 'muted';
+                var btnLbl = u.active ? '停用' : '启用';
+                var kq = (u.last_query || '-').slice(0, 30);
+                return '<tr>' +
+                    '<td><b>' + esc(u.name) + '</b></td>' +
+                    '<td class="key-mono">' + esc(u.key) + '</td>' +
+                    '<td>' + esc(u.note || '') + '</td>' +
+                    '<td><span class="status-pill ' + cls + '">' + label + '</span></td>' +
+                    '<td style="white-space:nowrap">' + lastSeen + '</td>' +
+                    '<td style="text-align:center">' + (u.total_logins || 0) + '</td>' +
+                    '<td style="text-align:center">' + (u.total_searches || 0) + '</td>' +
+                    '<td style="max-width:140px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="' + esc(u.last_query||'') + '">' + esc(kq) + '</td>' +
+                    '<td><button class="adm-btn ' + btnCls + ' toggle-user-btn" data-key="' + esc(u.key) + '">' + btnLbl + '</button></td>' +
+                    '</tr>';
+            }).join('');
+        }
+
+        // Toggle user via event delegation
+        document.getElementById('adminTbody').addEventListener('click', async function(e) {
+            var btn = e.target.closest('.toggle-user-btn');
+            if (!btn) return;
+            var key = btn.dataset.key;
+            var ak  = sessionStorage.getItem(ADMIN_AK);
+            if (!ak || !key) return;
+            btn.disabled = true;
+            await workerPost('/admin/del-user?ak=' + encodeURIComponent(ak), { key: key });
+            loadAdminStats(ak);
+        });
+
+        // Add user
+        document.getElementById('btnAddUser').addEventListener('click', async function() {
+            var ak   = sessionStorage.getItem(ADMIN_AK);
+            var name = document.getElementById('newUserName').value.trim();
+            var note = document.getElementById('newUserNote').value.trim();
+            if (!name) { alert('请输入姓名'); return; }
+            if (!ak) return;
+            var btn = document.getElementById('btnAddUser');
+            btn.disabled = true;
+            var res = await workerPost('/admin/add-user?ak=' + encodeURIComponent(ak), { name: name, note: note });
+            btn.disabled = false;
+            if (res.ok) {
+                document.getElementById('newUserName').value = '';
+                document.getElementById('newUserNote').value = '';
+                document.getElementById('newKeyCode').textContent = res.key;
+                document.getElementById('adminNewKey').style.display = 'block';
+                loadAdminStats(ak);
+            } else {
+                alert('添加失败：' + (res.error || '未知错误'));
+            }
+        });
+
+        // Copy key
+        document.getElementById('btnCopyKey').addEventListener('click', function() {
+            var key = document.getElementById('newKeyCode').textContent;
+            navigator.clipboard.writeText(key).then(function() {
+                var btn = document.getElementById('btnCopyKey');
+                btn.textContent = '已复制！';
+                setTimeout(function() { btn.textContent = '复制'; }, 2000);
+            });
+        });
+
+        // Refresh
+        document.getElementById('btnRefresh').addEventListener('click', function() {
+            var ak = sessionStorage.getItem(ADMIN_AK);
+            if (ak) loadAdminStats(ak);
+        });
+
+        // Admin key submit
+        document.getElementById('adminKeyBtn').addEventListener('click', adminLogin);
+        document.getElementById('adminKeyInput').addEventListener('keydown', function(e) {
+            if (e.key === 'Enter') adminLogin();
+        });
+
+        // Close admin
+        ['adminClose','adminClose2'].forEach(function(id) {
+            var el = document.getElementById(id);
+            if (el) el.addEventListener('click', closeAdmin);
+        });
+        adminOvr.addEventListener('click', function(e) {
+            if (e.target === adminOvr) closeAdmin();
+        });
+
+        // ── Escape key ─────────────────────────────────────────
+        function esc(s) {
+            return String(s || '').replace(/[&<>"']/g, function(c) {
+                return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];
+            });
+        }
+
+        // ── Init ───────────────────────────────────────────────
+        (async function init() {
+            var sess = getSession();
+            if (!sess) { showGate(); return; }
+
+            hideGate(sess.name); // optimistic: show immediately
+            var res = await workerPost('/auth/login', { key: sess.key });
+            if (!res.ok) {
+                clearSession();
+                logout();
+            } else if (res.name !== sess.name) {
+                saveSession(sess.key, res.name);
+                document.getElementById('badgeName').textContent = res.name;
+            }
+        })();
+
+        return { ping: ping };
     })();
 
     let corpusData = [];
@@ -480,6 +808,7 @@
         document.getElementById('searchInput').value = '';
         renderChips();
         performSearch();
+        AUTH.ping('search', filters.filter(f => f.mode === 'include').map(f => f.kw).join(' '));
     }
 
     /* ── 收藏词条（语料条目）── */
@@ -1446,5 +1775,56 @@
         resultsDiv.appendChild(frag);
     }
     </script>
+
+    <!-- 管理员面板 -->
+    <div id="adminOverlay">
+        <div class="admin-card">
+            <!-- 未登录：输入管理员密钥 -->
+            <div id="adminAuthSection">
+                <div class="admin-hdr">
+                    <h3>🔧 管理员登录</h3>
+                    <button class="admin-close-btn" id="adminClose">✕</button>
+                </div>
+                <div style="margin-bottom:12px; font-size:14px; color:#666">请输入在 Cloudflare Worker 中设置的 ADMIN_KEY：</div>
+                <div style="display:flex; gap:8px">
+                    <input type="password" id="adminKeyInput" class="admin-input" placeholder="管理员密钥" style="flex:1">
+                    <button id="adminKeyBtn" class="adm-btn primary">进入</button>
+                </div>
+                <div id="adminAuthErr" style="color:#dc3545; font-size:13px; margin-top:8px; min-height:18px"></div>
+            </div>
+            <!-- 已登录：管理内容 -->
+            <div id="adminContent" style="display:none">
+                <div class="admin-hdr">
+                    <h3>🔧 用户管理</h3>
+                    <button class="admin-close-btn" id="adminClose2">✕</button>
+                </div>
+                <div class="admin-add-row">
+                    <input type="text" id="newUserName" class="admin-input" placeholder="姓名 / 用户名" style="width:150px">
+                    <input type="text" id="newUserNote" class="admin-input" placeholder="备注（可选）" style="width:160px">
+                    <button id="btnAddUser" class="adm-btn primary">+ 添加用户</button>
+                    <button id="btnRefresh" class="adm-btn muted" style="margin-left:auto">↻ 刷新</button>
+                </div>
+                <div id="adminNewKey">
+                    <div class="new-key-label">用户已创建，访问码如下（分享给用户后请关闭此提示）：</div>
+                    <div class="new-key-row">
+                        <span id="newKeyCode"></span>
+                        <button id="btnCopyKey" class="adm-btn success">复制</button>
+                    </div>
+                </div>
+                <div id="adminLoading" style="text-align:center; color:#aaa; padding:30px; font-size:14px">加载中...</div>
+                <div class="admin-table-wrap" id="adminTableWrap" style="display:none">
+                    <table class="admin-tbl" id="adminTbl">
+                        <thead>
+                            <tr>
+                                <th>姓名</th><th>访问码</th><th>备注</th><th>状态</th>
+                                <th>最近活跃</th><th>登录</th><th>搜索</th><th>最近搜索词</th><th>操作</th>
+                            </tr>
+                        </thead>
+                        <tbody id="adminTbody"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
 </body>
 </html>
