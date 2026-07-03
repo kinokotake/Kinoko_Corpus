@@ -148,9 +148,40 @@
         /* 标签行 */
         .skill-tags { margin-top: 8px; font-size: 13px; color: #6c757d; }
         .skill-tag-chip { display: inline-block; background: #f0f0f0; color: #555; padding: 1px 7px; border-radius: 10px; font-size: 12px; margin: 2px 3px 2px 0; }
+
+        /* ── 访问验证门 ── */
+        #accessGate { position: fixed; inset: 0; z-index: 9999; background: linear-gradient(135deg, #f7f9fc 0%, #eef2f8 100%); display: flex; align-items: center; justify-content: center; }
+        .gate-card { background: white; border-radius: 16px; box-shadow: 0 8px 32px rgba(0,0,0,0.12); padding: 40px 48px; max-width: 440px; width: 90%; text-align: center; }
+        .gate-icon { font-size: 48px; margin-bottom: 12px; }
+        .gate-title { font-size: 22px; font-weight: bold; color: #d63384; margin-bottom: 8px; }
+        .gate-desc { font-size: 14px; color: #666; line-height: 1.8; margin-bottom: 28px; }
+        .gate-input { width: 100%; padding: 12px 16px; font-size: 16px; border: 2px solid #e1e4e8; border-radius: 8px; outline: none; box-sizing: border-box; margin-bottom: 12px; transition: border 0.3s; }
+        .gate-input:focus { border-color: #d63384; }
+        .gate-input.shake { animation: gate-shake 0.35s; border-color: #dc3545; }
+        .gate-btn { width: 100%; padding: 12px; font-size: 16px; font-weight: bold; background: #d63384; color: white; border: none; border-radius: 8px; cursor: pointer; transition: background 0.2s; }
+        .gate-btn:hover { background: #b8296e; }
+        .gate-error { color: #dc3545; font-size: 13px; margin-top: 8px; min-height: 18px; }
+        @keyframes gate-shake { 0%,100%{transform:translateX(0)} 25%{transform:translateX(-7px)} 75%{transform:translateX(7px)} }
     </style>
 </head>
 <body>
+
+    <!-- 访问验证门 -->
+    <div id="accessGate">
+        <div class="gate-card">
+            <div class="gate-icon">🔐</div>
+            <div class="gate-title">🍄 KINOKO 语料库</div>
+            <div class="gate-desc">
+                为防止外部人员通过 AI 搜索发现并使用此工具，<br>
+                本语料库设有访问验证。<br>
+                请输入访问码以继续使用。
+            </div>
+            <input type="password" id="gateInput" class="gate-input" placeholder="访问码" autocomplete="off">
+            <button id="gateBtn" class="gate-btn">验证访问权限</button>
+            <div id="gateError" class="gate-error"></div>
+        </div>
+    </div>
+
     <h1>🍄 KINOKO 本地化在线检索系统</h1>
 
     <div class="tab-container">
@@ -240,6 +271,43 @@
     <div id="results"></div>
 
     <script>
+    /* ── 访问验证 ──
+       修改访问码：把下面 ACCESS_CODE 改成新密码，所有人下次打开时需重新验证。
+    */
+    (function () {
+        const ACCESS_CODE = atob('a2lub2tvMjAyNQ=='); // kinoko2025
+        const STORE_KEY   = 'kinoko_gate_v1';
+        const gate        = document.getElementById('accessGate');
+
+        if (localStorage.getItem(STORE_KEY) === btoa(ACCESS_CODE)) {
+            gate.style.display = 'none';
+            return;
+        }
+
+        const input  = document.getElementById('gateInput');
+        const btn    = document.getElementById('gateBtn');
+        const errDiv = document.getElementById('gateError');
+
+        function tryUnlock() {
+            if (input.value === ACCESS_CODE) {
+                localStorage.setItem(STORE_KEY, btoa(ACCESS_CODE));
+                gate.style.display = 'none';
+            } else {
+                errDiv.textContent = '访问码不正确，请联系管理员获取。';
+                input.classList.remove('shake');
+                void input.offsetWidth; // restart animation
+                input.classList.add('shake');
+                input.value = '';
+                input.focus();
+                setTimeout(() => input.classList.remove('shake'), 400);
+            }
+        }
+
+        btn.addEventListener('click', tryUnlock);
+        input.addEventListener('keydown', e => { if (e.key === 'Enter') tryUnlock(); });
+        setTimeout(() => input.focus(), 50);
+    })();
+
     let corpusData = [];
     let currentMode = 'dialogue';
     let currentGame = 'all';
