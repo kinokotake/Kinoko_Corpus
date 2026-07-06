@@ -327,6 +327,55 @@
     <div id="status">正在读取语料库，请稍候...</div>
     <div id="results"></div>
 
+    <!-- 管理员面板（必须在 <script> 之前，否则 JS 找不到元素） -->
+    <div id="adminOverlay">
+        <div class="admin-card">
+            <div id="adminAuthSection">
+                <div class="admin-hdr">
+                    <h3>🔧 管理员登录</h3>
+                    <button class="admin-close-btn" id="adminClose">✕</button>
+                </div>
+                <div style="margin-bottom:12px; font-size:14px; color:#666">请输入在 Cloudflare Worker 中设置的 ADMIN_KEY：</div>
+                <div style="display:flex; gap:8px">
+                    <input type="password" id="adminKeyInput" class="admin-input" placeholder="管理员密钥" style="flex:1">
+                    <button id="adminKeyBtn" class="adm-btn primary">进入</button>
+                </div>
+                <div id="adminAuthErr" style="color:#dc3545; font-size:13px; margin-top:8px; min-height:18px"></div>
+            </div>
+            <div id="adminContent" style="display:none">
+                <div class="admin-hdr">
+                    <h3>🔧 用户管理</h3>
+                    <button class="admin-close-btn" id="adminClose2">✕</button>
+                </div>
+                <div class="admin-add-row">
+                    <input type="text" id="newUserName" class="admin-input" placeholder="姓名 / 用户名" style="width:150px">
+                    <input type="text" id="newUserNote" class="admin-input" placeholder="备注（可选）" style="width:160px">
+                    <button id="btnAddUser" class="adm-btn primary">+ 添加用户</button>
+                    <button id="btnRefresh" class="adm-btn muted" style="margin-left:auto">↻ 刷新</button>
+                </div>
+                <div id="adminNewKey">
+                    <div class="new-key-label">用户已创建，访问码如下（分享给用户后请关闭此提示）：</div>
+                    <div class="new-key-row">
+                        <span id="newKeyCode"></span>
+                        <button id="btnCopyKey" class="adm-btn success">复制</button>
+                    </div>
+                </div>
+                <div id="adminLoading" style="text-align:center; color:#aaa; padding:30px; font-size:14px">加载中...</div>
+                <div class="admin-table-wrap" id="adminTableWrap" style="display:none">
+                    <table class="admin-tbl" id="adminTbl">
+                        <thead>
+                            <tr>
+                                <th>姓名</th><th>访问码</th><th>备注</th><th>状态</th>
+                                <th>最近活跃</th><th>登录</th><th>搜索</th><th>最近搜索词</th><th>操作</th>
+                            </tr>
+                        </thead>
+                        <tbody id="adminTbody"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <script>
     /* ══════════════════════════════════════════════════════════
        KINOKO 多用户认证系统
@@ -1775,56 +1824,5 @@
         resultsDiv.appendChild(frag);
     }
     </script>
-
-    <!-- 管理员面板 -->
-    <div id="adminOverlay">
-        <div class="admin-card">
-            <!-- 未登录：输入管理员密钥 -->
-            <div id="adminAuthSection">
-                <div class="admin-hdr">
-                    <h3>🔧 管理员登录</h3>
-                    <button class="admin-close-btn" id="adminClose">✕</button>
-                </div>
-                <div style="margin-bottom:12px; font-size:14px; color:#666">请输入在 Cloudflare Worker 中设置的 ADMIN_KEY：</div>
-                <div style="display:flex; gap:8px">
-                    <input type="password" id="adminKeyInput" class="admin-input" placeholder="管理员密钥" style="flex:1">
-                    <button id="adminKeyBtn" class="adm-btn primary">进入</button>
-                </div>
-                <div id="adminAuthErr" style="color:#dc3545; font-size:13px; margin-top:8px; min-height:18px"></div>
-            </div>
-            <!-- 已登录：管理内容 -->
-            <div id="adminContent" style="display:none">
-                <div class="admin-hdr">
-                    <h3>🔧 用户管理</h3>
-                    <button class="admin-close-btn" id="adminClose2">✕</button>
-                </div>
-                <div class="admin-add-row">
-                    <input type="text" id="newUserName" class="admin-input" placeholder="姓名 / 用户名" style="width:150px">
-                    <input type="text" id="newUserNote" class="admin-input" placeholder="备注（可选）" style="width:160px">
-                    <button id="btnAddUser" class="adm-btn primary">+ 添加用户</button>
-                    <button id="btnRefresh" class="adm-btn muted" style="margin-left:auto">↻ 刷新</button>
-                </div>
-                <div id="adminNewKey">
-                    <div class="new-key-label">用户已创建，访问码如下（分享给用户后请关闭此提示）：</div>
-                    <div class="new-key-row">
-                        <span id="newKeyCode"></span>
-                        <button id="btnCopyKey" class="adm-btn success">复制</button>
-                    </div>
-                </div>
-                <div id="adminLoading" style="text-align:center; color:#aaa; padding:30px; font-size:14px">加载中...</div>
-                <div class="admin-table-wrap" id="adminTableWrap" style="display:none">
-                    <table class="admin-tbl" id="adminTbl">
-                        <thead>
-                            <tr>
-                                <th>姓名</th><th>访问码</th><th>备注</th><th>状态</th>
-                                <th>最近活跃</th><th>登录</th><th>搜索</th><th>最近搜索词</th><th>操作</th>
-                            </tr>
-                        </thead>
-                        <tbody id="adminTbody"></tbody>
-                    </table>
-                </div>
-            </div>
-        </div>
-    </div>
 </body>
 </html>
