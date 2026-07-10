@@ -630,21 +630,34 @@
                     '<td style="text-align:center">' + (u.total_logins || 0) + '</td>' +
                     '<td style="text-align:center">' + (u.total_searches || 0) + '</td>' +
                     '<td style="max-width:140px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="' + esc(u.last_query||'') + '">' + esc(kq) + '</td>' +
-                    '<td><button class="adm-btn ' + btnCls + ' toggle-user-btn" data-key="' + esc(u.key) + '">' + btnLbl + '</button></td>' +
+                    '<td style="white-space:nowrap;display:flex;gap:4px">' +
+                        '<button class="adm-btn ' + btnCls + ' toggle-user-btn" data-key="' + esc(u.key) + '">' + btnLbl + '</button>' +
+                        '<button class="adm-btn remove-user-btn" data-key="' + esc(u.key) + '" data-name="' + esc(u.name) + '" style="background:#f8d7da;color:#721c24;border:1px solid #f1b0b7" title="永久删除">删除</button>' +
+                    '</td>' +
                     '</tr>';
             }).join('');
         }
 
-        // Toggle user via event delegation
+        // Toggle / Remove user via event delegation
         document.getElementById('adminTbody').addEventListener('click', async function(e) {
-            var btn = e.target.closest('.toggle-user-btn');
-            if (!btn) return;
-            var key = btn.dataset.key;
-            var ak  = sessionStorage.getItem(ADMIN_AK);
-            if (!ak || !key) return;
-            btn.disabled = true;
-            await workerPost('/admin/del-user?ak=' + encodeURIComponent(ak), { key: key });
-            loadAdminStats(ak);
+            var ak = sessionStorage.getItem(ADMIN_AK);
+            if (!ak) return;
+
+            var toggleBtn = e.target.closest('.toggle-user-btn');
+            if (toggleBtn) {
+                toggleBtn.disabled = true;
+                await workerPost('/admin/del-user?ak=' + encodeURIComponent(ak), { key: toggleBtn.dataset.key });
+                loadAdminStats(ak);
+                return;
+            }
+
+            var removeBtn = e.target.closest('.remove-user-btn');
+            if (removeBtn) {
+                if (!confirm('永久删除用户「' + removeBtn.dataset.name + '」？此操作不可撤销。')) return;
+                removeBtn.disabled = true;
+                await workerPost('/admin/remove-user?ak=' + encodeURIComponent(ak), { key: removeBtn.dataset.key });
+                loadAdminStats(ak);
+            }
         });
 
         // Add user

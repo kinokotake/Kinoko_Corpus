@@ -161,6 +161,20 @@ export default {
       return jsonResp({ ok: true, active: user.active });
     }
 
+    // ── POST /admin/remove-user ─────────────────────────────────
+    if (url.pathname === '/admin/remove-user' && request.method === 'POST') {
+      if (!isAdmin(url, env)) return jsonResp({ error: 'unauthorized' }, 403);
+      if (!env.KINOKO_KV) return jsonResp({ error: 'KV not bound' }, 500);
+
+      const body = await request.json().catch(() => ({}));
+      const key = (body.key || '').trim();
+      if (!key) return jsonResp({ error: 'missing key' }, 400);
+
+      await env.KINOKO_KV.delete('user:'  + key);
+      await env.KINOKO_KV.delete('usage:' + key);
+      return jsonResp({ ok: true });
+    }
+
     // ── 原有 CORS 代理 ──────────────────────────────────────────
     const target = url.searchParams.get('url');
     if (!target) {
