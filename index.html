@@ -165,12 +165,30 @@
         @keyframes gate-shake { 0%,100%{transform:translateX(0)} 25%{transform:translateX(-7px)} 75%{transform:translateX(7px)} }
 
         /* ── 用户状态徽章 ── */
-        #userBadge { position: fixed; top: 14px; right: 18px; z-index: 500; display: none; align-items: center; gap: 6px; background: white; border: 1.5px solid #e1e4e8; border-radius: 20px; padding: 6px 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.08); font-size: 13px; cursor: pointer; user-select: none; transition: border-color 0.2s; }
+        /* ── 顶部右侧栏 ── */
+        #topRightBar { position: fixed; top: 14px; right: 18px; z-index: 500; display: flex; align-items: center; gap: 8px; }
+        #helpBtn { background: white; border: 1.5px solid #e1e4e8; border-radius: 50%; width: 34px; height: 34px; font-size: 16px; cursor: pointer; box-shadow: 0 2px 8px rgba(0,0,0,0.08); transition: border-color 0.2s; display: flex; align-items: center; justify-content: center; padding: 0; flex-shrink: 0; line-height: 1; }
+        #helpBtn:hover { border-color: #d63384; }
+        #userBadge { display: none; align-items: center; gap: 6px; background: white; border: 1.5px solid #e1e4e8; border-radius: 20px; padding: 6px 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.08); font-size: 13px; cursor: pointer; user-select: none; transition: border-color 0.2s; }
         #userBadge:hover, #userBadge.open { border-color: #d63384; }
         .badge-name { font-weight: 600; color: #333; }
         .badge-arrow { color: #bbb; font-size: 10px; margin-left: 2px; }
         #badgeDropdown { position: fixed; top: 50px; right: 18px; z-index: 501; display: none; background: white; border: 1.5px solid #e1e4e8; border-radius: 10px; box-shadow: 0 4px 20px rgba(0,0,0,0.12); overflow: hidden; min-width: 136px; }
         #badgeDropdown.open { display: block; }
+        /* ── 帮助模态框 ── */
+        #helpOverlay { position: fixed; inset: 0; z-index: 1000; background: rgba(0,0,0,0.45); display: none; align-items: flex-start; justify-content: center; padding: 40px 16px; overflow-y: auto; }
+        #helpOverlay.open { display: flex; }
+        .help-card { background: white; border-radius: 16px; box-shadow: 0 8px 40px rgba(0,0,0,0.18); padding: 32px 36px; max-width: 640px; width: 100%; }
+        .help-hdr { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; padding-bottom: 14px; border-bottom: 2px solid #fce4ef; }
+        .help-hdr h3 { margin: 0; font-size: 18px; color: #d63384; }
+        .help-section { margin-bottom: 16px; }
+        .help-section:last-child { margin-bottom: 0; }
+        .help-section h4 { margin: 0 0 6px; font-size: 13.5px; color: #d63384; font-weight: 700; }
+        .help-section ul { margin: 0; padding-left: 18px; }
+        .help-section li { font-size: 13.5px; color: #444; line-height: 1.75; margin-bottom: 2px; }
+        .help-section code { background: #f4f4f4; border-radius: 4px; padding: 1px 5px; font-size: 12.5px; color: #d63384; font-family: monospace; }
+        .help-divider { border: none; border-top: 1px solid #f0f0f0; margin: 16px 0; }
+        .help-note { background: #fff8f0; border-left: 3px solid #f0ad4e; padding: 9px 13px; border-radius: 0 6px 6px 0; font-size: 13px; color: #5a4a2a; line-height: 1.7; margin-top: 6px; }
         .dd-item { width: 100%; text-align: left; padding: 11px 16px; border: none; background: none; cursor: pointer; font-size: 14px; display: block; transition: background 0.15s; white-space: nowrap; }
         .dd-item:hover { background: #f8f8f8; }
         .dd-item.danger { color: #dc3545; border-top: 1px solid #f5f5f5; }
@@ -258,11 +276,14 @@
         </div>
     </div>
 
-    <!-- 用户状态徽章（登录后右上角显示） -->
-    <div id="userBadge">
-        <span>👤</span>
-        <span class="badge-name" id="badgeName"></span>
-        <span class="badge-arrow">▾</span>
+    <!-- 右上角操作栏 -->
+    <div id="topRightBar">
+        <button id="helpBtn" title="使用帮助">❓</button>
+        <div id="userBadge">
+            <span>👤</span>
+            <span class="badge-name" id="badgeName"></span>
+            <span class="badge-arrow">▾</span>
+        </div>
     </div>
     <div id="badgeDropdown">
         <button class="dd-item" id="btnAdminPanel">🔧 管理面板</button>
@@ -406,6 +427,72 @@
         </div>
     </div>
 
+    <!-- 帮助模态框 -->
+    <div id="helpOverlay">
+        <div class="help-card">
+            <div class="help-hdr">
+                <h3>❓ LiliCorpus 使用说明</h3>
+                <button class="admin-close-btn" id="helpClose">✕</button>
+            </div>
+
+            <div class="help-section">
+                <h4>🔍 搜索</h4>
+                <ul>
+                    <li>在搜索框输入关键词，按 <code>Enter</code> 或点击按钮搜索</li>
+                    <li>多个关键词用<b>空格</b>分隔，默认为 AND（同时包含所有词）</li>
+                    <li>排除词前加 <code>-</code>，例如 <code>攻撃 -魔法</code>：含「攻撃」但不含「魔法」</li>
+                    <li>勾选「区分大小写」后，英文字母大小写视为不同</li>
+                    <li>搜索结果上限 500 条，结果过多时请增加关键词缩小范围</li>
+                </ul>
+            </div>
+
+            <hr class="help-divider">
+
+            <div class="help-section">
+                <h4>🎮 数据浏览</h4>
+                <ul>
+                    <li>顶部 Tab 可切换「💬 剧情台词库」和「⚔️ 游戏技能库」两个独立数据库</li>
+                    <li>点击游戏标签按钮只看该游戏的条目，再次点击取消筛选</li>
+                    <li>技能条目右侧的「展开上下文」可查看相邻词条</li>
+                </ul>
+            </div>
+
+            <hr class="help-divider">
+
+            <div class="help-section">
+                <h4>⭐ 收藏夹</h4>
+                <ul>
+                    <li>点击条目右侧的 ☆ 可收藏，收藏结果跨会话保留在<b>本浏览器</b></li>
+                    <li>点击「⭐ 收藏夹」标签可查看所有已收藏条目</li>
+                </ul>
+                <div class="help-note">收藏数据存储在本地（localStorage），清除浏览器数据会丢失。</div>
+            </div>
+
+            <hr class="help-divider">
+
+            <div class="help-section">
+                <h4>🔗 网址抓取（临时扩充技能库）</h4>
+                <ul>
+                    <li>在「粘贴网址自动抓取」区域输入攻略页面网址，自动识别技能表格</li>
+                    <li>支持 kamigame.jp、gamerch.com、altema.jp、gamewith.jp 等常见攻略站</li>
+                    <li>抓取结果仅在<b>本次浏览器会话</b>内可搜索，刷新页面后丢失</li>
+                    <li>抓取通过 CORS 代理转发，偶尔较慢或失败，换个代理或稍后重试</li>
+                </ul>
+            </div>
+
+            <hr class="help-divider">
+
+            <div class="help-section">
+                <h4>💾 永久保存到数据库</h4>
+                <ul>
+                    <li>配置 GitHub Fine-grained Token 后，点击「保存到数据库」直接写入仓库</li>
+                    <li>几分钟后 GitHub Actions 自动重建，数据对所有用户生效</li>
+                    <li>未配置 Token 可点击「导出 JSONL」，将文件发给维护者手动提交</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
     <!-- 更新公告浮窗（必须在 <script> 之前） -->
     <button id="clBtn"><span class="cl-dot" id="clDot"></span>🔔 更新日志</button>
     <div id="clPanel">
@@ -523,6 +610,18 @@
             sessionStorage.removeItem(ADMIN_AK);
             showGate();
         }
+
+        // ── Help modal ─────────────────────────────────────────
+        const helpOverlay = document.getElementById('helpOverlay');
+        document.getElementById('helpBtn').addEventListener('click', () => {
+            helpOverlay.classList.add('open');
+        });
+        document.getElementById('helpClose').addEventListener('click', () => {
+            helpOverlay.classList.remove('open');
+        });
+        helpOverlay.addEventListener('click', e => {
+            if (e.target === helpOverlay) helpOverlay.classList.remove('open');
+        });
 
         // ── Badge dropdown ─────────────────────────────────────
         badge.addEventListener('click', () => {
