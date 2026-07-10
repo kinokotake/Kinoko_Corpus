@@ -207,6 +207,31 @@
         .status-pill { display: inline-block; padding: 2px 9px; border-radius: 10px; font-size: 11px; font-weight: 600; }
         .status-pill.on { background: #d4edda; color: #155724; }
         .status-pill.off { background: #f8d7da; color: #721c24; }
+
+        /* ── 更新公告浮窗 ── */
+        #clBtn { position: fixed; bottom: 24px; right: 24px; z-index: 400; display: none; align-items: center; gap: 6px; padding: 8px 14px; background: white; border: 1.5px solid #e1e4e8; border-radius: 20px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); cursor: pointer; font-size: 13px; font-weight: 600; color: #555; transition: all 0.2s; user-select: none; }
+        #clBtn:hover { border-color: #d63384; color: #d63384; box-shadow: 0 4px 14px rgba(214,51,132,0.15); }
+        #clBtn.open { border-color: #d63384; color: #d63384; }
+        .cl-dot { width: 8px; height: 8px; background: #dc3545; border-radius: 50%; display: none; flex-shrink: 0; }
+        .cl-dot.show { display: inline-block; }
+        #clPanel { position: fixed; bottom: 68px; right: 24px; z-index: 400; width: 310px; background: white; border: 1.5px solid #e1e4e8; border-radius: 12px; box-shadow: 0 6px 24px rgba(0,0,0,0.13); display: none; overflow: hidden; }
+        #clPanel.open { display: block; animation: cl-slide-up 0.18s ease; }
+        @keyframes cl-slide-up { from { opacity:0; transform:translateY(8px); } to { opacity:1; transform:translateY(0); } }
+        .cl-hdr { display: flex; justify-content: space-between; align-items: center; padding: 11px 14px 10px; border-bottom: 1px solid #f0f0f0; background: #fafafa; }
+        .cl-hdr-title { font-weight: 700; font-size: 13px; color: #444; }
+        .cl-close { background: none; border: none; cursor: pointer; color: #bbb; font-size: 16px; line-height: 1; padding: 0; transition: color 0.15s; }
+        .cl-close:hover { color: #555; }
+        .cl-body { max-height: 380px; overflow-y: auto; }
+        .cl-entry { padding: 10px 14px; border-bottom: 1px solid #f5f5f5; }
+        .cl-entry:last-child { border-bottom: none; }
+        .cl-date { font-size: 11px; font-weight: 700; color: #aaa; letter-spacing: 0.3px; margin-bottom: 6px; }
+        .cl-row { display: flex; align-items: baseline; gap: 6px; font-size: 13px; padding: 2px 0; line-height: 1.4; }
+        .cl-game { font-weight: 600; color: #333; flex-shrink: 0; }
+        .cl-delta-up { color: #198754; font-weight: 600; }
+        .cl-delta-dn { color: #dc3545; font-weight: 600; }
+        .cl-sub { color: #bbb; font-size: 11px; }
+        .cl-total { font-size: 11px; color: #ccc; margin-top: 6px; }
+        .cl-empty { padding: 24px; text-align: center; color: #bbb; font-size: 13px; }
     </style>
 </head>
 <body>
@@ -374,6 +399,16 @@
                 </div>
             </div>
         </div>
+    </div>
+
+    <!-- 更新公告浮窗（必须在 <script> 之前） -->
+    <button id="clBtn"><span class="cl-dot" id="clDot"></span>🔔 更新日志</button>
+    <div id="clPanel">
+        <div class="cl-hdr">
+            <span class="cl-hdr-title">月度更新日志</span>
+            <button class="cl-close" id="clClose">✕</button>
+        </div>
+        <div class="cl-body" id="clBody"></div>
     </div>
 
     <script>
@@ -1823,6 +1858,96 @@
 
         resultsDiv.appendChild(frag);
     }
+
+    /* ── 更新公告 ── */
+    (function () {
+        const CL_SEEN_KEY = 'kinoko_cl_seen';
+        const CL_NAMES = {
+            'feh_skills':    'FEH',
+            'granblue':      'グラブル',
+            'pk_alterna':    'ファンキルオルタナ',
+            'kingdom_ran':   'キングダムラン',
+            'mememori':      'メメントモリ',
+            'one_piece_br':  'ワンピースBR',
+            'fgo':           'FGO',
+            'pricone':       'プリコネ',
+            'another_eden':  'アナザーエデン',
+            'jojo_ss':       'ジョジョSS',
+            'shadowverse':   'シャドウバース',
+            'utaware':       'うたわれるもの',
+            'web_scraped':   '手动抓取',
+        };
+
+        function clName(src) {
+            for (const [k, v] of Object.entries(CL_NAMES)) {
+                if (src.includes(k)) return v;
+            }
+            return src.split('/').pop().replace(/\.[^.]+$/, '').replace(/_/g, ' ');
+        }
+
+        function renderLog(log) {
+            if (!log || !log.length) return;
+            const btn   = document.getElementById('clBtn');
+            const panel = document.getElementById('clPanel');
+            const body  = document.getElementById('clBody');
+            const dot   = document.getElementById('clDot');
+            btn.style.display = 'flex';
+
+            const lastSeen = localStorage.getItem(CL_SEEN_KEY) || '';
+            const latest   = log[0] ? log[0].date : '';
+            if (latest && latest > lastSeen) dot.classList.add('show');
+
+            body.innerHTML = log.slice(0, 6).map(function (entry) {
+                const rows = entry.changes
+                    .filter(function (c) { return c.delta !== 0; })
+                    .map(function (c) {
+                        const up = c.delta > 0;
+                        const cls = up ? 'cl-delta-up' : 'cl-delta-dn';
+                        const arrow = up ? '▲' : '▼';
+                        return '<div class="cl-row">' +
+                            '<span class="cl-game">' + escapeHtml(clName(c.source)) + '</span>' +
+                            '<span class="' + cls + '">' + arrow + ' ' + Math.abs(c.delta) + ' 条</span>' +
+                            '<span class="cl-sub">共 ' + c.curr + '</span>' +
+                            '</div>';
+                    }).join('');
+                const total = entry.total
+                    ? '<div class="cl-total">数据库总计 ' + Number(entry.total).toLocaleString() + ' 条</div>'
+                    : '';
+                return '<div class="cl-entry"><div class="cl-date">' + entry.date + ' 更新</div>' + rows + total + '</div>';
+            }).join('');
+
+            if (!body.innerHTML) {
+                body.innerHTML = '<div class="cl-empty">暂无更新记录</div>';
+            }
+
+            btn.addEventListener('click', function () {
+                const isOpen = panel.classList.toggle('open');
+                btn.classList.toggle('open', isOpen);
+                if (isOpen && latest) {
+                    localStorage.setItem(CL_SEEN_KEY, latest);
+                    dot.classList.remove('show');
+                }
+            });
+
+            document.getElementById('clClose').addEventListener('click', function (e) {
+                e.stopPropagation();
+                panel.classList.remove('open');
+                btn.classList.remove('open');
+            });
+
+            document.addEventListener('click', function (e) {
+                if (!btn.contains(e.target) && !panel.contains(e.target)) {
+                    panel.classList.remove('open');
+                    btn.classList.remove('open');
+                }
+            });
+        }
+
+        fetch('changelog.json?v=' + Date.now())
+            .then(function (r) { return r.json(); })
+            .then(function (log) { renderLog(log); })
+            .catch(function () {});
+    })();
     </script>
 </body>
 </html>

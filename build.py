@@ -2,6 +2,8 @@ import os
 import json
 import csv
 import re
+import datetime
+from collections import Counter
 
 corpus = []
 print("正在扫描本地文件夹...")
@@ -71,3 +73,48 @@ with open('data.json', 'w', encoding='utf-8') as f:
     json.dump(corpus, f, ensure_ascii=False)
 
 print(f"Build complete: {len(corpus)} entries written to data.json")
+
+# ── Changelog generation ────────────────────────────────────────────
+COUNTS_FILE  = 'data_counts.json'
+CHANGELOG_FILE = 'changelog.json'
+
+def norm(p):
+    return p.replace('\\', '/')
+
+source_counts = Counter(norm(item['source']) for item in corpus)
+
+prev_counts = {}
+try:
+    with open(COUNTS_FILE, 'r', encoding='utf-8') as f:
+        prev_counts = json.load(f)
+except Exception:
+    pass
+
+changes = []
+for src in sorted(set(list(source_counts.keys()) + list(prev_counts.keys()))):
+    curr = source_counts.get(src, 0)
+    prev = prev_counts.get(src, 0)
+    if curr != prev:
+        changes.append({'source': src, 'prev': prev, 'curr': curr, 'delta': curr - prev})
+
+if changes and prev_counts:
+    today = datetime.date.today().isoformat()
+    entry = {'date': today, 'total': len(corpus), 'changes': changes}
+    log = []
+    try:
+        with open(CHANGELOG_FILE, 'r', encoding='utf-8') as f:
+            log = json.load(f)
+    except Exception:
+        pass
+    if log and log[0].get('date') == today:
+        log[0] = entry
+    else:
+        log.insert(0, entry)
+    log = log[:12]
+    with open(CHANGELOG_FILE, 'w', encoding='utf-8') as f:
+        json.dump(log, f, ensure_ascii=False, indent=2)
+    print(f"Changelog updated: {len(changes)} source(s) changed")
+
+with open(COUNTS_FILE, 'w', encoding='utf-8') as f:
+    json.dump(dict(source_counts), f, ensure_ascii=False, indent=2)
+print(f"Counts snapshot saved")
