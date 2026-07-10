@@ -231,6 +231,11 @@
         .cl-delta-dn { color: #dc3545; font-weight: 600; }
         .cl-sub { color: #bbb; font-size: 11px; }
         .cl-total { font-size: 11px; color: #ccc; margin-top: 6px; }
+        .cl-feat-title { font-size: 13px; font-weight: 700; color: #b8296e; margin-bottom: 4px; }
+        .cl-feat-item { font-size: 12px; color: #555; line-height: 1.6; padding-left: 10px; position: relative; }
+        .cl-feat-item::before { content: '·'; position: absolute; left: 2px; color: #d63384; }
+        .cl-divider { border: none; border-top: 1px dashed #eee; margin: 8px 0; }
+        .cl-data-label { font-size: 11px; font-weight: 700; color: #aaa; margin-bottom: 4px; }
         .cl-empty { padding: 24px; text-align: center; color: #bbb; font-size: 13px; }
     </style>
 </head>
@@ -1863,30 +1868,37 @@
     (function () {
         const CL_SEEN_KEY = 'kinoko_cl_seen';
         const CL_NAMES = {
-            'feh_skills':    'FEH',
-            'granblue':      'グラブル',
-            'pk_alterna':    'ファンキルオルタナ',
-            'kingdom_ran':   'キングダムラン',
-            'mememori':      'メメントモリ',
-            'one_piece_br':  'ワンピースBR',
-            'fgo':           'FGO',
-            'pricone':       'プリコネ',
-            'another_eden':  'アナザーエデン',
-            'jojo_ss':       'ジョジョSS',
-            'shadowverse':   'シャドウバース',
-            'utaware':       'うたわれるもの',
-            'web_scraped':   '手动抓取',
+            'feh_skills':   'FEH',           'granblue':     'グラブル',
+            'pk_alterna':   'ファンキルオルタナ', 'kingdom_ran':  'キングダムラン',
+            'mememori':     'メメントモリ',    'one_piece_br': 'ワンピースBR',
+            'fgo':          'FGO',           'pricone':      'プリコネ',
+            'another_eden': 'アナザーエデン',  'jojo_ss':      'ジョジョSS',
+            'shadowverse':  'シャドウバース',  'utaware':      'うたわれるもの',
+            'web_scraped':  '手动抓取',
         };
-
         function clName(src) {
-            for (const [k, v] of Object.entries(CL_NAMES)) {
-                if (src.includes(k)) return v;
-            }
+            for (const [k, v] of Object.entries(CL_NAMES)) { if (src.includes(k)) return v; }
             return src.split('/').pop().replace(/\.[^.]+$/, '').replace(/_/g, ' ');
         }
 
-        function renderLog(log) {
-            if (!log || !log.length) return;
+        /* 将 changelog（数据更新）与 site_news（功能更新）按日期合并 */
+        function merge(dataLog, news) {
+            const map = {};
+            (dataLog || []).forEach(function (e) {
+                map[e.date] = map[e.date] || { date: e.date };
+                map[e.date].changes = e.changes;
+                map[e.date].total   = e.total;
+            });
+            (news || []).forEach(function (e) {
+                map[e.date] = map[e.date] || { date: e.date };
+                map[e.date].title = e.title;
+                map[e.date].items = e.items;
+            });
+            return Object.values(map).sort(function (a, b) { return b.date.localeCompare(a.date); });
+        }
+
+        function render(entries) {
+            if (!entries || !entries.length) return;
             const btn   = document.getElementById('clBtn');
             const panel = document.getElementById('clPanel');
             const body  = document.getElementById('clBody');
@@ -1894,59 +1906,60 @@
             btn.style.display = 'flex';
 
             const lastSeen = localStorage.getItem(CL_SEEN_KEY) || '';
-            const latest   = log[0] ? log[0].date : '';
+            const latest   = entries[0] ? entries[0].date : '';
             if (latest && latest > lastSeen) dot.classList.add('show');
 
-            body.innerHTML = log.slice(0, 6).map(function (entry) {
-                const rows = entry.changes
-                    .filter(function (c) { return c.delta !== 0; })
-                    .map(function (c) {
-                        const up = c.delta > 0;
-                        const cls = up ? 'cl-delta-up' : 'cl-delta-dn';
-                        const arrow = up ? '▲' : '▼';
-                        return '<div class="cl-row">' +
+            body.innerHTML = entries.slice(0, 8).map(function (e) {
+                var html = '<div class="cl-entry"><div class="cl-date">' + e.date + '</div>';
+
+                /* 功能更新 */
+                if (e.title || e.items) {
+                    html += '<div class="cl-feat-title">✨ ' + escapeHtml(e.title || '功能更新') + '</div>';
+                    (e.items || []).forEach(function (it) {
+                        html += '<div class="cl-feat-item">' + escapeHtml(it) + '</div>';
+                    });
+                }
+
+                /* 数据更新 */
+                if (e.changes && e.changes.length) {
+                    if (e.title || e.items) html += '<div class="cl-divider"></div>';
+                    html += '<div class="cl-data-label">🗂 数据更新</div>';
+                    e.changes.filter(function (c) { return c.delta !== 0; }).forEach(function (c) {
+                        var up = c.delta > 0;
+                        html += '<div class="cl-row">' +
                             '<span class="cl-game">' + escapeHtml(clName(c.source)) + '</span>' +
-                            '<span class="' + cls + '">' + arrow + ' ' + Math.abs(c.delta) + ' 条</span>' +
-                            '<span class="cl-sub">共 ' + c.curr + '</span>' +
-                            '</div>';
-                    }).join('');
-                const total = entry.total
-                    ? '<div class="cl-total">数据库总计 ' + Number(entry.total).toLocaleString() + ' 条</div>'
-                    : '';
-                return '<div class="cl-entry"><div class="cl-date">' + entry.date + ' 更新</div>' + rows + total + '</div>';
+                            '<span class="' + (up ? 'cl-delta-up' : 'cl-delta-dn') + '">' +
+                            (up ? '▲' : '▼') + ' ' + Math.abs(c.delta) + ' 条</span>' +
+                            '<span class="cl-sub">共 ' + c.curr + '</span></div>';
+                    });
+                    if (e.total) html += '<div class="cl-total">数据库总计 ' + Number(e.total).toLocaleString() + ' 条</div>';
+                }
+
+                return html + '</div>';
             }).join('');
 
-            if (!body.innerHTML) {
-                body.innerHTML = '<div class="cl-empty">暂无更新记录</div>';
-            }
+            if (!body.innerHTML.trim()) body.innerHTML = '<div class="cl-empty">暂无更新记录</div>';
 
             btn.addEventListener('click', function () {
-                const isOpen = panel.classList.toggle('open');
+                var isOpen = panel.classList.toggle('open');
                 btn.classList.toggle('open', isOpen);
-                if (isOpen && latest) {
-                    localStorage.setItem(CL_SEEN_KEY, latest);
-                    dot.classList.remove('show');
-                }
+                if (isOpen && latest) { localStorage.setItem(CL_SEEN_KEY, latest); dot.classList.remove('show'); }
             });
-
             document.getElementById('clClose').addEventListener('click', function (e) {
-                e.stopPropagation();
-                panel.classList.remove('open');
-                btn.classList.remove('open');
+                e.stopPropagation(); panel.classList.remove('open'); btn.classList.remove('open');
             });
-
             document.addEventListener('click', function (e) {
                 if (!btn.contains(e.target) && !panel.contains(e.target)) {
-                    panel.classList.remove('open');
-                    btn.classList.remove('open');
+                    panel.classList.remove('open'); btn.classList.remove('open');
                 }
             });
         }
 
-        fetch('changelog.json?v=' + Date.now())
-            .then(function (r) { return r.json(); })
-            .then(function (log) { renderLog(log); })
-            .catch(function () {});
+        var v = '?v=' + Date.now();
+        Promise.all([
+            fetch('changelog.json' + v).then(function (r) { return r.json(); }).catch(function () { return []; }),
+            fetch('site_news.json' + v).then(function (r) { return r.json(); }).catch(function () { return []; }),
+        ]).then(function (res) { render(merge(res[0], res[1])); });
     })();
     </script>
 </body>
