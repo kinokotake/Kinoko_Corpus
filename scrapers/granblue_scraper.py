@@ -57,7 +57,12 @@ def clean_effect(cell):
     lines = [re.sub(r'[ \t]+', ' ', line).strip() for line in text.split('\n')]
     return '\n'.join(line for line in lines if line)
 
-SKIP_TITLES = {"目次", "関連記事", "おすすめ記事", "コメント", "注意事項"}
+SKIP_TITLES = {
+    "目次", "関連記事", "おすすめ記事", "コメント", "注意事項",
+    "人気記事ランキング", "記事の編集者情報", "編集者情報", "編集者",
+    "ランキング", "人気記事", "新着記事", "最新記事",
+    "この記事を書いた人", "ライター情報", "プロフィール",
+}
 
 def is_prose(text):
     """True if text contains a continuous Japanese run of 15+ chars (real prose)."""
