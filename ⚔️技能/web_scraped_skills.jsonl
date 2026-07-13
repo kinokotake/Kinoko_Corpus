@@ -365,3 +365,370 @@
 {"source":"gamerch.com（网页抓取）","type":"skill_desc","text":"【ミネルヴァ】【エンハンドスピリットスキル強化】 効果：[スピリット系列英雄]体力+3%"}
 {"source":"gamerch.com（网页抓取）","type":"skill_desc","text":"【ミネルヴァ】【スピットファイヤースキル強化】 効果：[スピリット系列英雄]攻撃力/魔法力+3%"}
 {"source":"gamerch.com（网页抓取）","type":"skill_desc","text":"【ミネルヴァ】【アクアストームスキル強化】 効果：[スピリット系列英雄]攻撃速度+3%"}
+{"source":"gamerch.com（网页抓取）","type":"skill_desc","text":"【ソードマンの詳細】 効果：クリティカル率 / クリティカルダメージ / [ソードマン系列]攻撃力/魔法力+3% / 体力+140 / [ソードマン系列]体力+3% / 攻撃力+17 / 攻撃速度+0.05 / アルカナタクティクス / iOS Android / カテゴリー RPG（ロールプレイング） カジュアル / 新規、復帰プレイヤーに英雄100種ゲットのチャンス！"}
+{"source":"gamerch.com（网页抓取）","type":"skill_desc","text":"【アーチャーの詳細】 効果：クリティカル率 / クリティカルダメージ / [アーチャー系列]攻撃力/魔法力+3% / 攻撃力+14 / [アーチャー系列]体力+3% / 体力+140 / 攻撃速度+0.05 / アルカナタクティクス / iOS Android / カテゴリー RPG（ロールプレイング） カジュアル / 新規、復帰プレイヤーに英雄100種ゲットのチャンス！"}
+{"source":"gamerch.com（网页抓取）","type":"skill_desc","text":"【ローグの詳細】 効果：クリティカル率 / クリティカルダメージ / [ローグ系列]攻撃力/魔法力+3% / 攻撃力+17 / [ローグ系列]体力+3% / 体力+160 / 攻撃速度+0.05 / アルカナタクティクス / iOS Android / カテゴリー RPG（ロールプレイング） カジュアル / 新規、復帰プレイヤーに英雄100種ゲットのチャンス！"}
+{"source":"gamerch.com（网页抓取）","type":"skill_desc","text":"【ウィザードの詳細】 効果：クリティカル率 / クリティカルダメージ / [ウィザード系列]攻撃力/魔法力+3% / 攻撃力+14 / [ウィザード系列]体力+3% / 体力+140 / 攻撃速度+0.05 / アルカナタクティクス / iOS Android / カテゴリー RPG（ロールプレイング） カジュアル / 新規、復帰プレイヤーに英雄100種ゲットのチャンス！"}
+{"source":"gamerch.com（网页抓取）","type":"skill_desc","text":"【クレリックの詳細】 効果：クリティカル率 / クリティカルダメージ / [クレリック系列英雄]攻撃力/魔法力+3% / 攻撃力+14 / [クレリック系列英雄]体力+3% / 体力+180 / 攻撃速度+0.05 / アルカナタクティクス / iOS Android / カテゴリー RPG（ロールプレイング） カジュアル / 新規、復帰プレイヤーに英雄100種ゲットのチャンス！"}
+{"source":"gamerch.com（网页抓取）","type":"skill_desc","text":"【ファイターの詳細】 効果：クリティカル率 / クリティカルダメージ / [ファイター系列英雄]攻撃力/魔法力+3% / 体力+180 / [ファイター系列英雄]体力+3% / 攻撃力+14 / 攻撃速度+0.05 / アルカナタクティクス / iOS Android / カテゴリー RPG（ロールプレイング） カジュアル / 新規、復帰プレイヤーに英雄100種ゲットのチャンス！"}
+{"source":"gamerch.com（网页抓取）","type":"skill_desc","text":"【ランサーの詳細】 効果：クリティカル率 / クリティカルダメージ / [ランサー系列英雄]攻撃力/魔法力+3% / 体力+180 / [ランサー系列英雄]体力+3% / 攻撃力+14 / 攻撃速度+0.05 / アルカナタクティクス / iOS Android / カテゴリー RPG（ロールプレイング） カジュアル / 新規、復帰プレイヤーに英雄100種ゲットのチャンス！"}
+{"source":"gamerch.com（网页抓取）","type":"skill_desc","text":"【スピリットの詳細】 効果：クリティカル率 / クリティカルダメージ / [スピリット系列英雄]攻撃力/魔法力+3% / 攻撃力+17 / [スピリット系列英雄]体力+3% / 体力+210 / 攻撃速度+0.05 / アルカナタクティクス / iOS Android / カテゴリー RPG（ロールプレイング） カジュアル / 新規、復帰プレイヤーに英雄100種ゲットのチャンス！"}
+{"source":"gamerch.com（网页抓取）","type":"skill_desc","text":"【スペルソードの詳細】【剣気スキル強化】 効果：魔法力+28 / [ソードマン系列英雄]攻撃力/魔法力+3% / 体力+270 / [ソードマン系列英雄]防御力+50 / 攻撃力/魔法力+10% / [ソードマン系列英雄]体力+3%"}
+{"source":"gamerch.com（网页抓取）","type":"skill_desc","text":"【パラディンの詳細】【祈祷スキル強化】 効果：体力+250 / [ソードマン系列英雄]体力+3% / 防御力+180 / [ソードマン系列英雄]魔法抵抗力+50 / 攻撃力/魔法力+10% / [ソードマン系列英雄]攻撃力/魔法力+3%"}
+{"source":"gamerch.com（网页抓取）","type":"skill_desc","text":"【スナイパーの詳細】【赤鷹スキル強化】 効果：攻撃力+17 / [アーチャー系列英雄]攻撃力/魔法力+3% / 攻撃速度+0.05 / [アーチャー系列英雄]防御力+50 / 攻撃力/魔法力+10% / [アーチャー系列英雄]体力+3%"}
+{"source":"gamerch.com（网页抓取）","type":"skill_desc","text":"【チェイサーの詳細】【ブードゥーアロースキル強化】 効果：攻撃力+14 / [アーチャー系列英雄]体力+3% / 攻撃範囲+2.5 / [アーチャー系列英雄]魔法抵抗力+50 / 攻撃力/魔法力+10% / [アーチャー系列英雄]攻撃力/魔法力+3%"}
+{"source":"gamerch.com（网页抓取）","type":"skill_desc","text":"【アサシンの詳細】【神経切断スキル強化】 効果：攻撃力+24 / [ローグ系列英雄]攻撃力/魔法力+3% / クリティカル率+2% / [ローグ系列英雄]防御力+50 / 攻撃力/魔法力+10% / [ローグ系列英雄]体力+3%"}
+{"source":"gamerch.com（网页抓取）","type":"skill_desc","text":"【ニンジャの詳細】【強化手裏剣スキル強化】 効果：攻撃速度+0.1 / [ローグ系列英雄]体力+3% / 攻撃力+21 / [ローグ系列英雄]魔法抵抗力+50 / 攻撃力/魔法力+10% / [ローグ系列英雄]攻撃力/魔法力+3%"}
+{"source":"gamerch.com（网页抓取）","type":"skill_desc","text":"【ソーサラーの詳細】【アイススパイクスキル強化】 効果：攻撃速度+0.05 / [ウィザード系列英雄]体力+3% / 魔法力+45 / [ウィザード系列英雄]防御力+50 / 攻撃力/魔法力+10% / [ウィザード系列英雄]攻撃力/魔法力+3%"}
+{"source":"gamerch.com（网页抓取）","type":"skill_desc","text":"【シャーマンの詳細】【ブードゥーチェーンスキル強化】 効果：魔法力+17 / [ウィザード系列英雄]攻撃力/魔法力+3% / 体力+230 / [ウィザード系列英雄]魔法抵抗力+50 / 攻撃力/魔法力+10% / [ウィザード系列英雄]体力+3%"}
+{"source":"gamerch.com（网页抓取）","type":"skill_desc","text":"【ドルイドの詳細】【森の治癒スキル強化】 効果：攻撃速度+0.06 / [クレリック系列英雄]攻撃力/魔法力+3% / 魔法力+56 / [クレリック系列英雄]防御力+50 / 攻撃力/魔法力+10% / [クレリック系列英雄]体力+3%"}
+{"source":"gamerch.com（网页抓取）","type":"skill_desc","text":"【バードの詳細】【応援ダンススキル強化】 効果：攻撃力+17 / [クレリック系列英雄]体力+3% / 攻撃速度+0.07 / [クレリック系列英雄]魔法抵抗力+50 / 攻撃力/魔法力+10% / [クレリック系列英雄]攻撃力/魔法力+3%"}
+{"source":"gamerch.com（网页抓取）","type":"skill_desc","text":"【バーバリアンの詳細】【憤怒スキル強化】 効果：体力+280 / [ファイター系列英雄]体力+3% / 攻撃力+24 / [ファイター系列英雄]防御力+50 / 攻撃力/魔法力+10% / [ファイター系列英雄]攻撃力/魔法力+3%"}
+{"source":"gamerch.com（网页抓取）","type":"skill_desc","text":"【モンクの詳細】【高揚スキル強化】 効果：攻撃力+21 / [ファイター系列英雄]攻撃力/魔法力+3% / 攻撃速度+0.1 / [ファイター系列英雄]魔法抵抗力+50 / 攻撃力/魔法力+10% / [ファイター系列英雄]体力+3%"}
+{"source":"gamerch.com（网页抓取）","type":"skill_desc","text":"【ガーディアンの詳細】【鉄甲スキル強化】 効果：防御力+150 / [ランサー系列英雄]攻撃力/魔法力+3% / ''体力+390' / [ランサー系列英雄]防御力+50 / 攻撃力/魔法力+10% / [ランサー系列英雄]体力+3%"}
+{"source":"gamerch.com（网页抓取）","type":"skill_desc","text":"【フェンサーの詳細】【連続突きスキル強化】 効果：攻撃力+21 / [ランサー系列英雄]体力+3% / 攻撃速度+0.12 / [ランサー系列英雄]魔法抵抗力+50 / 攻撃力/魔法力+10% / [ランサー系列英雄]攻撃力/魔法力+3%"}
+{"source":"gamerch.com（网页抓取）","type":"skill_desc","text":"【エンチャンターの詳細】【マジックスクロールスキル強化】 効果：魔法力+35 / [スピリット系列英雄]体力+3% / 攻撃速度+0.06 / [スピリット系列英雄]防御力+50 / 攻撃力/魔法力+10% / [スピリット系列英雄]攻撃力/魔法力+3%"}
+{"source":"gamerch.com（网页抓取）","type":"skill_desc","text":"【ブラックスミスの詳細】【武器研磨スキル強化】 効果：体力+250 / [スピリット系列英雄]攻撃力/魔法力+3% / 攻撃速度+0.07 / [スピリット系列英雄]魔法抵抗力+50 / 攻撃力/魔法力+10% / [スピリット系列英雄]体力+3%"}
+{"source":"gamerch.com（网页抓取）","type":"skill_desc","text":"【ルーンナイトの詳細】【ルーンの魔力スキル強化】 効果：魔法力+56"}
+{"source":"gamerch.com（网页抓取）","type":"skill_desc","text":"【ルーンナイトの詳細】【ルーンの一撃スキル強化】 効果：体力+370 / [ソードマン系列英雄]モンスターターゲット攻撃時のダメージ+2% / 攻撃力/魔法力+10% / [ソードマン系列英雄]英雄ターゲット攻撃時のダメージ+3%"}
+{"source":"gamerch.com（网页抓取）","type":"skill_desc","text":"【ハイランダーの詳細】【鋭い剣スキル強化】 効果：攻撃力+38"}
+{"source":"gamerch.com（网页抓取）","type":"skill_desc","text":"【ハイランダーの詳細】【鉄の斬撃スキル強化】 効果：攻撃速度+0.07 / [ソードマン系列英雄]英雄ターゲット攻撃時のダメージ+3% / 攻撃力/魔法力+10% / [ソードマン系列英雄]モンスターターゲット攻撃時のダメージ+2%"}
+{"source":"gamerch.com（网页抓取）","type":"skill_desc","text":"【ディフェンダーの詳細】【守護スキル強化】 効果：体力+320"}
+{"source":"gamerch.com（网页抓取）","type":"skill_desc","text":"【ディフェンダーの詳細】【守護者スキル強化】 効果：防御力+200 / [ソードマン系列英雄]モンスターからの被攻撃時のダメージ-2% / 攻撃力/魔法力+10% / [ソードマン系列英雄]英雄からの被攻撃時のダメージ-3%"}
+{"source":"gamerch.com（网页抓取）","type":"skill_desc","text":"【クルセイダーの詳細】【聖剣スキル強化】 効果：体力+360"}
+{"source":"gamerch.com（网页抓取）","type":"skill_desc","text":"【クルセイダーの詳細】【光の加護スキル強化】 効果：攻撃速度+0.08 / [ソードマン系列英雄]英雄からの被攻撃時のダメージ-2% / 攻撃力/魔法力+10% / [ソードマン系列英雄]モンスターからの被攻撃時のダメージ-3%"}
+{"source":"gamerch.com（网页抓取）","type":"skill_desc","text":"【スカウトの詳細】【天罰の矢スキル強化】 効果：攻撃速度+0.05"}
+{"source":"gamerch.com（网页抓取）","type":"skill_desc","text":"【スカウトの詳細】【毒の矢スキル強化】 効果：攻撃力+38 / [アーチャー系列英雄]モンスターターゲット攻撃時のダメージ+2% / 攻撃力/魔法力+10% / [アーチャー系列英雄]英雄ターゲット攻撃時のダメージ+3%"}
+{"source":"gamerch.com（网页抓取）","type":"skill_desc","text":"【レンジャーの詳細】【終わりなき食い意地スキル強化】 効果：攻撃力+31"}
+{"source":"gamerch.com（网页抓取）","type":"skill_desc","text":"【レンジャーの詳細】【暗殺の矢スキル強化】 効果：クリティカル率+2% / [アーチャー系列英雄]モンスターからの被攻撃時のダメージ-2% / 攻撃力/魔法力+10% / [アーチャー系列英雄]英雄からの被攻撃時のダメージ-3%"}
+{"source":"gamerch.com（网页抓取）","type":"skill_desc","text":"【ハンターの詳細】【鷹飛ばしスキル強化】 効果：攻撃力+28"}
+{"source":"gamerch.com（网页抓取）","type":"skill_desc","text":"【ハンターの詳細】【狩猟技術スキル強化】 効果：攻撃範囲+2.5 / [アーチャー系列英雄]英雄からの被攻撃時のダメージ-2% / 攻撃力/魔法力+10% / [アーチャー系列英雄]モンスターからの被攻撃時のダメージ-3%"}
+{"source":"gamerch.com（网页抓取）","type":"skill_desc","text":"【スティンガーの詳細】【ラピッドショットスキル強化】 効果：クリティカル率+2%"}
+{"source":"gamerch.com（网页抓取）","type":"skill_desc","text":"【スティンガーの詳細】【弾薬補充スキル強化】 効果：攻撃力+49 / [アーチャー系列英雄]英雄ターゲット攻撃時のダメージ+2% / 攻撃力/魔法力+10% / [アーチャー系列英雄]モンスターターゲット攻撃時のダメージ+3%"}
+{"source":"gamerch.com（网页抓取）","type":"skill_desc","text":"【アベンジャーの詳細】【標識スキル強化】 効果：体力+300"}
+{"source":"gamerch.com（网页抓取）","type":"skill_desc","text":"【アベンジャーの詳細】【回避起動スキル強化】 効果：クリティカルダメージ+30% / [ローグ系列英雄]モンスターからの被攻撃時のダメージ-2% / 攻撃力/魔法力+10% / [ローグ系列英雄]英雄からの被攻撃時のダメージ-3%"}
+{"source":"gamerch.com（网页抓取）","type":"skill_desc","text":"【スレイヤーの詳細】【蛇の牙スキル強化】 効果：攻撃速度+0.06"}
+{"source":"gamerch.com（网页抓取）","type":"skill_desc","text":"【スレイヤーの詳細】【猛毒スキル強化】 効果：攻撃力+45 / [ローグ系列英雄]英雄からの被攻撃時のダメージ-2% / 攻撃力/魔法力+10% / [ローグ系列英雄]モンスターからの被攻撃時のダメージ-2%"}
+{"source":"gamerch.com（网页抓取）","type":"skill_desc","text":"【サムライの詳細】【縦の剣スキル強化】 効果：攻撃力+35"}
+{"source":"gamerch.com（网页抓取）","type":"skill_desc","text":"【サムライの詳細】【抜刀術スキル強化】 効果：クリティカルダメージ+45% / [ローグ系列英雄]モンスターターゲット攻撃時のダメージ+2% / 攻撃力/魔法力+10% / [ローグ系列英雄]英雄ターゲット攻撃時のダメージ+3%"}
+{"source":"gamerch.com（网页抓取）","type":"skill_desc","text":"【ワンダラーの詳細】【蛇の牙スキル強化】 効果：攻撃速度+0.06"}
+{"source":"gamerch.com（网页抓取）","type":"skill_desc","text":"【ワンダラーの詳細】【猛毒スキル強化】 効果：攻撃力+45 / [ローグ系列英雄]英雄からの被攻撃時のダメージ-2% / 攻撃力/魔法力+10% / [ローグ系列英雄]モンスターからの被攻撃時のダメージ-2%"}
+{"source":"gamerch.com（网页抓取）","type":"skill_desc","text":"【インヴォーカーの詳細】【ライト・オブ・ドーンスキル強化】 効果：魔法力+56"}
+{"source":"gamerch.com（网页抓取）","type":"skill_desc","text":"【インヴォーカーの詳細】【ライトニングアタックスキル強化】 効果：攻撃速度+0.06 / [ウィザード系列英雄]モンスターターゲット攻撃時のダメージ+2% / 攻撃力/魔法力+10% / [ウィザード系列英雄]英雄ターゲット攻撃時のダメージ+3%"}
+{"source":"gamerch.com（网页抓取）","type":"skill_desc","text":"【ウォーロックの詳細】【暗黒爆発スキル強化】 効果：攻撃速度+0.055"}
+{"source":"gamerch.com（网页抓取）","type":"skill_desc","text":"【ウォーロックの詳細】【ホロウエナジースキル強化】 効果：魔法力+70 / [ウィザード系列英雄]英雄ターゲット攻撃時のダメージ+2% / 攻撃力/魔法力+10% / [ウィザード系列英雄]モンスターターゲット攻撃時のダメージ+3%"}
+{"source":"gamerch.com（网页抓取）","type":"skill_desc","text":"【ネクロマンサーの詳細】【腐敗スキル強化】 効果：体力+260"}
+{"source":"gamerch.com（网页抓取）","type":"skill_desc","text":"【ネクロマンサーの詳細】【死者の肉体スキル強化】 効果：攻撃速度+0.06 / [ウィザード系列英雄]モンスターからの被攻撃時のダメージ-2% / 攻撃力/魔法力+10% / [ウィザード系列英雄]英雄からの被攻撃時のダメージ-3%"}
+{"source":"gamerch.com（网页抓取）","type":"skill_desc","text":"【エスパーの詳細】【無力化スキル強化】 効果：攻撃速度+0.07"}
+{"source":"gamerch.com（网页抓取）","type":"skill_desc","text":"【エスパーの詳細】【サイコキネシススキル強化】 効果：クリティカル率+2% / [ウィザード系列英雄]英雄からの被攻撃時のダメージ-2% / 攻撃力/魔法力+10% / [ウィザード系列英雄]モンスターからの被攻撃時のダメージ-3%"}
+{"source":"gamerch.com（网页抓取）","type":"skill_desc","text":"【ウォーデンの詳細】【自然の保護スキル強化】 効果：体力+340"}
+{"source":"gamerch.com（网页抓取）","type":"skill_desc","text":"【ウォーデンの詳細】【竜牙剣スキル強化】 効果：攻撃力+35 / [クレリック系列英雄]英雄攻撃時のダメージ+2% / 攻撃力/魔法力+10% / [クレリック系列英雄]モンスターターゲット攻撃時のダメージ+3%"}
+{"source":"gamerch.com（网页抓取）","type":"skill_desc","text":"【ミンストレルの詳細】【シンフォニースキル強化】 効果：与回復量+30%"}
+{"source":"gamerch.com（网页抓取）","type":"skill_desc","text":"【ミンストレルの詳細】【指揮スキル強化】 効果：魔法力+70 / [クレリック系列英雄]英雄からの被攻撃時のダメージ-2% / 攻撃力/魔法力+10% / [クレリック系列英雄]モンスターからの被攻撃時のダメージ-3%"}
+{"source":"gamerch.com（网页抓取）","type":"skill_desc","text":"【プリーストの詳細】【ヒールスキル強化】 効果：魔法力+56"}
+{"source":"gamerch.com（网页抓取）","type":"skill_desc","text":"【プリーストの詳細】【信仰心スキル強化】 効果：攻撃速度+0.06 / [クレリック系列英雄]モンスターからの被攻撃時のダメージ-2% / 攻撃力/魔法力+10% / [クレリック系列英雄]英雄からの被攻撃時のダメージ-3%"}
+{"source":"gamerch.com（网页抓取）","type":"skill_desc","text":"【ピルグリムの詳細】【厚い信仰スキル強化】 効果：攻撃速度+0.05"}
+{"source":"gamerch.com（网页抓取）","type":"skill_desc","text":"【ピルグリムの詳細】【異端審判スキル強化】 効果：体力+410 / [クレリック系列英雄]モンスターターゲット攻撃時のダメージ+2% / 攻撃力/魔法力+10% / [クレリック系列英雄]英雄ターゲット攻撃時のダメージ+3%"}
+{"source":"gamerch.com（网页抓取）","type":"skill_desc","text":"【バーサーカーの詳細】【暴走スキル強化】 効果：クリティカル率+2.3%"}
+{"source":"gamerch.com（网页抓取）","type":"skill_desc","text":"【バーサーカーの詳細】【血の渇望スキル強化】 効果：攻撃速度+0.7 / [ファイター系列英雄]英雄ターゲット攻撃時のダメージ+2% / 攻撃力/魔法力+10% / [ファイター系列英雄]モンスターターゲット攻撃時のダメージ+3%"}
+{"source":"gamerch.com（网页抓取）","type":"skill_desc","text":"【グラディエーターの詳細】【戦闘技術スキル強化】 効果：防御力+180"}
+{"source":"gamerch.com（网页抓取）","type":"skill_desc","text":"【グラディエーターの詳細】【粘り強い闘士スキル強化】 効果：体力+460 / [ファイター系列英雄]モンスターターゲット攻撃時のダメージ+2% / 攻撃力/魔法力+10% / [ファイター系列英雄]英雄ターゲット攻撃時のダメージ+3%"}
+{"source":"gamerch.com（网页抓取）","type":"skill_desc","text":"【ストライカーの詳細】【震脚スキル強化】 効果：攻撃力+38"}
+{"source":"gamerch.com（网页抓取）","type":"skill_desc","text":"【ストライカーの詳細】【鶴の一撃スキル強化】 効果：攻撃速度+0.07 / [ファイター系列英雄]英雄からの被攻撃時のダメージ-2% / 攻撃力/魔法力+10% / [ファイター系列英雄]モンスターからの被攻撃時のダメージ-3%"}
+{"source":"gamerch.com（网页抓取）","type":"skill_desc","text":"【ルーンマスターの詳細】【ナノマシンスキル強化】 効果：魔法力+56"}
+{"source":"gamerch.com（网页抓取）","type":"skill_desc","text":"【ルーンマスターの詳細】【マシーンアームスキル強化】 効果：体力+410 / [ファイター系列英雄]モンスターからの被攻撃時のダメージ-2% / 攻撃力/魔法力+10% / [ファイター系列英雄]英雄からの被攻撃時のダメージ-3%"}
+{"source":"gamerch.com（网页抓取）","type":"skill_desc","text":"【ライダーの詳細】【先鋒隊長スキル強化】 効果：体力+370"}
+{"source":"gamerch.com（网页抓取）","type":"skill_desc","text":"【ライダーの詳細】【猛烈な突進スキル強化】 効果：攻撃力+42 / [ランサー系列英雄]モンスターからの被攻撃時のダメージ-2% / 攻撃力/魔法力+10% / [ランサー系列英雄]英雄からの被攻撃時のダメージ-3%"}
+{"source":"gamerch.com（网页抓取）","type":"skill_desc","text":"【ランペイジャーの詳細】【猛攻スキル強化】 効果：攻撃力+42"}
+{"source":"gamerch.com（网页抓取）","type":"skill_desc","text":"【ランペイジャーの詳細】【大戦車スキル強化】 効果：クリティカル率+3.3% / [ランサー系列英雄]モンスターターゲット攻撃時のダメージ+2% / 攻撃力/魔法力+10% / [ランサー系列英雄]英雄ターゲット攻撃時のダメージ+3%"}
+{"source":"gamerch.com（网页抓取）","type":"skill_desc","text":"【マエストロの詳細】【戦場の指揮者スキル強化】 効果：体力+270"}
+{"source":"gamerch.com（网页抓取）","type":"skill_desc","text":"【マエストロの詳細】【護送スキル強化】 効果：与回復量+50% / [ランサー系列英雄]英雄からの被攻撃時のダメージ-2% / 攻撃力/魔法力+10% / [ランサー系列英雄]モンスターからの被攻撃時のダメージ-3%"}
+{"source":"gamerch.com（网页抓取）","type":"skill_desc","text":"【バガボンドの詳細】【旋風斬りスキル強化】 効果：攻撃力+35"}
+{"source":"gamerch.com（网页抓取）","type":"skill_desc","text":"【バガボンドの詳細】【一人立ちスキル強化】 効果：クリティカルダメージ+30% / [ランサー系列英雄]英雄ターゲット攻撃時のダメージ+2% / 攻撃力/魔法力+10% / [ランサー系列英雄]モンスターターゲット攻撃時のダメージ+3%"}
+{"source":"gamerch.com（网页抓取）","type":"skill_desc","text":"【サーバントの詳細】【精霊の核スキル強化】 効果：攻撃速度+0.05"}
+{"source":"gamerch.com（网页抓取）","type":"skill_desc","text":"【サーバントの詳細】【過熱した核スキル強化】 効果：魔法力+70 / [スピリット系列英雄]モンスターターゲット攻撃時のダメージ+2% / 攻撃力/魔法力+10% / [スピリット系列英雄]英雄ターゲット攻撃時のダメージ+3%"}
+{"source":"gamerch.com（网页抓取）","type":"skill_desc","text":"【ハイスピリットの詳細】【非物質スキル強化】 効果：体力+370"}
+{"source":"gamerch.com（网页抓取）","type":"skill_desc","text":"【ハイスピリットの詳細】【結合精霊スキル強化】 効果：防御力/魔法抵抗力+15% / [スピリット系列英雄]モンスターからの被攻撃時のダメージ-2% / 攻撃力/魔法力+10% / [スピリット系列英雄]英雄からの被攻撃時のダメージ-3%"}
+{"source":"gamerch.com（网页抓取）","type":"skill_desc","text":"【ホワイトスミスの詳細】【魔法付与スキル強化】 効果：攻撃力+35"}
+{"source":"gamerch.com（网页抓取）","type":"skill_desc","text":"【ホワイトスミスの詳細】【強度測定スキル強化】 効果：体力+390 / [スピリット系列英雄]英雄ターゲット攻撃時のダメージ+2% / 攻撃力/魔法力+10% / [スピリット系列英雄]モンスターターゲット攻撃時のダメージ+3%"}
+{"source":"gamerch.com（网页抓取）","type":"skill_desc","text":"【ニンフの詳細】【自然の手スキル強化】 効果：魔法力+70"}
+{"source":"gamerch.com（网页抓取）","type":"skill_desc","text":"【ニンフの詳細】【再生スキル強化】 効果：与回復量+30% / [スピリット系列英雄]英雄からの被攻撃時のダメージ-2% / 攻撃力/魔法力+10% / [スピリット系列英雄]モンスターからの被攻撃時のダメージ-3%"}
+{"source":"gamerch.com（网页抓取）","type":"skill_desc","text":"【ヴァルキリーの詳細】【ヴァルキリーの力スキル強化】 効果：魔法力+56"}
+{"source":"gamerch.com（网页抓取）","type":"skill_desc","text":"【ヴァルキリーの詳細】【聖なる祝福スキル強化】 効果：体力+390"}
+{"source":"gamerch.com（网页抓取）","type":"skill_desc","text":"【ヴァルキリーの詳細】【神秘の斬撃スキル強化】 効果：攻撃速度+0.07 / 攻撃力/魔法力+8%"}
+{"source":"gamerch.com（网页抓取）","type":"skill_desc","text":"【デスナイトの詳細】【不意打ちの恐怖スキル強化】 効果：体力+400"}
+{"source":"gamerch.com（网页抓取）","type":"skill_desc","text":"【デスナイトの詳細】【魂の収穫スキル強化】 効果：移動速度+2.5"}
+{"source":"gamerch.com（网页抓取）","type":"skill_desc","text":"【デスナイトの詳細】【悪霊の加護スキル強化】 効果：魔法抵抗力+220 / 攻撃力/魔法力+8%"}
+{"source":"gamerch.com（网页抓取）","type":"skill_desc","text":"【ロイヤルガードの詳細】【振りかざす盾スキル強化】 効果：防御力+220"}
+{"source":"gamerch.com（网页抓取）","type":"skill_desc","text":"【ロイヤルガードの詳細】【花の恵スキル強化】 効果：被回復量+10%"}
+{"source":"gamerch.com（网页抓取）","type":"skill_desc","text":"【ロイヤルガードの詳細】【屈強な少女スキル強化】 効果：体力+410 / 攻撃力/魔法力+8%"}
+{"source":"gamerch.com（网页抓取）","type":"skill_desc","text":"【ブレードシンガーの詳細】【剣の歌スキル強化】 効果：攻撃力+45"}
+{"source":"gamerch.com（网页抓取）","type":"skill_desc","text":"【ブレードシンガーの詳細】【燃える曲刀スキル強化】 効果：クリティカル率+2%"}
+{"source":"gamerch.com（网页抓取）","type":"skill_desc","text":"【ブレードシンガーの詳細】【砂漠の剣スキル強化】 効果：魔法力+84 / 攻撃力/魔法力+8%"}
+{"source":"gamerch.com（网页抓取）","type":"skill_desc","text":"【ルナティックの詳細】【爆発する狂気スキル強化】 効果：体力+320"}
+{"source":"gamerch.com（网页抓取）","type":"skill_desc","text":"【ルナティックの詳細】【スレイヤースキル強化】 効果：攻撃力+52"}
+{"source":"gamerch.com（网页抓取）","type":"skill_desc","text":"【ルナティックの詳細】【戦争狂の歓喜スキル強化】 効果：クリティカル率+2% / 攻撃力/魔法力+8%"}
+{"source":"gamerch.com（网页抓取）","type":"skill_desc","text":"【ウィンドウォーカーの詳細】【強風スキル強化】 効果：攻撃力+35"}
+{"source":"gamerch.com（网页抓取）","type":"skill_desc","text":"【ウィンドウォーカーの詳細】【西風スキル強化】 効果：クリティカルダメージ+20%"}
+{"source":"gamerch.com（网页抓取）","type":"skill_desc","text":"【ウィンドウォーカーの詳細】【つむじ風スキル強化】 効果：クリティカル率+2% / 攻撃力/魔法力+8%"}
+{"source":"gamerch.com（网页抓取）","type":"skill_desc","text":"【アーケインアーチャーの詳細】【秘伝の矢スキル強化】 効果：魔法力+59"}
+{"source":"gamerch.com（网页抓取）","type":"skill_desc","text":"【アーケインアーチャーの詳細】【知能向上スキル強化】 効果：攻撃範囲+3"}
+{"source":"gamerch.com（网页抓取）","type":"skill_desc","text":"【アーケインアーチャーの詳細】【冷酷な射手スキル強化】 効果：攻撃速度+0.06 / 攻撃力/魔法力+8%"}
+{"source":"gamerch.com（网页抓取）","type":"skill_desc","text":"【レイヴンの詳細】【黒い羽毛スキル強化】 効果：クリティカル率+3.3%"}
+{"source":"gamerch.com（网页抓取）","type":"skill_desc","text":"【レイヴンの詳細】【カラスの爪スキル強化】 効果：攻撃力+45"}
+{"source":"gamerch.com（网页抓取）","type":"skill_desc","text":"【レイヴンの詳細】【ライトスレイヤースキル強化】 効果：クリティカルダメージ+30% / 攻撃力/魔法力+8%"}
+{"source":"gamerch.com（网页抓取）","type":"skill_desc","text":"【コルセアの詳細】【弱点補足スキル強化】 効果：攻撃力+38"}
+{"source":"gamerch.com（网页抓取）","type":"skill_desc","text":"【コルセアの詳細】【絨毯爆撃スキル強化】 効果：防御力/魔法抵抗力+15%"}
+{"source":"gamerch.com（网页抓取）","type":"skill_desc","text":"【コルセアの詳細】【責任感スキル強化】 効果：体力+560 / 攻撃力/魔法力+8%"}
+{"source":"gamerch.com（网页抓取）","type":"skill_desc","text":"【エンシェントボウの詳細】【炎弓スキル強化】 効果：魔法力+49"}
+{"source":"gamerch.com（网页抓取）","type":"skill_desc","text":"【エンシェントボウの詳細】【フェニックスアロースキル強化】 効果：移動速度+2"}
+{"source":"gamerch.com（网页抓取）","type":"skill_desc","text":"【エンシェントボウの詳細】【火気吸収スキル強化】 効果：クリティカルダメージ+30% / 攻撃力/魔法力+8%"}
+{"source":"gamerch.com（网页抓取）","type":"skill_desc","text":"【トリックスターの詳細】【歪んだ狂気スキル強化】 効果：攻撃速度+0.06"}
+{"source":"gamerch.com（网页抓取）","type":"skill_desc","text":"【トリックスターの詳細】【危険なトリックスキル強化】 効果：攻撃力+49"}
+{"source":"gamerch.com（网页抓取）","type":"skill_desc","text":"【トリックスターの詳細】【口に蜜あり腹に剣ありスキル強化】 効果：クリティカル率+3.3% / 攻撃力/魔法力+8%"}
+{"source":"gamerch.com（网页抓取）","type":"skill_desc","text":"【ハイアサシンの詳細】【奇襲スキル強化】 効果：攻撃力+52"}
+{"source":"gamerch.com（网页抓取）","type":"skill_desc","text":"【ハイアサシンの詳細】【紅い影スキル強化】 効果：クリティカル率+2%"}
+{"source":"gamerch.com（网页抓取）","type":"skill_desc","text":"【ハイアサシンの詳細】【魔眼スキル強化】 効果：クリティカルダメージ+30% / 攻撃力/魔法力+8%"}
+{"source":"gamerch.com（网页抓取）","type":"skill_desc","text":"【ドラゴンスレイヤーの詳細】【巨大な獲物スキル強化】 効果：体力+460"}
+{"source":"gamerch.com（网页抓取）","type":"skill_desc","text":"【ドラゴンスレイヤーの詳細】【頭蓋骨スマッシュスキル強化】 効果：攻撃力+49"}
+{"source":"gamerch.com（网页抓取）","type":"skill_desc","text":"【ドラゴンスレイヤーの詳細】【ドラゴンハンタースキル強化】 効果：被攻撃時のダメージ-15% / 攻撃力/魔法力+8%"}
+{"source":"gamerch.com（网页抓取）","type":"skill_desc","text":"【シャドウダンサーの詳細】【影吸収スキル強化】 効果：クリティカル率+2%"}
+{"source":"gamerch.com（网页抓取）","type":"skill_desc","text":"【シャドウダンサーの詳細】【悪魔のダンススキル強化】 効果：攻撃速度+0.07"}
+{"source":"gamerch.com（网页抓取）","type":"skill_desc","text":"【シャドウダンサーの詳細】【影の一撃スキル強化】 効果：体力+390 / 攻撃力/魔法力+8%"}
+{"source":"gamerch.com（网页抓取）","type":"skill_desc","text":"【オシリスの詳細】【砂の呼び声スキル強化】 効果：クリティカルダメージ+30%"}
+{"source":"gamerch.com（网页抓取）","type":"skill_desc","text":"【オシリスの詳細】【ここへ留まれスキル強化】 効果：攻撃力+45"}
+{"source":"gamerch.com（网页抓取）","type":"skill_desc","text":"【オシリスの詳細】【死を祝福せよスキル強化】 効果：攻撃速度+0.07 / 攻撃力/魔法力+8%"}
+{"source":"gamerch.com（网页抓取）","type":"skill_desc","text":"【アークメイジの詳細】【メテオスキル強化】 効果：魔法力+105"}
+{"source":"gamerch.com（网页抓取）","type":"skill_desc","text":"【アークメイジの詳細】【呪文封じスキル強化】 効果：体力+320"}
+{"source":"gamerch.com（网页抓取）","type":"skill_desc","text":"【アークメイジの詳細】【リカバリースキル強化】 効果：攻撃速度+0.06 / 攻撃力/魔法力+8%"}
+{"source":"gamerch.com（网页抓取）","type":"skill_desc","text":"【エルドリッチの詳細】【絶対零度スキル強化】 効果：移動速度+2.5"}
+{"source":"gamerch.com（网页抓取）","type":"skill_desc","text":"【エルドリッチの詳細】【酷寒の息吹スキル強化】 効果：魔法力+91"}
+{"source":"gamerch.com（网页抓取）","type":"skill_desc","text":"【エルドリッチの詳細】【氷河の爪スキル強化】 効果：攻撃速度+0.06 / 攻撃力/魔法力+8%"}
+{"source":"gamerch.com（网页抓取）","type":"skill_desc","text":"【ソウルイーターの詳細】【吸魂術スキル強化】 効果：魔法力+56"}
+{"source":"gamerch.com（网页抓取）","type":"skill_desc","text":"【ソウルイーターの詳細】【毒の爆発スキル強化】 効果：攻撃速度+0.07"}
+{"source":"gamerch.com（网页抓取）","type":"skill_desc","text":"【ソウルイーターの詳細】【生命の呪いスキル強化】 効果：体力+340 / 攻撃力/魔法力+8%"}
+{"source":"gamerch.com（网页抓取）","type":"skill_desc","text":"【ミスティックの詳細】【幸福回路連結スキル強化】 効果：攻撃速度+0.05"}
+{"source":"gamerch.com（网页抓取）","type":"skill_desc","text":"【ミスティックの詳細】【催眠術スキル強化】 効果：魔法力+91"}
+{"source":"gamerch.com（网页抓取）","type":"skill_desc","text":"【ミスティックの詳細】【永遠の幻想スキル強化】 効果：クリティカル率+3.3% / 攻撃力/魔法力+8%"}
+{"source":"gamerch.com（网页抓取）","type":"skill_desc","text":"【ジェネリックの詳細】【ジェネリックブームスキル強化】 効果：攻撃速度+0.05"}
+{"source":"gamerch.com（网页抓取）","type":"skill_desc","text":"【ジェネリックの詳細】【グラビティバリアスキル強化】 効果：魔法力+105"}
+{"source":"gamerch.com（网页抓取）","type":"skill_desc","text":"【ジェネリックの詳細】【コレクションブリンクスキル強化】 効果：体力+410 / 攻撃力/魔法力+8%"}
+{"source":"gamerch.com（网页抓取）","type":"skill_desc","text":"【シビュラの詳細】【高音不可スキル強化】 効果：魔法力+56"}
+{"source":"gamerch.com（网页抓取）","type":"skill_desc","text":"【シビュラの詳細】【ハイライトスキル強化】 効果：攻撃範囲+3"}
+{"source":"gamerch.com（网页抓取）","type":"skill_desc","text":"【シビュラの詳細】【鼓膜強打スキル強化】 効果：攻撃速度+0.06 / 攻撃力/魔法力+8%"}
+{"source":"gamerch.com（网页抓取）","type":"skill_desc","text":"【テンプラーの詳細】【神聖の象徴スキル強化】 効果：攻撃力+42"}
+{"source":"gamerch.com（网页抓取）","type":"skill_desc","text":"【テンプラーの詳細】【聖戦士の一撃スキル強化】 効果：体力+460"}
+{"source":"gamerch.com（网页抓取）","type":"skill_desc","text":"【テンプラーの詳細】【救援に応える者スキル強化】 効果：与回復量+20% / 攻撃力/魔法力+8%"}
+{"source":"gamerch.com（网页抓取）","type":"skill_desc","text":"【オラクルの詳細】【重力操作スキル強化】 効果：攻撃速度+0.06"}
+{"source":"gamerch.com（网页抓取）","type":"skill_desc","text":"【オラクルの詳細】【聖なるマナシールドスキル強化】 効果：体力+320"}
+{"source":"gamerch.com（网页抓取）","type":"skill_desc","text":"【オラクルの詳細】【魔力耐性スキル強化】 効果：魔法力+105 / 攻撃力/魔法力+8%"}
+{"source":"gamerch.com（网页抓取）","type":"skill_desc","text":"【ダークプリーストの詳細】【闇の激怒スキル強化】 効果：魔法力+84"}
+{"source":"gamerch.com（网页抓取）","type":"skill_desc","text":"【ダークプリーストの詳細】【暗黒治癒スキル強化】 効果：移動速度+3"}
+{"source":"gamerch.com（网页抓取）","type":"skill_desc","text":"【ダークプリーストの詳細】【裏切りの使徒スキル強化】 効果：攻撃速度+0.07 / 攻撃力/魔法力+8%"}
+{"source":"gamerch.com（网页抓取）","type":"skill_desc","text":"【ビショップの詳細】【癒しの祈りスキル強化】 効果：体力+320"}
+{"source":"gamerch.com（网页抓取）","type":"skill_desc","text":"【ビショップの詳細】【ホーリーライトスキル強化】 効果：魔法力+91"}
+{"source":"gamerch.com（网页抓取）","type":"skill_desc","text":"【ビショップの詳細】【神の恵みスキル強化】 効果：攻撃速度+0.06 / 攻撃力/魔法力+8%"}
+{"source":"gamerch.com（网页抓取）","type":"skill_desc","text":"【ウィンドキュアの詳細】【風の手スキル強化】 効果：与回復量+20%"}
+{"source":"gamerch.com（网页抓取）","type":"skill_desc","text":"【ウィンドキュアの詳細】【風のあいさつスキル強化】 効果：魔法力+105"}
+{"source":"gamerch.com（网页抓取）","type":"skill_desc","text":"【ウィンドキュアの詳細】【キュアスキル強化】 効果：体力+290 / 攻撃力/魔法力+8%"}
+{"source":"gamerch.com（网页抓取）","type":"skill_desc","text":"【デストロイヤーの詳細】【気まぐれスキル強化】 効果：体力+440"}
+{"source":"gamerch.com（网页抓取）","type":"skill_desc","text":"【デストロイヤーの詳細】【破壊戦車スキル強化】 効果：被回復量+20%"}
+{"source":"gamerch.com（网页抓取）","type":"skill_desc","text":"【デストロイヤーの詳細】【海の娘スキル強化】 効果：攻撃力+49 / 攻撃力/魔法力+8%"}
+{"source":"gamerch.com（网页抓取）","type":"skill_desc","text":"【チャンピオンの詳細】【衝撃場スキル強化】 効果：攻撃力+56"}
+{"source":"gamerch.com（网页抓取）","type":"skill_desc","text":"【チャンピオンの詳細】【風切りスキル強化】 効果：攻撃速度+0.06"}
+{"source":"gamerch.com（网页抓取）","type":"skill_desc","text":"【チャンピオンの詳細】【連戦連勝スキル強化】 効果：クリティカル率+2% / 攻撃力/魔法力+8%"}
+{"source":"gamerch.com（网页抓取）","type":"skill_desc","text":"【ウォーシェイパーの詳細】【凶暴な猛獣スキル強化】 効果：体力+390"}
+{"source":"gamerch.com（网页抓取）","type":"skill_desc","text":"【ウォーシェイパーの詳細】【猛襲スキル強化】 効果：被攻撃時のダメージ-5%"}
+{"source":"gamerch.com（网页抓取）","type":"skill_desc","text":"【ウォーシェイパーの詳細】【皮膚再練磨スキル強化】 効果：被回復量+15% / 攻撃力/魔法力+8%"}
+{"source":"gamerch.com（网页抓取）","type":"skill_desc","text":"【スウォッシュバックラーの詳細】【爆熱拳スキル強化】 効果：攻撃速度+0.06"}
+{"source":"gamerch.com（网页抓取）","type":"skill_desc","text":"【スウォッシュバックラーの詳細】【フレイムストームスキル強化】 効果：攻撃力+63"}
+{"source":"gamerch.com（网页抓取）","type":"skill_desc","text":"【スウォッシュバックラーの詳細】【イモレイションスキル強化】 効果：クリティカル率+3.3% / 攻撃力/魔法力+8%"}
+{"source":"gamerch.com（网页抓取）","type":"skill_desc","text":"【サベージの詳細】【狩り開始スキル強化】 効果：攻撃力+42"}
+{"source":"gamerch.com（网页抓取）","type":"skill_desc","text":"【サベージの詳細】【獲物刻印スキル強化】 効果：移動速度+3"}
+{"source":"gamerch.com（网页抓取）","type":"skill_desc","text":"【サベージの詳細】【切開スキル強化】 効果：体力+320 / 攻撃力/魔法力+8%"}
+{"source":"gamerch.com（网页抓取）","type":"skill_desc","text":"【フォートレスの詳細】【力場の盾スキル強化】 効果：体力+460"}
+{"source":"gamerch.com（网页抓取）","type":"skill_desc","text":"【フォートレスの詳細】【生命力転換スキル強化】 効果：被回復量+15%"}
+{"source":"gamerch.com（网页抓取）","type":"skill_desc","text":"【フォートレスの詳細】【鈍化の魔方陣スキル強化】 効果：被攻撃時のダメージ-8% / 攻撃力/魔法力+8%"}
+{"source":"gamerch.com（网页抓取）","type":"skill_desc","text":"【トライデントの詳細】【稲妻のトリアイナスキル強化】 効果：魔法力+63"}
+{"source":"gamerch.com（网页抓取）","type":"skill_desc","text":"【トライデントの詳細】【怒りの大地スキル強化】 効果：攻撃速度+0.05"}
+{"source":"gamerch.com（网页抓取）","type":"skill_desc","text":"【トライデントの詳細】【過激ないたずらスキル強化】 効果：クリティカルダメージ+30% / 攻撃力/魔法力+8%"}
+{"source":"gamerch.com（网页抓取）","type":"skill_desc","text":"【ヴァンガードの詳細】【力の強奪スキル強化】 効果：被攻撃時のダメージ-5%"}
+{"source":"gamerch.com（网页抓取）","type":"skill_desc","text":"【ヴァンガードの詳細】【士気低下スキル強化】 効果：体力+510"}
+{"source":"gamerch.com（网页抓取）","type":"skill_desc","text":"【ヴァンガードの詳細】【洗脳された野獣スキル強化】 効果：攻撃速度+0.05 / 攻撃力/魔法力+8%"}
+{"source":"gamerch.com（网页抓取）","type":"skill_desc","text":"【ルーラーの詳細】【高揚した旗手スキル強化】 効果：体力+340"}
+{"source":"gamerch.com（网页抓取）","type":"skill_desc","text":"【ルーラーの詳細】【復讐の旗スキル強化】 効果：攻撃速度+0.06"}
+{"source":"gamerch.com（网页抓取）","type":"skill_desc","text":"【ルーラーの詳細】【守護の旗スキル強化】 効果：被攻撃時のダメージ-8% / 攻撃力/魔法力+8%"}
+{"source":"gamerch.com（网页抓取）","type":"skill_desc","text":"【オペレーターの詳細】【重力制御スキル強化】 効果：攻撃範囲+2"}
+{"source":"gamerch.com（网页抓取）","type":"skill_desc","text":"【オペレーターの詳細】【魔法工学の槍兵スキル強化】 効果：魔法力+84"}
+{"source":"gamerch.com（网页抓取）","type":"skill_desc","text":"【オペレーターの詳細】【磁場の盾スキル強化】 効果：体力+290 / 攻撃力/魔法力+8%"}
+{"source":"gamerch.com（网页抓取）","type":"skill_desc","text":"【エクソシストの詳細】【スピリットジャンプスキル強化】 効果：攻撃力+49"}
+{"source":"gamerch.com（网页抓取）","type":"skill_desc","text":"【エクソシストの詳細】【シャドウアイスキル強化】 効果：体力+320"}
+{"source":"gamerch.com（网页抓取）","type":"skill_desc","text":"【エクソシストの詳細】【フローラルグレイヴスキル強化】 効果：攻撃時のダメージ+5% / 攻撃力/魔法力+8%"}
+{"source":"gamerch.com（网页抓取）","type":"skill_desc","text":"【サラマンダーの詳細】【フレアスキル強化】 効果：体力+250"}
+{"source":"gamerch.com（网页抓取）","type":"skill_desc","text":"【サラマンダーの詳細】【マグマスキンスキル強化】 効果：魔法力+84"}
+{"source":"gamerch.com（网页抓取）","type":"skill_desc","text":"【サラマンダーの詳細】【フレイムバーストスキル強化】 効果：クリティカル率+2% / 攻撃力/魔法力+8%"}
+{"source":"gamerch.com（网页抓取）","type":"skill_desc","text":"【ウンディーネの詳細】【表面張力スキル強化】 効果：魔法力+84"}
+{"source":"gamerch.com（网页抓取）","type":"skill_desc","text":"【ウンディーネの詳細】【波の祝福スキル強化】 効果：攻撃速度+0.06"}
+{"source":"gamerch.com（网页抓取）","type":"skill_desc","text":"【ウンディーネの詳細】【水龍波スキル強化】 効果：体力+290 / 攻撃力/魔法力+8%"}
+{"source":"gamerch.com（网页抓取）","type":"skill_desc","text":"【シルフの詳細】【風のメロディスキル強化】 効果：攻撃力+45"}
+{"source":"gamerch.com（网页抓取）","type":"skill_desc","text":"【シルフの詳細】【鋭い風スキル強化】 効果：クリティカル率+2%"}
+{"source":"gamerch.com（网页抓取）","type":"skill_desc","text":"【シルフの詳細】【春風スキル強化】 効果：クリティカルダメージ+30% / 攻撃力/魔法力+8%"}
+{"source":"gamerch.com（网页抓取）","type":"skill_desc","text":"【シェードの詳細】【アンホーリーブレードスキル強化】 効果：攻撃速度+0.05"}
+{"source":"gamerch.com（网页抓取）","type":"skill_desc","text":"【シェードの詳細】【ブラインドクラウドスキル強化】 効果：魔法力+77"}
+{"source":"gamerch.com（网页抓取）","type":"skill_desc","text":"【シェードの詳細】【ダークネスバイブスキル強化】 効果：クリティカル率+2% / 攻撃力/魔法力+8%"}
+{"source":"gamerch.com（网页抓取）","type":"skill_desc","text":"【デュエリストの詳細】【決闘の代償スキル強化】 効果：攻撃力+42"}
+{"source":"gamerch.com（网页抓取）","type":"skill_desc","text":"【デュエリストの詳細】【応手スキル強化】 効果：攻撃速度+0.05"}
+{"source":"gamerch.com（网页抓取）","type":"skill_desc","text":"【デュエリストの詳細】【快剣術スキル強化】 効果：クリティカルダメージ+30% / 攻撃力/魔法力+8%"}
+{"source":"gamerch.com（网页抓取）","type":"skill_desc","text":"【パイレーツの詳細】【無差別射撃スキル強化】 効果：攻撃力+45"}
+{"source":"gamerch.com（网页抓取）","type":"skill_desc","text":"【パイレーツの詳細】【大口径弾丸スキル強化】 効果：クリティカル率+3.3%"}
+{"source":"gamerch.com（网页抓取）","type":"skill_desc","text":"【パイレーツの詳細】【スパイク弾スキル強化】 効果：攻撃力+56 / 攻撃力/魔法力+8%"}
+{"source":"gamerch.com（网页抓取）","type":"skill_desc","text":"【スナッチャーの詳細】【強奪スキル強化】 効果：攻撃力+49"}
+{"source":"gamerch.com（网页抓取）","type":"skill_desc","text":"【スナッチャーの詳細】【ソロフライングスキル強化】 効果：クリティカル率+2%"}
+{"source":"gamerch.com（网页抓取）","type":"skill_desc","text":"【スナッチャーの詳細】【盗人の意志スキル強化】 効果：クリティカルダメージ+40% / 攻撃力/魔法力+8%"}
+{"source":"gamerch.com（网页抓取）","type":"skill_desc","text":"【ドラゴンシャーマンの詳細】【龍の教えスキル強化】 効果：魔法力+63"}
+{"source":"gamerch.com（网页抓取）","type":"skill_desc","text":"【ドラゴンシャーマンの詳細】【竜の威圧感スキル強化】 効果：クリティカル率+2%"}
+{"source":"gamerch.com（网页抓取）","type":"skill_desc","text":"【ドラゴンシャーマンの詳細】【竜の祝福スキル強化】 効果：攻撃速度+0.07 / 攻撃力/魔法力+8%"}
+{"source":"gamerch.com（网页抓取）","type":"skill_desc","text":"【バイキングの詳細】【落雷スキル強化】 効果：体力+340"}
+{"source":"gamerch.com（网页抓取）","type":"skill_desc","text":"【バイキングの詳細】【鉄の障壁スキル強化】 効果：攻撃速度+0.06"}
+{"source":"gamerch.com（网页抓取）","type":"skill_desc","text":"【バイキングの詳細】【固い意志スキル強化】 効果：被攻撃時のダメージｰ5% / 攻撃力/魔法力+8%"}
+{"source":"gamerch.com（网页抓取）","type":"skill_desc","text":"【クラッシャーの詳細】【ローキックスキル強化】 効果：攻撃力+61"}
+{"source":"gamerch.com（网页抓取）","type":"skill_desc","text":"【クラッシャーの詳細】【浩然の気スキル強化】 効果：クリティカルダメージ+30%"}
+{"source":"gamerch.com（网页抓取）","type":"skill_desc","text":"【クラッシャーの詳細】【無法地帯の虎スキル強化】 効果：クリティカル率+10% / 攻撃力+10%"}
+{"source":"gamerch.com（网页抓取）","type":"skill_desc","text":"【テイマーの詳細】【ウルフソウルスキル強化】 効果：攻撃力+45"}
+{"source":"gamerch.com（网页抓取）","type":"skill_desc","text":"【テイマーの詳細】【ちびハンタースキル強化】 効果：移動速度+2"}
+{"source":"gamerch.com（网页抓取）","type":"skill_desc","text":"【テイマーの詳細】【デュアルソウルスキル強化】 効果：クリティカル率+2% / 攻撃力/魔法力+8%"}
+{"source":"gamerch.com（网页抓取）","type":"skill_desc","text":"【アルケミストの詳細】【錬金術スキル強化】 効果：攻撃速度+0.07"}
+{"source":"gamerch.com（网页抓取）","type":"skill_desc","text":"【アルケミストの詳細】【弱化の錬成陣スキル強化】 効果：クリティカル率+3.3%"}
+{"source":"gamerch.com（网页抓取）","type":"skill_desc","text":"【アルケミストの詳細】【等価交換スキル強化】 効果：魔法力+126 / 攻撃力/魔法力+8%"}
+{"source":"gamerch.com（网页抓取）","type":"skill_desc","text":"【セイントの詳細】【泣いちゃダメスキル強化】 効果：[全て系列英雄]メインステータス+1%"}
+{"source":"gamerch.com（网页抓取）","type":"skill_desc","text":"【セイントの詳細】【ジングルベルスキル強化】 効果：[全て系列英雄]攻撃速度+2%"}
+{"source":"gamerch.com（网页抓取）","type":"skill_desc","text":"【セイントの詳細】【サイレントナイトスキル強化】 効果：[全て系列英雄]攻撃速度+3% / [全て系列英雄]メインステータス+3%"}
+{"source":"gamerch.com（网页抓取）","type":"skill_desc","text":"【ブラックヴァルキュリアの詳細】【魔王の加護スキル強化】 効果：攻撃速度+0.06"}
+{"source":"gamerch.com（网页抓取）","type":"skill_desc","text":"【ブラックヴァルキュリアの詳細】【魂斬りスキル強化】 効果：攻撃時のダメージ+5%"}
+{"source":"gamerch.com（网页抓取）","type":"skill_desc","text":"【ブラックヴァルキュリアの詳細】【魔気チャージスキル強化】 効果：被攻撃時のダメージ-8%"}
+{"source":"gamerch.com（网页抓取）","type":"skill_desc","text":"【ドラグーンの詳細】【ビキニアーマースキル強化】 効果：体力+560"}
+{"source":"gamerch.com（网页抓取）","type":"skill_desc","text":"【ドラグーンの詳細】【段階破砕術スキル強化】 効果：防御力/魔法抵抗力+20%"}
+{"source":"gamerch.com（网页抓取）","type":"skill_desc","text":"【ドラグーンの詳細】【邪念の狂剣スキル強化】 効果：被攻撃時のダメージ-8%"}
+{"source":"gamerch.com（网页抓取）","type":"skill_desc","text":"【ソードマスターの詳細】【剣門開放スキル強化】 効果：攻撃力+66"}
+{"source":"gamerch.com（网页抓取）","type":"skill_desc","text":"【ソードマスターの詳細】【炸裂する居合スキル強化】 効果：クリティカル率+2%"}
+{"source":"gamerch.com（网页抓取）","type":"skill_desc","text":"【ソードマスターの詳細】【大気切剣スキル強化】 効果：攻撃時のダメージ+10%"}
+{"source":"gamerch.com（网页抓取）","type":"skill_desc","text":"【ソウルボウの詳細】【イグドラシルの弓スキル強化】 効果：攻撃力/魔法力+8%"}
+{"source":"gamerch.com（网页抓取）","type":"skill_desc","text":"【ソウルボウの詳細】【深緑色の爆撃スキル強化】 効果：クリティカル率+2%"}
+{"source":"gamerch.com（网页抓取）","type":"skill_desc","text":"【ソウルボウの詳細】【大自然の憤怒スキル強化】 効果：攻撃時のダメージ+5%"}
+{"source":"gamerch.com（网页抓取）","type":"skill_desc","text":"【ダークワンダラーの詳細】【闇の刻印スキル強化】 効果：攻撃力+52"}
+{"source":"gamerch.com（网页抓取）","type":"skill_desc","text":"【ダークワンダラーの詳細】【闇を切り裂く星スキル強化】 効果：クリティカル率+3.3%"}
+{"source":"gamerch.com（网页抓取）","type":"skill_desc","text":"【ダークワンダラーの詳細】【弱者淘汰スキル強化】 効果：クリティカルダメージ+50%"}
+{"source":"gamerch.com（网页抓取）","type":"skill_desc","text":"【ファルコンの詳細】【バイコーン最大出力スキル強化】 効果：攻撃速度+0.06"}
+{"source":"gamerch.com（网页抓取）","type":"skill_desc","text":"【ファルコンの詳細】【氷結加速システムスキル強化】 効果：攻撃時のダメージ+5%"}
+{"source":"gamerch.com（网页抓取）","type":"skill_desc","text":"【ファルコンの詳細】【フローズンダブルスキル強化】 効果：クリティカル率+3.3%"}
+{"source":"gamerch.com（网页抓取）","type":"skill_desc","text":"【バウンティハンターの詳細】【トラウマスキル強化】 効果：攻撃速度+0.06"}
+{"source":"gamerch.com（网页抓取）","type":"skill_desc","text":"【バウンティハンターの詳細】【破滅の時間スキル強化】 効果：被回復量+15%"}
+{"source":"gamerch.com（网页抓取）","type":"skill_desc","text":"【バウンティハンターの詳細】【循環の振り子スキル強化】 効果：被攻撃時のダメージ-10%"}
+{"source":"gamerch.com（网页抓取）","type":"skill_desc","text":"【ダルヴィーシュの詳細】【ゼロシークエンススキル強化】 効果：クリティカル率+3.3%"}
+{"source":"gamerch.com（网页抓取）","type":"skill_desc","text":"【ダルヴィーシュの詳細】【オーバードライブスキル強化】 効果：攻撃速度+0.07"}
+{"source":"gamerch.com（网页抓取）","type":"skill_desc","text":"【ダルヴィーシュの詳細】【アルファソードスキル強化】 効果：攻撃時のダメージ+10%"}
+{"source":"gamerch.com（网页抓取）","type":"skill_desc","text":"【デーモンシャドウの詳細】【ダブルクロススキル強化】 効果：攻撃力+63"}
+{"source":"gamerch.com（网页抓取）","type":"skill_desc","text":"【デーモンシャドウの詳細】【ポイズンマスタリースキル強化】 効果：攻撃速度+0.07"}
+{"source":"gamerch.com（网页抓取）","type":"skill_desc","text":"【デーモンシャドウの詳細】【パラライズスキル強化】 効果：攻撃時のダメージ+10%"}
+{"source":"gamerch.com（网页抓取）","type":"skill_desc","text":"【ロードメイジの詳細】【マジックミサイルスキル強化】 効果：魔法力+56"}
+{"source":"gamerch.com（网页抓取）","type":"skill_desc","text":"【ロードメイジの詳細】【メテオストライクスキル強化】 効果：体力+380"}
+{"source":"gamerch.com（网页抓取）","type":"skill_desc","text":"【ロードメイジの詳細】【グレイシャルスパイクスキル強化】 効果：クリティカル率+3.3%"}
+{"source":"gamerch.com（网页抓取）","type":"skill_desc","text":"【セージの詳細】【賢者の祝福スキル強化】 効果：体力+340"}
+{"source":"gamerch.com（网页抓取）","type":"skill_desc","text":"【セージの詳細】【花様年華スキル強化】 効果：魔法力+112"}
+{"source":"gamerch.com（网页抓取）","type":"skill_desc","text":"【セージの詳細】【千紫万紅スキル強化】 効果：与回復量+30%"}
+{"source":"gamerch.com（网页抓取）","type":"skill_desc","text":"【ヴァンパイアの詳細】【血の波動スキル強化】 効果：クリティカル率+2%"}
+{"source":"gamerch.com（网页抓取）","type":"skill_desc","text":"【ヴァンパイアの詳細】【血の復讐スキル強化】 効果：体力+600"}
+{"source":"gamerch.com（网页抓取）","type":"skill_desc","text":"【ヴァンパイアの詳細】【終わりなき渇きスキル強化】 効果：クリティカルダメージ+30%"}
+{"source":"gamerch.com（网页抓取）","type":"skill_desc","text":"【ビーストロードの詳細】【キツネ火スキル強化】 効果：魔法力+91"}
+{"source":"gamerch.com（网页抓取）","type":"skill_desc","text":"【ビーストロードの詳細】【九尾スキル強化】 効果：攻撃速度+0.06"}
+{"source":"gamerch.com（网页抓取）","type":"skill_desc","text":"【ビーストロードの詳細】【業火スキル強化】 効果：被攻撃時のダメージ-10%"}
+{"source":"gamerch.com（网页抓取）","type":"skill_desc","text":"【ダークロードの詳細】【空虚の手スキル強化】 効果：魔法力+77"}
+{"source":"gamerch.com（网页抓取）","type":"skill_desc","text":"【ダークロードの詳細】【闇を迎えようスキル強化】 効果：攻撃時のダメージ+10%"}
+{"source":"gamerch.com（网页抓取）","type":"skill_desc","text":"【ダークロードの詳細】【ダークヴァインスキル強化】 効果：クリティカル率+3.3%"}
+{"source":"gamerch.com（网页抓取）","type":"skill_desc","text":"【アークエンジェルの詳細】【天命の光スキル強化】 効果：与回復量+15%"}
+{"source":"gamerch.com（网页抓取）","type":"skill_desc","text":"【アークエンジェルの詳細】【守護の光スキル強化】 効果：移動速度+3"}
+{"source":"gamerch.com（网页抓取）","type":"skill_desc","text":"【アークエンジェルの詳細】【光輝の結束スキル強化】 効果：体力+670"}
+{"source":"gamerch.com（网页抓取）","type":"skill_desc","text":"【ヘルブリンガーの詳細】【共鳴する水スキル強化】 効果：攻撃速度+0.07"}
+{"source":"gamerch.com（网页抓取）","type":"skill_desc","text":"【ヘルブリンガーの詳細】【力の波動スキル強化】 効果：体力+840"}
+{"source":"gamerch.com（网页抓取）","type":"skill_desc","text":"【ヘルブリンガーの詳細】【溢れる力スキル強化】 効果：被攻撃時のダメージ-8%"}
+{"source":"gamerch.com（网页抓取）","type":"skill_desc","text":"【ゴッドハンドの詳細】【色即是空スキル強化】 効果：攻撃力+59"}
+{"source":"gamerch.com（网页抓取）","type":"skill_desc","text":"【ゴッドハンドの詳細】【修羅スキル強化】 効果：クリティカル率+3.3%"}
+{"source":"gamerch.com（网页抓取）","type":"skill_desc","text":"【ゴッドハンドの詳細】【主人公スキル強化】 効果：被攻撃時のダメージ-10%"}
+{"source":"gamerch.com（网页抓取）","type":"skill_desc","text":"【ドリームペインターの詳細】【モデルマークスキル強化】 効果：移動速度+3"}
+{"source":"gamerch.com（网页抓取）","type":"skill_desc","text":"【ドリームペインターの詳細】【アーティストスキル強化】 効果：攻撃速度+0.08"}
+{"source":"gamerch.com（网页抓取）","type":"skill_desc","text":"【ドリームペインターの詳細】【書きまくるスキル強化】 効果：体力+11% / 攻撃時のダメージ+10%"}
+{"source":"gamerch.com（网页抓取）","type":"skill_desc","text":"【キャヴァリアの詳細】【グリフォンライダースキル強化】 効果：体力+600"}
+{"source":"gamerch.com（网页抓取）","type":"skill_desc","text":"【キャヴァリアの詳細】【スカイレインフォーススキル強化】 効果：防御力/魔法抵抗力+30%"}
+{"source":"gamerch.com（网页抓取）","type":"skill_desc","text":"【キャヴァリアの詳細】【オール・フォー・ワンスキル強化】 効果：被攻撃時のダメージｰ10%"}
+{"source":"gamerch.com（网页抓取）","type":"skill_desc","text":"【デュランダルの詳細】【必滅の灰スキル強化】 効果：攻撃速度+0.06"}
+{"source":"gamerch.com（网页抓取）","type":"skill_desc","text":"【デュランダルの詳細】【天武破滅閃スキル強化】 効果：攻撃力+77"}
+{"source":"gamerch.com（网页抓取）","type":"skill_desc","text":"【デュランダルの詳細】【漆黒の半月軌スキル強化】 効果：クリティカル率+3.3%"}
+{"source":"gamerch.com（网页抓取）","type":"skill_desc","text":"【ホーリープリンセスの詳細】【ロイヤリティスキル強化】 効果：攻撃速度+0.06"}
+{"source":"gamerch.com（网页抓取）","type":"skill_desc","text":"【ホーリープリンセスの詳細】【皆の念願スキル強化】 効果：被攻撃時のダメージ-10%"}
+{"source":"gamerch.com（网页抓取）","type":"skill_desc","text":"【ホーリープリンセスの詳細】【輝く品格スキル強化】 効果：体力+10%"}
+{"source":"gamerch.com（网页抓取）","type":"skill_desc","text":"【ソウルランサーの詳細】【美女はお寝坊さんスキル強化】 効果：攻撃力+63"}
+{"source":"gamerch.com（网页抓取）","type":"skill_desc","text":"【ソウルランサーの詳細】【魂の傷スキル強化】 効果：攻撃速度+0.06"}
+{"source":"gamerch.com（网页抓取）","type":"skill_desc","text":"【ソウルランサーの詳細】【雪豹牙スキル強化】 効果：攻撃時のダメージ+10%"}
+{"source":"gamerch.com（网页抓取）","type":"skill_desc","text":"【ストームスピアの詳細】【ロンギヌスストームスキル強化】 効果：攻撃力+70"}
+{"source":"gamerch.com（网页抓取）","type":"skill_desc","text":"【ストームスピアの詳細】【ライトニングシールドスキル強化】 効果：クリティカル率+3.3%"}
+{"source":"gamerch.com（网页抓取）","type":"skill_desc","text":"【ストームスピアの詳細】【クリスタル・オブ・ライフスキル強化】 効果：クリティカルダメージ+35%"}
+{"source":"gamerch.com（网页抓取）","type":"skill_desc","text":"【イフリートの詳細】【スウィープスキル強化】 効果：魔法力+59"}
+{"source":"gamerch.com（网页抓取）","type":"skill_desc","text":"【イフリートの詳細】【ファイヤーウォールスキル強化】 効果：被攻撃時のダメージｰ15%"}
+{"source":"gamerch.com（网页抓取）","type":"skill_desc","text":"【イフリートの詳細】【威嚇スキル強化】 効果：攻撃速度+0.06"}
+{"source":"gamerch.com（网页抓取）","type":"skill_desc","text":"【エルライムの詳細】【レイジ・オブ・ウォータースキル強化】 効果：魔法力+105"}
+{"source":"gamerch.com（网页抓取）","type":"skill_desc","text":"【エルライムの詳細】【アクアブレススキル強化】 効果：与回復量+20%"}
+{"source":"gamerch.com（网页抓取）","type":"skill_desc","text":"【エルライムの詳細】【青声の歌スキル強化】 効果：攻撃速度+0.05"}
+{"source":"gamerch.com（网页抓取）","type":"skill_desc","text":"【シルフィードの詳細】【風の子スキル強化】 効果：攻撃力+63"}
+{"source":"gamerch.com（网页抓取）","type":"skill_desc","text":"【シルフィードの詳細】【ウィンドフォースキャノンスキル強化】 効果：クリティカル率+3.3%"}
+{"source":"gamerch.com（网页抓取）","type":"skill_desc","text":"【シルフィードの詳細】【テンペストスキル強化】 効果：攻撃時のダメージ+10%"}
+{"source":"gamerch.com（网页抓取）","type":"skill_desc","text":"【リベレーターの詳細】【豚じゃない！スキル強化】 効果：体力+590"}
+{"source":"gamerch.com（网页抓取）","type":"skill_desc","text":"【リベレーターの詳細】【ウィーンウィーンスキル強化】 効果：攻撃速度+0.06"}
+{"source":"gamerch.com（网页抓取）","type":"skill_desc","text":"【リベレーターの詳細】【ドキドキスキル強化】 効果：被攻撃時のダメージｰ15%"}
+{"source":"gamerch.com（网页抓取）","type":"skill_desc","text":"【アヴァロンの詳細】【蓮の鎧スキル強化】 効果：魔法力+84"}
+{"source":"gamerch.com（网页抓取）","type":"skill_desc","text":"【アヴァロンの詳細】【理想の世界スキル強化】 効果：攻撃速度+0.06"}
+{"source":"gamerch.com（网页抓取）","type":"skill_desc","text":"【アヴァロンの詳細】【伝説の剣スキル強化】 効果：攻撃時のダメージ+10%"}
+{"source":"gamerch.com（网页抓取）","type":"skill_desc","text":"【デスペラードの詳細】【一発三中スキル強化】 効果：攻撃力+52"}
+{"source":"gamerch.com（网页抓取）","type":"skill_desc","text":"【デスペラードの詳細】【捕縛術スキル強化】 効果：クリティカル率+3.3%"}
+{"source":"gamerch.com（网页抓取）","type":"skill_desc","text":"【デスペラードの詳細】【爆発射撃スキル強化】 効果：攻撃時のダメージ+10%"}
+{"source":"gamerch.com（网页抓取）","type":"skill_desc","text":"【ルナブレイドの詳細】【月光切りスキル強化】 効果：攻撃速度+0.06"}
+{"source":"gamerch.com（网页抓取）","type":"skill_desc","text":"【ルナブレイドの詳細】【夕暮れの導きスキル強化】 効果：クリティカル率アップ+3.3%"}
+{"source":"gamerch.com（网页抓取）","type":"skill_desc","text":"【ルナブレイドの詳細】【満月の惨殺スキル強化】 効果：クリティカルダメージ+50%"}
+{"source":"gamerch.com（网页抓取）","type":"skill_desc","text":"【マリオネットの詳細】【人形の夢スキル強化】 効果：魔法力+84"}
+{"source":"gamerch.com（网页抓取）","type":"skill_desc","text":"【マリオネットの詳細】【幻のダンススキル強化】 効果：体力+500"}
+{"source":"gamerch.com（网页抓取）","type":"skill_desc","text":"【マリオネットの詳細】【テディベアスキル強化】 効果：攻撃速度+0.07"}
+{"source":"gamerch.com（网页抓取）","type":"skill_desc","text":"【ヴェノムクイーンの詳細】【新しいドレススキル強化】 効果：クリティカル率+3.3%"}
+{"source":"gamerch.com（网页抓取）","type":"skill_desc","text":"【ヴェノムクイーンの詳細】【クモの女王スキル強化】 効果：攻撃速度+0.06"}
+{"source":"gamerch.com（网页抓取）","type":"skill_desc","text":"【ヴェノムクイーンの詳細】【致命的な魅力スキル強化】 効果：攻撃時のダメージ+10%"}
+{"source":"gamerch.com（网页抓取）","type":"skill_desc","text":"【メイジフィストの詳細】【猫精霊の祝福スキル強化】 効果：体力+530"}
+{"source":"gamerch.com（网页抓取）","type":"skill_desc","text":"【メイジフィストの詳細】【ビリビリパンチスキル強化】 効果：魔法力+105"}
+{"source":"gamerch.com（网页抓取）","type":"skill_desc","text":"【メイジフィストの詳細】【増幅される勇気スキル強化】 効果：攻撃速度+0.07"}
+{"source":"gamerch.com（网页抓取）","type":"skill_desc","text":"【ウォーロードの詳細】【フィールド・オブ・ウォーロードスキル強化】 効果：攻撃速度+0.07"}
+{"source":"gamerch.com（网页抓取）","type":"skill_desc","text":"【ウォーロードの詳細】【星の叫び声スキル強化】 効果：体力+640"}
+{"source":"gamerch.com（网页抓取）","type":"skill_desc","text":"【ウォーロードの詳細】【半月斬りスキル強化】 効果：攻撃時のダメージ+10%"}
+{"source":"gamerch.com（网页抓取）","type":"skill_desc","text":"【エレボスの詳細】【フィアーオーラスキル強化】 効果：魔法力+84"}
+{"source":"gamerch.com（网页抓取）","type":"skill_desc","text":"【エレボスの詳細】【イーヴィルシードスキル強化】 効果：クリティカル率+3.3%"}
+{"source":"gamerch.com（网页抓取）","type":"skill_desc","text":"【エレボスの詳細】【ダークインフレーションスキル強化】 効果：クリティカルダメージ+40%"}
+{"source":"gamerch.com（网页抓取）","type":"skill_desc","text":"【ソードセイントの詳細】【聖剣アスカロンスキル強化】 効果：[ソードマン系列英雄]体力+3%"}
+{"source":"gamerch.com（网页抓取）","type":"skill_desc","text":"【ソードセイントの詳細】【始まりと終わりスキル強化】 効果：[ソードマン系列英雄]攻撃力/魔法力+3%"}
+{"source":"gamerch.com（网页抓取）","type":"skill_desc","text":"【ソードセイントの詳細】【アンチマジックシールドスキル強化】 効果：[ソードマン系列英雄]攻撃速度+3%"}
+{"source":"gamerch.com（网页抓取）","type":"skill_desc","text":"【ユニオンセンチネル】【照準線刻印スキル強化】 効果：[アーチャー系列英雄]体力+3%"}
+{"source":"gamerch.com（网页抓取）","type":"skill_desc","text":"【ユニオンセンチネル】【殲滅スキル強化】 効果：[アーチャー系列英雄]攻撃力/魔法力+3%"}
+{"source":"gamerch.com（网页抓取）","type":"skill_desc","text":"【ユニオンセンチネル】【破壊スキル強化】 効果：[アーチャー系列英雄]攻撃速度+3%"}
+{"source":"gamerch.com（网页抓取）","type":"skill_desc","text":"【アスラの詳細】【幽霊の剣舞スキル強化】 効果：[ローグ系列英雄]体力+3%"}
+{"source":"gamerch.com（网页抓取）","type":"skill_desc","text":"【アスラの詳細】【拘束された魂スキル強化】 効果：[ローグ系列英雄]攻撃力/魔法力+3%"}
+{"source":"gamerch.com（网页抓取）","type":"skill_desc","text":"【アスラの詳細】【緊急回避スキル強化】 効果：[ローグ系列英雄]攻撃速度+3%"}
+{"source":"gamerch.com（网页抓取）","type":"skill_desc","text":"【グランドマスター】【マグニフィセントフレイムスキル強化】 効果：[ウィザード系列英雄]体力+3%"}
+{"source":"gamerch.com（网页抓取）","type":"skill_desc","text":"【グランドマスター】【グランドストライクスキル強化】 効果：[ウィザード系列英雄]攻撃力/魔法力+3%"}
+{"source":"gamerch.com（网页抓取）","type":"skill_desc","text":"【グランドマスター】【ウェーブ・オブ・サンダースキル強化】 効果：[ウィザード系列英雄]攻撃速度+3%"}
+{"source":"gamerch.com（网页抓取）","type":"skill_desc","text":"【スターゲートの詳細】【スターフィストスキル強化】 効果：[ファイター系列英雄]体力+3%"}
+{"source":"gamerch.com（网页抓取）","type":"skill_desc","text":"【スターゲートの詳細】【スターフォールスキル強化】 効果：[ファイター系列英雄]攻撃力/魔法力+3%"}
+{"source":"gamerch.com（网页抓取）","type":"skill_desc","text":"【スターゲートの詳細】【スウィフトスキル強化】 効果：[ファイター系列英雄]攻撃速度+3%"}
+{"source":"gamerch.com（网页抓取）","type":"skill_desc","text":"【デミゴッド】【神の手さばきスキル強化】 効果：[クレリック系列英雄]体力+3%"}
+{"source":"gamerch.com（网页抓取）","type":"skill_desc","text":"【デミゴッド】【終末宣言スキル強化】 効果：[クレリック系列英雄]攻撃力/魔法力+3%"}
+{"source":"gamerch.com（网页抓取）","type":"skill_desc","text":"【デミゴッド】【混沌の破片スキル強化】 効果：[クレリック系列英雄]攻撃速度+3%"}
+{"source":"gamerch.com（网页抓取）","type":"skill_desc","text":"【モノケロス】【ウォーストンプスキル強化】 効果：[ランサー系列英雄]体力+3%"}
+{"source":"gamerch.com（网页抓取）","type":"skill_desc","text":"【モノケロス】【スピリチュアルラッシュスキル強化】 効果：[ランサー系列英雄]攻撃力/魔法力+3%"}
+{"source":"gamerch.com（网页抓取）","type":"skill_desc","text":"【モノケロス】【ストラグルスキル強化】 効果：[ランサー系列英雄]攻撃速度+3%"}
+{"source":"gamerch.com（网页抓取）","type":"skill_desc","text":"【ミネルヴァ】【エンハンドスピリットスキル強化】 効果：[スピリット系列英雄]体力+3%"}
+{"source":"gamerch.com（网页抓取）","type":"skill_desc","text":"【ミネルヴァ】【スピットファイヤースキル強化】 効果：[スピリット系列英雄]攻撃力/魔法力+3%"}
+{"source":"gamerch.com（网页抓取）","type":"skill_desc","text":"【ミネルヴァ】【アクアストームスキル強化】 効果：[スピリット系列英雄]攻撃速度+3%"}
