@@ -1457,7 +1457,10 @@
     }
 
     /* gamerch.com キャラ詳細ページからスキル効果テキストを抽出 */
-    function parseGamerchCharaPage(doc, charName) {
+    function parseGamerchCharaPage(doc, charName, gameName) {
+        // 【GameName：CharName】形式にする（gameName がある場合）
+        const namePrefix = gameName && charName ? `${gameName}：${charName}` : (charName || gameName || '');
+
         const SKILL_HEAD_RE = /パッシブ|アクティブ|スキル|必殺技|奥義|アビリティ|ウルト|アルティメット/;
         // 英雄レベル達成時/下記の効果獲得/Lv数字 はテンプレートなので除外
         const BOILERPLATE_RE = /達成時|下記の効果獲得|^Lv\d/;
@@ -1484,7 +1487,7 @@
             while (sib && sib.tagName !== 'TABLE' && hops < 5) { sib = sib.nextElementSibling; hops++; }
             if (!sib || sib.tagName !== 'TABLE') return;
             const lines = extractCells(sib);
-            if (lines.length) items.push(`【${charName}】【${hText}】 効果：${lines.join(' / ')}`);
+            if (lines.length) items.push(`【${namePrefix}】【${hText}】 効果：${lines.join(' / ')}`);
         });
         if (items.length) return items;
 
@@ -1512,7 +1515,7 @@
                 });
             });
             Object.entries(bySection).forEach(([sec, effects]) => {
-                if (effects.length) items.push(`【${charName}】【${sec}】 効果：${effects.join(' / ')}`);
+                if (effects.length) items.push(`【${namePrefix}】【${sec}】 効果：${effects.join(' / ')}`);
             });
         });
         if (items.length) return items;
@@ -1524,7 +1527,7 @@
             if (!t || t.length < 6 || BOILERPLATE_RE.test(t) || META_RE.test(t)) return;
             if (!seen.has(t)) { seen.add(t); allEffects.push(t); }
         });
-        if (allEffects.length) return [`【${charName}】 効果：${allEffects.join(' / ')}`];
+        if (allEffects.length) return [`【${namePrefix}】 効果：${allEffects.join(' / ')}`];
 
         return [];
     }
@@ -1590,7 +1593,10 @@
                 const CONCURRENCY = 4;
                 const targets = gamerchList.slice(0, BATCH_LIMIT);
                 const total = targets.length;
-                statusEl.textContent = `検出：キャラ一覧 ${total} 件（最大${BATCH_LIMIT}件まで並列抓取中）`;
+                // ゲーム名をインデックスページから取得（一覧/評価などの接尾辞を除去）
+                const rawGameName = extractPageName(doc);
+                const gameName = rawGameName.replace(/\s*[一覧評価英雄キャラ、,，\s]+.*$/, '').trim() || host;
+                statusEl.textContent = `検出：${gameName} キャラ一覧 ${total} 件（最大${BATCH_LIMIT}件まで並列抓取中）`;
                 const allItems = [];
                 for (let i = 0; i < targets.length; i += CONCURRENCY) {
                     const batchEnd = Math.min(i + CONCURRENCY, total);
@@ -1600,7 +1606,7 @@
                             const charaHtml = await fetchHtmlViaProxy(charaUrl);
                             const charaDoc = new DOMParser().parseFromString(charaHtml, 'text/html');
                             const charName = extractPageName(charaDoc) || initName || charaUrl;
-                            return parseGamerchCharaPage(charaDoc, charName);
+                            return parseGamerchCharaPage(charaDoc, charName, gameName);
                         })
                     );
                     batchResults.forEach(r => {
