@@ -320,14 +320,14 @@
             <details class="scrape-settings">
                 <summary>🔑 GitHub 自动保存设置（填入令牌后「保存到数据库」可直接写入仓库，无需再手动发文件）</summary>
                 <div class="scrape-settings-body">
-                    <input type="password" id="ghTokenInput" placeholder="GitHub Fine-grained Personal Access Token">
+                    <input type="password" id="ghTokenInput" placeholder="GitHub Personal Access Token（ghp_ 或 github_pat_ 开头）">
                     <button id="btnSaveGhToken" class="btn-save-proxy">保存</button>
+                    <button id="btnTestGhToken" class="btn-save-proxy" style="background:#555;">🔍 测试连接</button>
                 </div>
                 <div class="gh-token-hint">
-                    在 GitHub 网站「Settings → Developer settings → Fine-grained tokens → Generate new token」创建：
-                    Repository access 选「Only select repositories」并仅勾选本仓库；Permissions 只勾选
-                    <code>Contents: Read and write</code>，其余权限都不要给，万一泄露也只能改这一个仓库的文件。
-                    令牌只保存在你自己浏览器的本地存储里，不会发给任何第三方服务器。
+                    支持两种令牌：① <b>Classic PAT</b>（Settings → Developer settings → Personal access tokens → Tokens(classic)，勾选 <code>repo</code> 权限）；
+                    ② <b>Fine-grained token</b>（同路径 → Fine-grained tokens，Repository access 仅选本仓库，Permissions 勾选 <code>Contents: Read and write</code>）。
+                    令牌只保存在浏览器本地，不发给第三方。
                 </div>
             </details>
             <div id="scrapeStatus" class="scrape-status"></div>
@@ -1168,6 +1168,31 @@
         const old = btn.textContent;
         btn.textContent = '✓ 已保存';
         setTimeout(() => { btn.textContent = old; }, 1500);
+    });
+
+    document.getElementById('btnTestGhToken').addEventListener('click', async () => {
+        const btn = document.getElementById('btnTestGhToken');
+        const statusEl = document.getElementById('scrapeStatus');
+        const token = ghTokenInput.value.trim() || (localStorage.getItem(GH_TOKEN_KEY) || '').trim();
+        if (!token) { statusEl.textContent = '⚠️ 请先填入 Token。'; return; }
+        btn.disabled = true;
+        btn.textContent = '⏳ 测试中...';
+        try {
+            const res = await fetch(`https://api.github.com/repos/${GH_OWNER}/${GH_REPO}`, {
+                headers: { Authorization: `Bearer ${token}`, Accept: 'application/vnd.github+json' },
+            });
+            const data = await res.json();
+            if (res.ok) {
+                statusEl.textContent = `✅ Token 有效！仓库「${data.full_name}」可访问，权限：${data.permissions ? Object.entries(data.permissions).filter(([,v])=>v).map(([k])=>k).join('/') : '未知'}`;
+            } else {
+                statusEl.textContent = `❌ Token 无效（${res.status}）：${data.message || res.statusText}。请检查：Token 是否正确粘贴？是否有 repo 权限？是否选了本仓库？`;
+            }
+        } catch (e) {
+            statusEl.textContent = '❌ 网络错误：' + e.message;
+        } finally {
+            btn.disabled = false;
+            btn.textContent = '🔍 测试连接';
+        }
     });
 
     function b64EncodeUtf8(str) { return btoa(unescape(encodeURIComponent(str))); }
