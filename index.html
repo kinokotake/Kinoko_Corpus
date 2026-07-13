@@ -353,6 +353,7 @@
         <button class="gf-btn" data-game="pricone">💎 プリコネ <span class="gf-count" id="cnt-pricone"></span></button>
         <button class="gf-btn" data-game="ae">🌟 アナザーエデン <span class="gf-count" id="cnt-ae"></span></button>
         <button class="gf-btn" data-game="jojo">👊 ジョジョSS <span class="gf-count" id="cnt-jojo"></span></button>
+        <button class="gf-btn" data-game="sv">🃏 シャドウバース <span class="gf-count" id="cnt-sv"></span></button>
     </div>
 
     <div class="search-container">
@@ -915,6 +916,7 @@
         if (source.includes('pricone'))       return 'pricone';
         if (source.includes('another_eden'))  return 'ae';
         if (source.includes('jojo_ss'))       return 'jojo';
+        if (source.includes('shadowverse'))   return 'sv';
         return 'other';
     }
 
@@ -933,7 +935,7 @@
     /* ── 动态更新筛选按钮计数 ── */
     function updateCounts() {
         const skills = corpusData.filter(isSkillItem);
-        const keys = ['feh','pka','kr','gbf','memo','opbr','fgo','pricone','ae','jojo'];
+        const keys = ['feh','pka','kr','gbf','memo','opbr','fgo','pricone','ae','jojo','sv'];
         document.getElementById('cnt-all').textContent = `(${skills.length})`;
         keys.forEach(k => {
             const el = document.getElementById('cnt-' + k);
