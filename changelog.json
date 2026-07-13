@@ -1,0 +1,32 @@
+[
+  {
+    "date": "2026-07-13",
+    "total": 227437,
+    "changes": [
+      {
+        "source": "⚔️技能/granblue_skills.jsonl",
+        "prev": 563,
+        "curr": 5716,
+        "delta": 5153
+      },
+      {
+        "source": "⚔️技能/shadowverse_skills.jsonl",
+        "prev": 0,
+        "curr": 5916,
+        "delta": 5916
+      },
+      {
+        "source": "⚔️技能/utaware_lostflag_skills.jsonl",
+        "prev": 417,
+        "curr": 0,
+        "delta": -417
+      },
+      {
+        "source": "⚔️技能/web_scraped_skills.jsonl",
+        "prev": 5916,
+        "curr": 0,
+        "delta": -5916
+      }
+    ]
+  }
+]
