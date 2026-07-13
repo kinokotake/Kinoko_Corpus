@@ -1447,40 +1447,74 @@
     /* gamerch.com キャラ詳細ページからスキル効果テキストを抽出 */
     function parseGamerchCharaPage(doc, charName) {
         const SKILL_HEAD_RE = /パッシブ|アクティブ|スキル|必殺技|奥義|アビリティ|ウルト|アルティメット/;
-        const BOILERPLATE_RE = /達成時|下記の効果獲得|^Lv\d+$/;
+        // 英雄レベル達成時/下記の効果獲得/Lv数字 はテンプレートなので除外
+        const BOILERPLATE_RE = /達成時|下記の効果獲得|^Lv\d/;
+        // ページのメタ情報テーブルも除外
+        const META_RE = /^(タイトル|対応OS|カテゴリ|ゲーム概要|公式サイト|配信日|メーカー|ジャンル|基本情報)$/;
         const items = [];
+        const seen = new Set();
 
-        Array.from(doc.querySelectorAll('h2, h3, h4')).forEach(h => {
-            const hText = scrapeCleanText(h.textContent);
-            if (!SKILL_HEAD_RE.test(hText)) return;
-
-            let sib = h.nextElementSibling;
-            let hops = 0;
-            while (sib && sib.tagName !== 'TABLE' && hops < 5) {
-                sib = sib.nextElementSibling;
-                hops++;
-            }
-            if (!sib || sib.tagName !== 'TABLE') return;
-
-            const effectLines = [];
-            sib.querySelectorAll('td, th').forEach(cell => {
+        function extractCells(table) {
+            const effects = [];
+            table.querySelectorAll('td, th').forEach(cell => {
                 const t = scrapeCleanText(cell.textContent);
-                if (!t || t.length < 4) return;
-                if (BOILERPLATE_RE.test(t)) return;
-                effectLines.push(t);
+                if (!t || t.length < 4 || BOILERPLATE_RE.test(t) || SKILL_HEAD_RE.test(t) || META_RE.test(t)) return;
+                if (!seen.has(t)) { seen.add(t); effects.push(t); }
             });
-
-            if (effectLines.length > 0) {
-                const prefix = charName ? `【${charName}】【${hText}】` : `【${hText}】`;
-                items.push(`${prefix} 効果：${effectLines.join(' / ')}`);
-            }
-        });
-
-        // fallback to generic if no structured sections found
-        if (items.length === 0) {
-            return parseTablesGeneric(doc, charName, false);
+            return effects;
         }
-        return items;
+
+        // Strategy 1: h2/h3/h4/p 見出し → 直後のテーブル
+        Array.from(doc.querySelectorAll('h2, h3, h4, p')).forEach(h => {
+            const hText = scrapeCleanText(h.textContent);
+            if (!SKILL_HEAD_RE.test(hText) || hText.length > 20) return;
+            let sib = h.nextElementSibling, hops = 0;
+            while (sib && sib.tagName !== 'TABLE' && hops < 5) { sib = sib.nextElementSibling; hops++; }
+            if (!sib || sib.tagName !== 'TABLE') return;
+            const lines = extractCells(sib);
+            if (lines.length) items.push(`【${charName}】【${hText}】 効果：${lines.join(' / ')}`);
+        });
+        if (items.length) return items;
+
+        // Strategy 2: テーブル内のthスパンヘッダー行でセクションを検出
+        Array.from(doc.querySelectorAll('table')).forEach(table => {
+            let curSection = '';
+            const bySection = {};
+            Array.from(table.querySelectorAll('tr')).forEach(row => {
+                const cells = Array.from(row.querySelectorAll('th, td'));
+                if (!cells.length) return;
+                // 1セルのみ or th+colSpan でセクション見出しと判断
+                if (cells.length === 1 || (cells[0].tagName === 'TH' && (cells[0].colSpan || 1) >= 2)) {
+                    const t = scrapeCleanText(cells[0].textContent);
+                    if (SKILL_HEAD_RE.test(t) && t.length <= 20) { curSection = t; return; }
+                }
+                if (!curSection) return;
+                cells.forEach(cell => {
+                    const t = scrapeCleanText(cell.textContent);
+                    if (!t || t.length < 4 || BOILERPLATE_RE.test(t) || SKILL_HEAD_RE.test(t) || META_RE.test(t)) return;
+                    if (!seen.has(t)) {
+                        seen.add(t);
+                        if (!bySection[curSection]) bySection[curSection] = [];
+                        bySection[curSection].push(t);
+                    }
+                });
+            });
+            Object.entries(bySection).forEach(([sec, effects]) => {
+                if (effects.length) items.push(`【${charName}】【${sec}】 効果：${effects.join(' / ')}`);
+            });
+        });
+        if (items.length) return items;
+
+        // Strategy 3: セクション情報なしで全テーブルから非テンプレートテキストを収集
+        const allEffects = [];
+        doc.querySelectorAll('table td, table th').forEach(cell => {
+            const t = scrapeCleanText(cell.textContent);
+            if (!t || t.length < 6 || BOILERPLATE_RE.test(t) || META_RE.test(t)) return;
+            if (!seen.has(t)) { seen.add(t); allEffects.push(t); }
+        });
+        if (allEffects.length) return [`【${charName}】 効果：${allEffects.join(' / ')}`];
+
+        return [];
     }
 
     function parseSkillsFromHtml(html, url) {
