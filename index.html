@@ -1411,6 +1411,78 @@
         return items.filter(it => { if (dedup.has(it)) return false; dedup.add(it); return true; });
     }
 
+    /* gamerch.com: テーブル内のキャラリンクを検出してキャラ一覧ページか判定 */
+    function detectGamerchCharaList(doc, url) {
+        let basePath = '';
+        let selfPath = '';
+        try {
+            const u = new URL(url);
+            selfPath = u.pathname;
+            const parts = u.pathname.split('/').filter(Boolean);
+            if (parts.length >= 1) basePath = '/' + parts[0] + '/';
+        } catch (_) {}
+        if (!basePath) return null;
+
+        const seen = new Set();
+        const names = new Map();
+        doc.querySelectorAll('table a[href]').forEach(a => {
+            const href = a.getAttribute('href') || '';
+            let fullUrl;
+            try { fullUrl = href.startsWith('http') ? href : new URL(href, url).href; } catch (_) { return; }
+            let linkPath;
+            try { linkPath = new URL(fullUrl).pathname; } catch (_) { return; }
+            if (!linkPath.startsWith(basePath)) return;
+            if (linkPath === selfPath) return;
+            const rest = linkPath.slice(basePath.length);
+            if (!rest || rest.includes('/')) return;
+            const charName = a.textContent.trim();
+            if (!seen.has(fullUrl)) {
+                seen.add(fullUrl);
+                if (charName) names.set(fullUrl, charName);
+            }
+        });
+        return seen.size >= 3 ? Array.from(seen).map(u => ({ url: u, name: names.get(u) || '' })) : null;
+    }
+
+    /* gamerch.com キャラ詳細ページからスキル効果テキストを抽出 */
+    function parseGamerchCharaPage(doc, charName) {
+        const SKILL_HEAD_RE = /パッシブ|アクティブ|スキル|必殺技|奥義|アビリティ|ウルト|アルティメット/;
+        const BOILERPLATE_RE = /達成時|下記の効果獲得|^Lv\d+$/;
+        const items = [];
+
+        Array.from(doc.querySelectorAll('h2, h3, h4')).forEach(h => {
+            const hText = scrapeCleanText(h.textContent);
+            if (!SKILL_HEAD_RE.test(hText)) return;
+
+            let sib = h.nextElementSibling;
+            let hops = 0;
+            while (sib && sib.tagName !== 'TABLE' && hops < 5) {
+                sib = sib.nextElementSibling;
+                hops++;
+            }
+            if (!sib || sib.tagName !== 'TABLE') return;
+
+            const effectLines = [];
+            sib.querySelectorAll('td, th').forEach(cell => {
+                const t = scrapeCleanText(cell.textContent);
+                if (!t || t.length < 4) return;
+                if (BOILERPLATE_RE.test(t)) return;
+                effectLines.push(t);
+            });
+
+            if (effectLines.length > 0) {
+                const prefix = charName ? `【${charName}】【${hText}】` : `【${hText}】`;
+                items.push(`${prefix} 効果：${effectLines.join(' / ')}`);
+            }
+        });
+
+        // fallback to generic if no structured sections found
+        if (items.length === 0) {
+            return parseTablesGeneric(doc, charName, false);
+        }
+        return items;
+    }
+
     function parseSkillsFromHtml(html, url) {
         const doc = new DOMParser().parseFromString(html, 'text/html');
         const pageName = extractPageName(doc);
@@ -1466,7 +1538,39 @@
 
             // gamewith.jp: まずカードリストか判定し、リストなら一括取得、単体カードページなら直接解析
             const cardList = host.includes('gamewith.jp') ? detectGamewithCardList(doc, url) : null;
-            if (cardList) {
+            const gamerchList = host.includes('gamerch.com') ? detectGamerchCharaList(doc, url) : null;
+            if (gamerchList) {
+                const BATCH_LIMIT = 200;
+                const CONCURRENCY = 4;
+                const targets = gamerchList.slice(0, BATCH_LIMIT);
+                const total = targets.length;
+                statusEl.textContent = `検出：キャラ一覧 ${total} 件（最大${BATCH_LIMIT}件まで並列抓取中）`;
+                const allItems = [];
+                for (let i = 0; i < targets.length; i += CONCURRENCY) {
+                    const batchEnd = Math.min(i + CONCURRENCY, total);
+                    statusEl.textContent = `⏳ 抓取中 ${i + 1}–${batchEnd} / ${total}`;
+                    const batchResults = await Promise.allSettled(
+                        targets.slice(i, batchEnd).map(async ({ url: charaUrl, name: initName }) => {
+                            const charaHtml = await fetchHtmlViaProxy(charaUrl);
+                            const charaDoc = new DOMParser().parseFromString(charaHtml, 'text/html');
+                            const charName = extractPageName(charaDoc) || initName || charaUrl;
+                            return parseGamerchCharaPage(charaDoc, charName);
+                        })
+                    );
+                    batchResults.forEach(r => {
+                        if (r.status === 'fulfilled') {
+                            r.value.forEach(text => allItems.push({ source: `${host}（网页抓取）`, text, type: 'skill_desc', meta: '' }));
+                        }
+                    });
+                }
+                if (!allItems.length) {
+                    statusEl.textContent = '⚠️ 未能从角色详情页提取技能文本。请直接粘贴单个角色页面的URL重试。';
+                    return;
+                }
+                const seen = new Set();
+                scrapeResults = allItems.filter(it => { if (seen.has(it.text)) return false; seen.add(it.text); return true; });
+                statusEl.textContent = `✅ 识别出 ${scrapeResults.length} 条技能文本（共抓取 ${total} 个角色页面），请人工核查后再添加/导出：`;
+            } else if (cardList) {
                 const BATCH_LIMIT = 200;
                 const CONCURRENCY = 8;
                 const targets = cardList.slice(0, BATCH_LIMIT);
@@ -1506,6 +1610,21 @@
                     return;
                 }
                 scrapeResults = cardItems.map(text => ({ source: `${host}（网页抓取）`, text, type: 'skill_desc', meta: '' }));
+                statusEl.textContent = `✅ 识别出 ${scrapeResults.length} 条技能文本，请人工核查后再添加/导出：`;
+            } else if (host.includes('gamerch.com')) {
+                // gamerch.com 単体キャラページ：専用パーサ→汎用フォールバック
+                const charName = extractPageName(doc);
+                const charaItems = parseGamerchCharaPage(doc, charName);
+                if (charaItems.length) {
+                    scrapeResults = charaItems.map(text => ({ source: `${host}（网页抓取）`, text, type: 'skill_desc', meta: '' }));
+                } else {
+                    const fallback = parseSkillsFromHtml(html, url);
+                    if (!fallback.length) {
+                        statusEl.textContent = '⚠️ 未能识别出技能文本，该网页结构暂不支持。';
+                        return;
+                    }
+                    scrapeResults = fallback;
+                }
                 statusEl.textContent = `✅ 识别出 ${scrapeResults.length} 条技能文本，请人工核查后再添加/导出：`;
             } else {
                 const items = parseSkillsFromHtml(html, url);
