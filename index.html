@@ -1544,6 +1544,45 @@
         return [`【${namePrefix}】 効果：\n${allEffects.join('\n')}`];
     }
 
+    /* wikiru.jp: h3+pre 構造の一覧ページを直接解析（子ページバッチ不要）
+       構造: div#body > ... > h3（技能名）+ pre（効果）+ p（補足説明）*/
+    function parseWikiruListPage(doc, gameName) {
+        const bodyEl = doc.querySelector('#body');
+        if (!bodyEl) return [];
+        const SECTION_RE = /^【.{1,20}】$/; // 【基礎・攻撃系サブスキル】などのセクション見出しを除外
+        const items = [];
+        let curName = '';
+        let curLines = [];
+
+        function flush() {
+            if (curName && curLines.length) {
+                const namePrefix = gameName ? `${gameName}：${curName}` : curName;
+                items.push(`【${namePrefix}】 効果：\n${curLines.join('\n')}`);
+            }
+            curName = ''; curLines = [];
+        }
+
+        bodyEl.querySelectorAll('h2, h3, pre, p').forEach(el => {
+            const tag = el.tagName.toLowerCase();
+            if (tag === 'h2' || tag === 'h3') {
+                flush();
+                const t = scrapeCleanText(el.textContent);
+                if (t && !SECTION_RE.test(t)) curName = t;
+            } else if (curName) {
+                if (tag === 'pre') {
+                    // pre は改行を保持（scrapeCleanText では折りたたまれるため直接分割）
+                    const lines = (el.textContent || '').split('\n').map(l => l.trim()).filter(Boolean);
+                    curLines.push(...lines);
+                } else if (tag === 'p') {
+                    const t = scrapeCleanText(el.textContent);
+                    if (t && t.length > 6) curLines.push(t);
+                }
+            }
+        });
+        flush();
+        return items;
+    }
+
     /* gamerch.com キャラ詳細ページからスキル効果テキストを抽出 */
     function parseGamerchCharaPage(doc, charName, gameName) {
         // 【GameName：CharName】形式にする（gameName がある場合）
@@ -1760,50 +1799,52 @@
                 const seen = new Set();
                 scrapeResults = allItems.filter(it => { if (seen.has(it.text)) return false; seen.add(it.text); return true; });
                 statusEl.textContent = `✅ 识别出 ${scrapeResults.length} 条技能文本（共抓取 ${total} 个角色页面），请人工核查后再添加/导出：`;
-            } else if (wikiruList) {
-                // wikiru.jp スキルリストからサブページを一括取得
-                const wikiTitle = doc.querySelector('title');
-                let gameName = '';
-                if (wikiTitle) {
-                    const t = scrapeCleanText(wikiTitle.textContent);
+            } else if (wikiruList || host.includes('wikiru.jp')) {
+                // wikiru.jp: まず現在ページの h3+pre 構造を直接解析（子ページはスタブのことが多い）
+                const wikiTitleEl = doc.querySelector('title');
+                let wGameName = '';
+                if (wikiTitleEl) {
+                    const t = scrapeCleanText(wikiTitleEl.textContent);
                     const m = t.match(/[-–]\s*(.+?)(?:\s*wiki)?$/i);
-                    if (m && m[1] && !m[1].includes('.')) gameName = m[1].trim();
+                    if (m && m[1] && !m[1].includes('.')) wGameName = m[1].trim();
                 }
-                if (!gameName) {
-                    gameName = window.prompt(`ゲーム名を入力してください（例：モンスター娘TD）\n検出したURL：${url}`, '') || host;
-                }
-                gameName = gameName.trim() || host;
-                const BATCH_LIMIT_W = 300;
-                const CONCURRENCY_W = 4;
-                const wTargets = wikiruList.slice(0, BATCH_LIMIT_W);
-                const wTotal = wTargets.length;
-                statusEl.textContent = `検出：スキルリスト ${wTotal} 件（最大${BATCH_LIMIT_W}件まで並列抓取中）`;
-                const wAllItems = [];
-                for (let i = 0; i < wTargets.length; i += CONCURRENCY_W) {
-                    const batchEnd = Math.min(i + CONCURRENCY_W, wTotal);
-                    statusEl.textContent = `⏳ 抓取中 ${i + 1}–${batchEnd} / ${wTotal}`;
-                    const batchResults = await Promise.allSettled(
-                        wTargets.slice(i, batchEnd).map(async ({ url: skillUrl, name: initName }) => {
-                            const skillHtml = await fetchHtmlViaProxy(skillUrl);
-                            const skillDoc = new DOMParser().parseFromString(skillHtml, 'text/html');
-                            const rawName = extractPageName(skillDoc) || initName;
-                            const skillName = rawName.replace(/^.*\//, '').trim() || initName;
-                            return parseWikiruSkillPage(skillDoc, skillName, gameName);
-                        })
-                    );
-                    batchResults.forEach(r => {
-                        if (r.status === 'fulfilled') {
-                            r.value.forEach(text => wAllItems.push({ source: `${host}（网页抓取）`, text, type: 'skill_desc', meta: '' }));
-                        }
-                    });
-                }
-                if (!wAllItems.length) {
-                    statusEl.textContent = '⚠️ 未能从技能详情页提取效果文本。请直接粘贴单个技能页面的URL重试。';
+                wGameName = (window.prompt(`ゲーム名を入力してください（例：モンスター娘TD）\n自動検出：${wGameName || '未検出'}\n（正しければそのままOK、修正する場合は書き換えてください）`, wGameName) || wGameName || host).trim() || host;
+
+                const directItems = parseWikiruListPage(doc, wGameName);
+                if (directItems.length) {
+                    const wSeen2 = new Set();
+                    scrapeResults = directItems
+                        .filter(text => { if (wSeen2.has(text)) return false; wSeen2.add(text); return true; })
+                        .map(text => ({ source: `${host}（网页抓取）`, text, type: 'skill_desc', meta: '' }));
+                    statusEl.textContent = `✅ 识别出 ${scrapeResults.length} 条技能文本，请人工核查后再添加/导出：`;
+                } else if (wikiruList) {
+                    // フォールバック: サブページバッチ（子ページに実コンテンツがある場合）
+                    const wTargets = wikiruList.slice(0, 300);
+                    const wTotal = wTargets.length;
+                    statusEl.textContent = `⏳ 子ページをバッチ抓取中... ${wTotal} 件`;
+                    const wAllItems = [];
+                    for (let i = 0; i < wTargets.length; i += 4) {
+                        const batchResults = await Promise.allSettled(
+                            wTargets.slice(i, i + 4).map(async ({ url: skillUrl, name: initName }) => {
+                                const skillHtml = await fetchHtmlViaProxy(skillUrl);
+                                const skillDoc = new DOMParser().parseFromString(skillHtml, 'text/html');
+                                const rawName = extractPageName(skillDoc) || initName;
+                                const skillName = rawName.replace(/^.*\//, '').trim() || initName;
+                                return parseWikiruSkillPage(skillDoc, skillName, wGameName);
+                            })
+                        );
+                        batchResults.forEach(r => {
+                            if (r.status === 'fulfilled') r.value.forEach(text => wAllItems.push({ source: `${host}（网页抓取）`, text, type: 'skill_desc', meta: '' }));
+                        });
+                    }
+                    if (!wAllItems.length) { statusEl.textContent = '⚠️ 未能识别出技能文本。'; return; }
+                    const wSeen3 = new Set();
+                    scrapeResults = wAllItems.filter(it => { if (wSeen3.has(it.text)) return false; wSeen3.add(it.text); return true; });
+                    statusEl.textContent = `✅ 识别出 ${scrapeResults.length} 条技能文本（共抓取 ${wTotal} 个页面），请人工核查后再添加/导出：`;
+                } else {
+                    statusEl.textContent = '⚠️ 未能识别出技能文本（#body 未找到或结构不支持）。';
                     return;
                 }
-                const wSeen = new Set();
-                scrapeResults = wAllItems.filter(it => { if (wSeen.has(it.text)) return false; wSeen.add(it.text); return true; });
-                statusEl.textContent = `✅ 识别出 ${scrapeResults.length} 条技能文本（共抓取 ${wTotal} 个技能页面），请人工核查后再添加/导出：`;
             } else if (cardList) {
                 const BATCH_LIMIT = 200;
                 const CONCURRENCY = 8;
