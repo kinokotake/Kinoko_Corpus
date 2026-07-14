@@ -1,13 +1,22 @@
 [
   {
     "date": "2026-07-14",
+<<<<<<< HEAD
     "total": 228598,
+=======
+    "total": 227923,
+>>>>>>> 948cf04 (chore: update changelog and counts after data cleanup)
     "changes": [
       {
         "source": "⚔️技能/web_scraped_skills.jsonl",
         "prev": 0,
+<<<<<<< HEAD
         "curr": 1161,
         "delta": 1161
+=======
+        "curr": 486,
+        "delta": 486
+>>>>>>> 948cf04 (chore: update changelog and counts after data cleanup)
       }
     ]
   },
