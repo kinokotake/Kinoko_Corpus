@@ -1991,18 +1991,17 @@
                 }
                 wwGame = (window.prompt(`ゲーム名を入力してください\n自動検出：${wwGame || '未検出'}`, wwGame) || wwGame || host).trim() || host;
 
-                // Part 1: メインページ（範囲図専用＋技能説明＋テーブル）
-                const wwRangeItems = parseWikiwikiRangeSection(doc, wwGame);
-                // ナビゲーション・索引見出しを除外してから parseDivHeaderBlocks を適用
-                const WW_NAV_RE = /イベント|ガチャ|掲示板|コメント|wiki編集|最近|その他情報|スキル一覧/i;
+                // Part 1: メインページ（技能説明テキストのみ、範囲図セクションは除外）
+                // ■グリッドは視覚情報であり文字コーパスに不向き → 丸ごとスキップ
+                const WW_NAV_RE = /イベント|ガチャ|掲示板|コメント|wiki編集|最近|その他情報|スキル一覧|範囲指定|範囲一覧|移動力/i;
                 const wwDivItems = parseDivHeaderBlocks(doc, wwGame).filter(t => {
-                    if (WW_NAV_RE.test(t)) return false;               // ナビ見出し除外
+                    if (WW_NAV_RE.test(t)) return false;               // ナビ・範囲図見出し除外
                     if (/：[あ-んア-ン]{1}】/.test(t)) return false;    // 1文字索引（あ行）除外
                     const ei = t.indexOf('効果：');
                     if (ei >= 0 && t.length - ei > 300) return false;  // 超長索引テキスト除外
                     return true;
                 });
-                const wwP1 = [...parseTablesGeneric(doc, wwGame, false), ...wwDivItems, ...wwRangeItems];
+                const wwP1 = [...parseTablesGeneric(doc, wwGame, false), ...wwDivItems];
 
                 // Part 2: スキル一覧 サブページバッチ
                 const wwSubs = detectWikiwikiSubLinks(doc, url);
