@@ -2383,16 +2383,16 @@
                     const rows = blocks.map(b =>
                         `<div class="skill-lv-block">${fmtEffect(hl(b, regex))}</div>`
                     ).join('');
-                    bodyHtml = `<div class="skill-effect-row">${rows}</div>`;
+                    bodyHtml += `<div class="skill-effect-row">${rows}</div>`;
                 } else {
                     const ctBlocks = splitFgoSkills(p.effect);
                     if (ctBlocks) {
                         const rows = ctBlocks.map(b =>
                             `<div class="skill-lv-block">${fmtEffect(hl(b, regex))}</div>`
                         ).join('');
-                        bodyHtml = `<div class="skill-effect-row">${rows}</div>`;
+                        bodyHtml += `<div class="skill-effect-row">${rows}</div>`;
                     } else {
-                        bodyHtml = `<div class="skill-effect-row">${fmtEffect(hl(p.effect, regex))}</div>`;
+                        bodyHtml += `<div class="skill-effect-row">${fmtEffect(hl(p.effect, regex))}</div>`;
                     }
                 }
             }
