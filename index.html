@@ -1912,7 +1912,7 @@
             }
 
             previewEl.innerHTML = scrapeResults.map((it, i) =>
-                `<div class="scrape-item"><label><input type="checkbox" class="scrape-chk" data-i="${i}" checked> ${escapeHtml(it.text)}</label></div>`
+                `<div class="scrape-item"><label><input type="checkbox" class="scrape-chk" data-i="${i}" checked> <span style="white-space:pre-wrap">${escapeHtml(it.text)}</span></label></div>`
             ).join('');
             actionsEl.style.display = 'flex';
         } catch (e) {
