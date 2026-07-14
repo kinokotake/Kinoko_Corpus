@@ -1491,17 +1491,24 @@
         const SKILL_HEAD_RE = /パッシブ|アクティブ|スキル|必殺技|奥義|アビリティ|ウルト|アルティメット/;
         // 英雄レベル達成時/下記の効果獲得/Lv数字 はテンプレートなので除外
         const BOILERPLATE_RE = /達成時|下記の効果獲得|^Lv\d/;
-        // ページのメタ情報テーブルも除外
-        const META_RE = /^(タイトル|対応OS|カテゴリ|ゲーム概要|公式サイト|配信日|メーカー|ジャンル|基本情報)$/;
+        // ページのメタ情報テーブルも除外（行単位で判定：メタ見出しセルがあれば行全体スキップ）
+        const META_RE = /^(タイトル|対応OS|カテゴリ[ーｰ]?|ゲーム概要|公式サイト|配信日|メーカー|ジャンル|基本情報|プレイ人数|価格|レーティング)$/;
         const items = [];
         const seen = new Set();
 
+        function isMetaRow(row) {
+            return Array.from(row.querySelectorAll('th, td')).some(c => META_RE.test(scrapeCleanText(c.textContent)));
+        }
+
         function extractCells(table) {
             const effects = [];
-            table.querySelectorAll('td, th').forEach(cell => {
-                const t = scrapeCleanText(cell.textContent);
-                if (!t || t.length < 4 || BOILERPLATE_RE.test(t) || SKILL_HEAD_RE.test(t) || META_RE.test(t)) return;
-                if (!seen.has(t)) { seen.add(t); effects.push(t); }
+            table.querySelectorAll('tr').forEach(row => {
+                if (isMetaRow(row)) return;
+                row.querySelectorAll('td, th').forEach(cell => {
+                    const t = scrapeCleanText(cell.textContent);
+                    if (!t || t.length < 4 || BOILERPLATE_RE.test(t) || SKILL_HEAD_RE.test(t)) return;
+                    if (!seen.has(t)) { seen.add(t); effects.push(t); }
+                });
             });
             return effects;
         }
@@ -1523,6 +1530,7 @@
             let curSection = '';
             const bySection = {};
             Array.from(table.querySelectorAll('tr')).forEach(row => {
+                if (isMetaRow(row)) return;
                 const cells = Array.from(row.querySelectorAll('th, td'));
                 if (!cells.length) return;
                 // 1セルのみ or th+colSpan でセクション見出しと判断
@@ -1533,7 +1541,7 @@
                 if (!curSection) return;
                 cells.forEach(cell => {
                     const t = scrapeCleanText(cell.textContent);
-                    if (!t || t.length < 4 || BOILERPLATE_RE.test(t) || SKILL_HEAD_RE.test(t) || META_RE.test(t)) return;
+                    if (!t || t.length < 4 || BOILERPLATE_RE.test(t) || SKILL_HEAD_RE.test(t)) return;
                     if (!seen.has(t)) {
                         seen.add(t);
                         if (!bySection[curSection]) bySection[curSection] = [];
@@ -1549,10 +1557,13 @@
 
         // Strategy 3: セクション情報なしで全テーブルから非テンプレートテキストを収集
         const allEffects = [];
-        doc.querySelectorAll('table td, table th').forEach(cell => {
-            const t = scrapeCleanText(cell.textContent);
-            if (!t || t.length < 6 || BOILERPLATE_RE.test(t) || META_RE.test(t)) return;
-            if (!seen.has(t)) { seen.add(t); allEffects.push(t); }
+        doc.querySelectorAll('table tr').forEach(row => {
+            if (isMetaRow(row)) return;
+            row.querySelectorAll('td, th').forEach(cell => {
+                const t = scrapeCleanText(cell.textContent);
+                if (!t || t.length < 6 || BOILERPLATE_RE.test(t)) return;
+                if (!seen.has(t)) { seen.add(t); allEffects.push(t); }
+            });
         });
         if (allEffects.length) return [`【${namePrefix}】 効果：${allEffects.join(' / ')}`];
 
