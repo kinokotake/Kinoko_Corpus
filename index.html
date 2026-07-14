@@ -1991,11 +1991,18 @@
                 }
                 wwGame = (window.prompt(`ゲーム名を入力してください\n自動検出：${wwGame || '未検出'}`, wwGame) || wwGame || host).trim() || host;
 
-                // Part 1: メインページ（範囲図専用＋テーブル行＋h3ブロック）
+                // Part 1: メインページ（範囲図専用＋技能説明＋テーブル）
                 const wwRangeItems = parseWikiwikiRangeSection(doc, wwGame);
-                const wwP1Raw = [...parseTablesGeneric(doc, wwGame, false), ...parseDivHeaderBlocks(doc, wwGame)];
-                // ■ 文字が10個以上のエントリは乱れたグリッドデータなので除外（専用パーサで処理済み）
-                const wwP1 = [...wwP1Raw.filter(text => (text.match(/■/g) || []).length < 10), ...wwRangeItems];
+                // ナビゲーション・索引見出しを除外してから parseDivHeaderBlocks を適用
+                const WW_NAV_RE = /イベント|ガチャ|掲示板|コメント|wiki編集|最近|その他情報|スキル一覧/i;
+                const wwDivItems = parseDivHeaderBlocks(doc, wwGame).filter(t => {
+                    if (WW_NAV_RE.test(t)) return false;               // ナビ見出し除外
+                    if (/：[あ-んア-ン]{1}】/.test(t)) return false;    // 1文字索引（あ行）除外
+                    const ei = t.indexOf('効果：');
+                    if (ei >= 0 && t.length - ei > 300) return false;  // 超長索引テキスト除外
+                    return true;
+                });
+                const wwP1 = [...parseTablesGeneric(doc, wwGame, false), ...wwDivItems, ...wwRangeItems];
 
                 // Part 2: スキル一覧 サブページバッチ
                 const wwSubs = detectWikiwikiSubLinks(doc, url);
@@ -2018,7 +2025,12 @@
                 if (!wwAll.length) { statusEl.textContent = '⚠️ 未能识别出技能文本。'; return; }
                 const wwSeen = new Set();
                 scrapeResults = wwAll
-                    .filter(text => { if (wwSeen.has(text)) return false; wwSeen.add(text); return true; })
+                    .filter(text => {
+                        if ((text.match(/■/g) || []).length >= 10) return false;  // ■グリッド乱码を全件除外
+                        if (wwSeen.has(text)) return false;
+                        wwSeen.add(text);
+                        return true;
+                    })
                     .map(text => ({ source: `${host}（网页抓取）`, text, type: 'skill_desc', meta: '' }));
                 statusEl.textContent = `✅ 识别出 ${scrapeResults.length} 条技能文本（Part1: ${wwP1.length}，Part2子页: ${wwSubs ? wwSubs.length : 0}），请人工核查后再添加/导出：`;
             } else {
