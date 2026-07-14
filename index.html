@@ -1375,6 +1375,33 @@
         return items;
     }
 
+    /* wikiwiki.jp: ■ グリッド図セルを解析（スキル範囲指定一覧など）
+       各セル: ■/□ 行（グリッド）＋ キャプションテキスト → 1エントリ */
+    function parseWikiwikiGridTable(doc, gameName) {
+        const items = [];
+        const seen = new Set();
+        doc.querySelectorAll('table').forEach(table => {
+            if ((table.textContent.match(/■/g) || []).length < 10) return;
+            table.querySelectorAll('td, th').forEach(cell => {
+                const raw = cell.textContent || '';
+                if ((raw.match(/■/g) || []).length < 3) return;
+                const lines = raw.split('\n').map(l => l.trim()).filter(Boolean);
+                const gridLines = lines.filter(l => {
+                    const sq = (l.match(/[■□]/g) || []).length;
+                    return sq > 0 && sq >= Math.max(1, l.length * 0.4);
+                });
+                const captionLines = lines.filter(l => !/[■□]/.test(l) && l.length >= 2 && l.length <= 25);
+                if (!gridLines.length || !captionLines.length) return;
+                const caption = captionLines[captionLines.length - 1];
+                if (seen.has(caption)) return;
+                seen.add(caption);
+                const namePrefix = gameName ? `${gameName}：${caption}` : caption;
+                items.push(`【${namePrefix}】 効果：\n${gridLines.join('\n')}`);
+            });
+        });
+        return items;
+    }
+
     /* gamewith.jp カードリストページを検出し、カードURLリストを返す
        カード名は各詳細ページのH1から取得するため、ここでは URL のみ収集 */
     function detectGamewithCardList(doc, baseUrl) {
@@ -1944,8 +1971,11 @@
                 }
                 wwGame = (window.prompt(`ゲーム名を入力してください\n自動検出：${wwGame || '未検出'}`, wwGame) || wwGame || host).trim() || host;
 
-                // Part 1: メインページ（テーブル行＋h3ブロック）
-                const wwP1 = [...parseTablesGeneric(doc, wwGame, false), ...parseDivHeaderBlocks(doc, wwGame)];
+                // Part 1: メインページ（グリッド表専用＋テーブル行＋h3ブロック）
+                const wwGridItems = parseWikiwikiGridTable(doc, wwGame);
+                const wwP1Raw = [...parseTablesGeneric(doc, wwGame, false), ...parseDivHeaderBlocks(doc, wwGame)];
+                // ■ 文字が10個以上のエントリは乱れたグリッドデータなので除外（専用パーサで処理済み）
+                const wwP1 = [...wwP1Raw.filter(text => (text.match(/■/g) || []).length < 10), ...wwGridItems];
 
                 // Part 2: スキル一覧 サブページバッチ
                 const wwSubs = detectWikiwikiSubLinks(doc, url);
@@ -1970,7 +2000,7 @@
                 scrapeResults = wwAll
                     .filter(text => { if (wwSeen.has(text)) return false; wwSeen.add(text); return true; })
                     .map(text => ({ source: `${host}（网页抓取）`, text, type: 'skill_desc', meta: '' }));
-                statusEl.textContent = `✅ 识别出 ${scrapeResults.length} 条技能文本（Part1: ${wwP1.length}，Part2子页: ${wwSubs ? wwSubs.length : 0}），请人工核查后再添加/导出：`;
+                statusEl.textContent = `✅ 识别出 ${scrapeResults.length} 条技能文本（Part1: ${wwP1.length} 含グリッド${wwGridItems.length}件，Part2子页: ${wwSubs ? wwSubs.length : 0}），请人工核查后再添加/导出：`;
             } else {
                 const items = parseSkillsFromHtml(html, url);
                 if (!items.length) {
