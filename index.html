@@ -1183,7 +1183,9 @@
             });
             const data = await res.json();
             if (res.ok) {
-                statusEl.textContent = `✅ Token 有效！仓库「${data.full_name}」可访问，权限：${data.permissions ? Object.entries(data.permissions).filter(([,v])=>v).map(([k])=>k).join('/') : '未知'}`;
+                localStorage.setItem(GH_TOKEN_KEY, token);
+                ghTokenInput.value = token;
+                statusEl.textContent = `✅ Token 有效，已自动保存！仓库「${data.full_name}」可访问，权限：${data.permissions ? Object.entries(data.permissions).filter(([,v])=>v).map(([k])=>k).join('/') : '未知'}`;
             } else {
                 statusEl.textContent = `❌ Token 无效（${res.status}）：${data.message || res.statusText}。请检查：Token 是否正确粘贴？是否有 repo 权限？是否选了本仓库？`;
             }
@@ -1757,9 +1759,9 @@
 
     document.getElementById('btnScrapeSave').addEventListener('click', async () => {
         const statusEl = document.getElementById('scrapeStatus');
-        const token = (localStorage.getItem(GH_TOKEN_KEY) || '').trim();
+        const token = ghTokenInput.value.trim() || (localStorage.getItem(GH_TOKEN_KEY) || '').trim();
         if (!token) {
-            statusEl.textContent = '⚠️ 请先在上方「🔑 GitHub 自动保存设置」中填入并保存访问令牌。';
+            statusEl.textContent = '⚠️ 请先在上方「🔑 GitHub 自动保存设置」中填入访问令牌并点击「测试连接」验证。';
             return;
         }
         const checked = Array.from(document.querySelectorAll('.scrape-chk:checked')).map(c => +c.dataset.i);
