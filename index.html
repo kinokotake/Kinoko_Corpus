@@ -1708,21 +1708,42 @@
             return effects;
         }
 
-        // Strategy 1: h2/h3/h4/p 見出し → 直後のテーブル（DIV内のテーブルも対応）
+        // Strategy 1: h2/h3/h4/p 見出し → 直後のテーブル + 見出し直下のdivカードテキストも収集
         Array.from(doc.querySelectorAll('h2, h3, h4, p')).forEach(h => {
             const hText = scrapeCleanText(h.textContent);
             if (!SKILL_HEAD_RE.test(hText) || hText.length > 20) return;
             let sib = h.nextElementSibling, hops = 0;
-            while (sib && hops < 5) {
-                if (sib.tagName === 'TABLE') break;
+            const cardLines = []; // テーブル外スキルカード（div形式）の説明文
+            while (sib && hops < 8) {
+                if (['H2','H3','H4'].includes(sib.tagName)) break;
+                if (sib.tagName === 'TABLE') {
+                    const tLines = extractCells(sib);
+                    const all = [...cardLines, ...tLines];
+                    if (all.length) items.push(`【${namePrefix}】【${hText}】 効果：\n${all.join('\n')}`);
+                    cardLines.length = 0;
+                    break;
+                }
                 const inner = sib.querySelector('table');
-                if (inner) { sib = inner; break; }
+                if (inner) {
+                    const tLines = extractCells(inner);
+                    const all = [...cardLines, ...tLines];
+                    if (all.length) items.push(`【${namePrefix}】【${hText}】 効果：\n${all.join('\n')}`);
+                    cardLines.length = 0;
+                    break;
+                }
+                // テーブルでない兄弟要素からスキル説明テキストを収集
+                const t = scrapeCleanText(sib.textContent);
+                if (t && t.length >= 10 && t.length <= 300 &&
+                    !BOILERPLATE_RE.test(t) && !(SKILL_HEAD_RE.test(t) && t.length <= 15) && !seen.has(t)) {
+                    seen.add(t);
+                    cardLines.push(t);
+                }
                 sib = sib.nextElementSibling;
                 hops++;
             }
-            if (!sib || sib.tagName !== 'TABLE') return;
-            const lines = extractCells(sib);
-            if (lines.length) items.push(`【${namePrefix}】【${hText}】 効果：\n${lines.join('\n')}`);
+            if (cardLines.length) {
+                items.push(`【${namePrefix}】【${hText}】 効果：\n${cardLines.join('\n')}`);
+            }
         });
         if (items.length) return items;
 
