@@ -1620,9 +1620,25 @@
                 const CONCURRENCY = 4;
                 const targets = gamerchList.slice(0, BATCH_LIMIT);
                 const total = targets.length;
-                // ゲーム名をインデックスページから取得（一覧/評価などの接尾辞を除去）
-                const rawGameName = extractPageName(doc);
-                const gameName = rawGameName.replace(/\s*[一覧評価英雄キャラ、,，\s]+.*$/, '').trim() || host;
+                // ゲーム名をインデックスページから取得（H1 → title → プロンプト の順で試みる）
+                function extractGamerchGameName(doc, fallbackHost) {
+                    const fromH1 = extractPageName(doc).replace(/\s*[一覧評価英雄キャラ、,，\s]+.*$/, '').trim();
+                    if (fromH1 && !fromH1.includes('.')) return fromH1;
+                    const titleEl = doc.querySelector('title');
+                    if (titleEl) {
+                        const t = scrapeCleanText(titleEl.textContent)
+                            .split(/[|｜\-–—]/)[0]
+                            .replace(/\s*(wiki|攻略|まとめ|情報|一覧|キャラ|評価).*/i, '')
+                            .trim();
+                        if (t && t.length >= 2 && !t.includes('.')) return t;
+                    }
+                    return null;
+                }
+                let gameName = extractGamerchGameName(doc, host);
+                if (!gameName) {
+                    gameName = window.prompt(`ゲーム名を入力してください（例：アルカナタクティクス）\n検出したURL：${url}`, '') || host;
+                }
+                gameName = gameName.trim() || host;
                 statusEl.textContent = `検出：${gameName} キャラ一覧 ${total} 件（最大${BATCH_LIMIT}件まで並列抓取中）`;
                 const allItems = [];
                 for (let i = 0; i < targets.length; i += CONCURRENCY) {
