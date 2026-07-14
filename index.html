@@ -1484,6 +1484,39 @@
     }
 
     /* wikiru.jp: サブスキル一覧ページからサブページリンクを検出 */
+    /* wikiwiki.jp: スキル一覧セクションのサブリンクを検出 */
+    function detectWikiwikiSubLinks(doc, url) {
+        try {
+            const baseUrl = new URL(url);
+            const wikiBase = '/' + baseUrl.pathname.split('/').filter(Boolean)[0] + '/';
+            const content = doc.querySelector('div#content, #article, article, main') || doc.body;
+            const headings = Array.from(content.querySelectorAll('h1, h2, h3, h4'));
+            // スキル一覧 セクション見出しを探す（最後の「一覧」を含む見出し）
+            const listHd = headings.slice().reverse().find(h => /一覧/.test(h.textContent));
+            if (!listHd) return null;
+            const seen = new Set();
+            const links = [];
+            let el = listHd.nextElementSibling;
+            while (el && !['H1','H2','H3','H4'].includes(el.tagName)) {
+                el.querySelectorAll('a[href]').forEach(a => {
+                    const href = a.getAttribute('href') || '';
+                    try {
+                        const abs = new URL(href, baseUrl);
+                        if (abs.hostname !== baseUrl.hostname) return;
+                        if (!abs.pathname.startsWith(wikiBase)) return;
+                        if (abs.pathname === baseUrl.pathname) return;
+                        const k = abs.origin + abs.pathname;
+                        if (seen.has(k)) return;
+                        seen.add(k);
+                        links.push({ url: abs.href, name: a.textContent.trim().replace(/^[→＞>\s]+/, '') });
+                    } catch(e) {}
+                });
+                el = el.nextElementSibling;
+            }
+            return links.length ? links : null;
+        } catch(e) { return null; }
+    }
+
     function detectWikiruSkillList(doc, url) {
         try {
             const baseUrl = new URL(url);
@@ -1901,6 +1934,43 @@
                     scrapeResults = fallback;
                 }
                 statusEl.textContent = `✅ 识别出 ${scrapeResults.length} 条技能文本，请人工核查后再添加/导出：`;
+            } else if (host.includes('wikiwiki.jp')) {
+                // wikiwiki.jp 両段抓取: Part1（メインページ表＋見出しブロック）+ Part2（サブページ）
+                const wwT = doc.querySelector('title');
+                let wwGame = '';
+                if (wwT) {
+                    const m = scrapeCleanText(wwT.textContent).match(/[-–]\s*(.+?)(?:\s*wiki)?$/i);
+                    if (m && m[1] && !m[1].includes('.')) wwGame = m[1].trim();
+                }
+                wwGame = (window.prompt(`ゲーム名を入力してください\n自動検出：${wwGame || '未検出'}`, wwGame) || wwGame || host).trim() || host;
+
+                // Part 1: メインページ（テーブル行＋h3ブロック）
+                const wwP1 = [...parseTablesGeneric(doc, wwGame, false), ...parseDivHeaderBlocks(doc, wwGame)];
+
+                // Part 2: スキル一覧 サブページバッチ
+                const wwSubs = detectWikiwikiSubLinks(doc, url);
+                const wwP2 = [];
+                if (wwSubs && wwSubs.length) {
+                    statusEl.textContent = `⏳ サブページ ${wwSubs.length} 件を抓取中...`;
+                    for (let i = 0; i < wwSubs.length; i += 4) {
+                        const batchResults = await Promise.allSettled(
+                            wwSubs.slice(i, i + 4).map(async ({ url: su }) => {
+                                const sh = await fetchHtmlViaProxy(su);
+                                const sd = new DOMParser().parseFromString(sh, 'text/html');
+                                return [...parseTablesGeneric(sd, wwGame, false), ...parseDivHeaderBlocks(sd, wwGame)];
+                            })
+                        );
+                        batchResults.forEach(r => { if (r.status === 'fulfilled') wwP2.push(...r.value); });
+                    }
+                }
+
+                const wwAll = [...wwP1, ...wwP2];
+                if (!wwAll.length) { statusEl.textContent = '⚠️ 未能识别出技能文本。'; return; }
+                const wwSeen = new Set();
+                scrapeResults = wwAll
+                    .filter(text => { if (wwSeen.has(text)) return false; wwSeen.add(text); return true; })
+                    .map(text => ({ source: `${host}（网页抓取）`, text, type: 'skill_desc', meta: '' }));
+                statusEl.textContent = `✅ 识别出 ${scrapeResults.length} 条技能文本（Part1: ${wwP1.length}，Part2子页: ${wwSubs ? wwSubs.length : 0}），请人工核查后再添加/导出：`;
             } else {
                 const items = parseSkillsFromHtml(html, url);
                 if (!items.length) {
