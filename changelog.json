@@ -1,13 +1,13 @@
 [
   {
     "date": "2026-07-14",
-    "total": 227437,
+    "total": 228598,
     "changes": [
       {
         "source": "⚔️技能/web_scraped_skills.jsonl",
-        "prev": 367,
-        "curr": 0,
-        "delta": -367
+        "prev": 0,
+        "curr": 1161,
+        "delta": 1161
       }
     ]
   },
