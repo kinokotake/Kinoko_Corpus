@@ -1519,7 +1519,9 @@
     /* wikiru.jp: 単体スキルページから効果テキストを抽出 */
     function parseWikiruSkillPage(doc, skillName, gameName) {
         const namePrefix = gameName && skillName ? `${gameName}：${skillName}` : (skillName || gameName || '');
-        const contentEl = doc.querySelector('#article, .content') || doc.body;
+        // wikiru.jp (PukiWiki) のコンテンツ領域を特定（body へのフォールバック禁止 — ノイズが多すぎる）
+        const contentEl = doc.querySelector('#article, #body, .body, div[id="article"], div[id="body"]');
+        if (!contentEl) return [];
         const seen = new Set();
         const allEffects = [];
         contentEl.querySelectorAll('table tr').forEach(row => {
@@ -1537,15 +1539,7 @@
                 allEffects.push(lvPrefix ? `${lvPrefix}　${rowParts.join('　')}` : rowParts.join('　'));
             }
         });
-        if (!allEffects.length) {
-            contentEl.querySelectorAll('p, li, dt, dd').forEach(el => {
-                if (el.closest('nav, .menu, #menu, .sidebar, #sidebar')) return;
-                const t = scrapeCleanText(el.textContent);
-                if (!t || t.length < 8 || seen.has(t)) return;
-                seen.add(t);
-                allEffects.push(t);
-            });
-        }
+        // p/li のフォールバックは使わない — ナビやスクリプトを拾いすぎるため
         if (!allEffects.length) return [];
         return [`【${namePrefix}】 効果：\n${allEffects.join('\n')}`];
     }
