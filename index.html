@@ -2148,16 +2148,34 @@
 
         try {
             const { sha, content } = await ghGetFile(GH_SAVE_PATH, token);
+
+            // 同一ゲームの旧データを自動削除（再抓取時の重複防止）
+            const gameM = toSave[0] && toSave[0].text.match(/^【([^：】]+)：/);
+            const gamePrefix = gameM ? `【${gameM[1]}：` : '';
+            const existingLines = content ? content.split('\n').filter(l => l.trim()) : [];
+            let removedCount = 0;
+            const filteredLines = gamePrefix
+                ? existingLines.filter(l => {
+                    try { return !JSON.parse(l).text.startsWith(gamePrefix); }
+                    catch { return true; }
+                })
+                : existingLines;
+            removedCount = existingLines.length - filteredLines.length;
+
             const newLines = toSave.map(it => JSON.stringify({ source: it.source, type: it.type, text: it.text }));
-            const base = content && !content.endsWith('\n') ? content + '\n' : content;
+            const base = filteredLines.length ? filteredLines.join('\n') + '\n' : '';
             const newContent = base + newLines.join('\n') + '\n';
-            await ghPutFile(GH_SAVE_PATH, newContent, `网页抓取：新增 ${toSave.length} 条技能文本`, sha, token);
+            const msg = removedCount > 0
+                ? `网页抓取：替换 ${gameM[1]} ${removedCount} 条旧数据 → 新增 ${toSave.length} 条`
+                : `网页抓取：新增 ${toSave.length} 条技能文本`;
+            await ghPutFile(GH_SAVE_PATH, newContent, msg, sha, token);
 
             corpusData = corpusData.concat(toSave);
             updateCounts();
             renderDynamicGameFilters();
             updateStatus();
-            statusEl.textContent = `✅ 已成功写入仓库 ${toSave.length} 条技能文本！数据库会在几分钟内自动重建，之后刷新页面即可永久检索到（本次会话已可立即搜索）。`;
+            const clearMsg = removedCount > 0 ? `（已自动清除 ${removedCount} 条同游戏旧数据）` : '';
+            statusEl.textContent = `✅ 已成功写入仓库 ${toSave.length} 条技能文本！${clearMsg}数据库会在几分钟内自动重建，之后刷新页面即可永久检索到（本次会话已可立即搜索）。`;
         } catch (e) {
             statusEl.textContent = '❌ 保存失败：' + (e.message || e);
         } finally {
