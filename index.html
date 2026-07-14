@@ -1375,31 +1375,51 @@
         return items;
     }
 
-    /* wikiwiki.jp: ■ グリッド図セルを解析（スキル範囲指定一覧など）
-       各セル: ■/□ 行（グリッド）＋ キャプションテキスト → 1エントリ */
-    function parseWikiwikiGridTable(doc, gameName) {
-        const items = [];
-        const seen = new Set();
-        doc.querySelectorAll('table').forEach(table => {
-            if ((table.textContent.match(/■/g) || []).length < 10) return;
-            table.querySelectorAll('td, th').forEach(cell => {
-                const raw = cell.textContent || '';
-                if ((raw.match(/■/g) || []).length < 3) return;
-                const lines = raw.split('\n').map(l => l.trim()).filter(Boolean);
-                const gridLines = lines.filter(l => {
-                    const sq = (l.match(/[■□]/g) || []).length;
-                    return sq > 0 && sq >= Math.max(1, l.length * 0.4);
+    /* wikiwiki.jp: スキル範囲指定一覧セクションを1エントリにまとめる
+       ■グリッドは視覚的すぎてテキストコーパスに不向きなため、
+       図例説明文＋範囲タイプ名一覧（周囲1マス / 周囲2マス / …）に整理する */
+    function parseWikiwikiRangeSection(doc, gameName) {
+        const content = doc.querySelector('div#content, #article, article, main') || doc.body;
+        if (!content) return [];
+
+        const rangeHd = Array.from(content.querySelectorAll('h1, h2, h3, h4'))
+            .find(h => /スキル範囲|範囲指定/.test(h.textContent));
+        if (!rangeHd) return [];
+
+        let legendText = '';
+        const rangeNames = [];
+        const nameSeen = new Set();
+        let el = rangeHd.nextElementSibling;
+        let hops = 0;
+        while (el && hops < 15 && !['H1','H2','H3'].includes(el.tagName)) {
+            const sqCount = (el.textContent.match(/■/g) || []).length;
+            if (sqCount < 5) {
+                // 非グリッド要素：図例説明文
+                const t = scrapeCleanText(el.textContent);
+                if (t && t.length >= 10) legendText += (legendText ? ' ' : '') + t;
+            } else {
+                // グリッド表：各セルの ■ 直後テキストをタイプ名として抽出
+                el.querySelectorAll('td, th').forEach(cell => {
+                    const raw = cell.textContent || '';
+                    const lastSq = raw.lastIndexOf('■');
+                    const caption = (lastSq >= 0 ? raw.slice(lastSq + 1) : raw).trim();
+                    if (caption && caption.length >= 2 && caption.length <= 20 && !/[■□]/.test(caption) && !nameSeen.has(caption)) {
+                        nameSeen.add(caption);
+                        rangeNames.push(caption);
+                    }
                 });
-                const captionLines = lines.filter(l => !/[■□]/.test(l) && l.length >= 2 && l.length <= 25);
-                if (!gridLines.length || !captionLines.length) return;
-                const caption = captionLines[captionLines.length - 1];
-                if (seen.has(caption)) return;
-                seen.add(caption);
-                const namePrefix = gameName ? `${gameName}：${caption}` : caption;
-                items.push(`【${namePrefix}】 効果：\n${gridLines.join('\n')}`);
-            });
-        });
-        return items;
+            }
+            el = el.nextElementSibling;
+            hops++;
+        }
+
+        if (!rangeNames.length && !legendText) return [];
+        const hdText = scrapeCleanText(rangeHd.textContent).replace(/^【|】$/g, '').trim();
+        const namePrefix = gameName ? `${gameName}：${hdText}` : hdText;
+        const lines = [];
+        if (legendText) lines.push(legendText);
+        if (rangeNames.length) lines.push(`種類：${rangeNames.join(' / ')}`);
+        return [`【${namePrefix}】 効果：\n${lines.join('\n')}`];
     }
 
     /* gamewith.jp カードリストページを検出し、カードURLリストを返す
@@ -1971,11 +1991,11 @@
                 }
                 wwGame = (window.prompt(`ゲーム名を入力してください\n自動検出：${wwGame || '未検出'}`, wwGame) || wwGame || host).trim() || host;
 
-                // Part 1: メインページ（グリッド表専用＋テーブル行＋h3ブロック）
-                const wwGridItems = parseWikiwikiGridTable(doc, wwGame);
+                // Part 1: メインページ（範囲図専用＋テーブル行＋h3ブロック）
+                const wwRangeItems = parseWikiwikiRangeSection(doc, wwGame);
                 const wwP1Raw = [...parseTablesGeneric(doc, wwGame, false), ...parseDivHeaderBlocks(doc, wwGame)];
                 // ■ 文字が10個以上のエントリは乱れたグリッドデータなので除外（専用パーサで処理済み）
-                const wwP1 = [...wwP1Raw.filter(text => (text.match(/■/g) || []).length < 10), ...wwGridItems];
+                const wwP1 = [...wwP1Raw.filter(text => (text.match(/■/g) || []).length < 10), ...wwRangeItems];
 
                 // Part 2: スキル一覧 サブページバッチ
                 const wwSubs = detectWikiwikiSubLinks(doc, url);
@@ -2000,7 +2020,7 @@
                 scrapeResults = wwAll
                     .filter(text => { if (wwSeen.has(text)) return false; wwSeen.add(text); return true; })
                     .map(text => ({ source: `${host}（网页抓取）`, text, type: 'skill_desc', meta: '' }));
-                statusEl.textContent = `✅ 识别出 ${scrapeResults.length} 条技能文本（Part1: ${wwP1.length} 含グリッド${wwGridItems.length}件，Part2子页: ${wwSubs ? wwSubs.length : 0}），请人工核查后再添加/导出：`;
+                statusEl.textContent = `✅ 识别出 ${scrapeResults.length} 条技能文本（Part1: ${wwP1.length}，Part2子页: ${wwSubs ? wwSubs.length : 0}），请人工核查后再添加/导出：`;
             } else {
                 const items = parseSkillsFromHtml(html, url);
                 if (!items.length) {
