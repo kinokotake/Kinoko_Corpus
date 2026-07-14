@@ -1632,20 +1632,20 @@
                 const targets = gamerchList.slice(0, BATCH_LIMIT);
                 const total = targets.length;
                 // ゲーム名をインデックスページから取得（H1 → title → プロンプト の順で試みる）
-                function extractGamerchGameName(doc, fallbackHost) {
+                function extractGamerchGameName(doc) {
+                    // Gamerch uses 【GameName】... format in H1 and title — extract the bracketed part first
+                    for (const sel of ['h1', 'title']) {
+                        const el = doc.querySelector(sel);
+                        if (!el) continue;
+                        const m = scrapeCleanText(el.textContent).match(/【([^】]{2,20})】/);
+                        if (m) return m[1];
+                    }
+                    // Fallback: H1 text with suffix removal
                     const fromH1 = extractPageName(doc).replace(/\s*[一覧評価英雄キャラ、,，\s]+.*$/, '').trim();
                     if (fromH1 && !fromH1.includes('.')) return fromH1;
-                    const titleEl = doc.querySelector('title');
-                    if (titleEl) {
-                        const t = scrapeCleanText(titleEl.textContent)
-                            .split(/[|｜\-–—]/)[0]
-                            .replace(/\s*(wiki|攻略|まとめ|情報|一覧|キャラ|評価).*/i, '')
-                            .trim();
-                        if (t && t.length >= 2 && !t.includes('.')) return t;
-                    }
                     return null;
                 }
-                let gameName = extractGamerchGameName(doc, host);
+                let gameName = extractGamerchGameName(doc);
                 if (!gameName) {
                     gameName = window.prompt(`ゲーム名を入力してください（例：アルカナタクティクス）\n検出したURL：${url}`, '') || host;
                 }
@@ -1659,7 +1659,8 @@
                         targets.slice(i, batchEnd).map(async ({ url: charaUrl, name: initName }) => {
                             const charaHtml = await fetchHtmlViaProxy(charaUrl);
                             const charaDoc = new DOMParser().parseFromString(charaHtml, 'text/html');
-                            const charName = extractPageName(charaDoc) || initName || charaUrl;
+                            const charRaw = extractPageName(charaDoc) || initName || charaUrl;
+                            const charName = charRaw.replace(/の詳細$|の(?:性能|スキル|評価)$/, '').trim();
                             return parseGamerchCharaPage(charaDoc, charName, gameName);
                         })
                     );
