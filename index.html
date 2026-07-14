@@ -1683,6 +1683,7 @@
         // 行単位でグループ化し Lv 前缀を保持する（原页排版忠实还原）
         function extractCells(table) {
             const effects = [];
+            let pendingLv = '';
             table.querySelectorAll('tr').forEach(row => {
                 if (isMetaRow(row)) return;
                 const cells = Array.from(row.querySelectorAll('td, th'));
@@ -1692,22 +1693,33 @@
                     const t = scrapeCleanText(cell.textContent);
                     if (!t) return;
                     if (/^Lv\d/.test(t)) { lvPrefix = t; return; }
-                    if (BOILERPLATE_RE.test(t) || SKILL_HEAD_RE.test(t) || t.length < 4) return;
+                    // 短い見出しセルのみ除外（長い場合は実効果テキストの可能性）
+                    if (BOILERPLATE_RE.test(t) || (SKILL_HEAD_RE.test(t) && t.length <= 15) || t.length < 4) return;
                     if (!seen.has(t)) { seen.add(t); rowParts.push(t); }
                 });
-                if (rowParts.length) {
-                    effects.push(lvPrefix ? `${lvPrefix}　${rowParts.join('　')}` : rowParts.join('　'));
+                if (lvPrefix && !rowParts.length) {
+                    pendingLv = lvPrefix; // Lv だけの行は次行へ持ち越す
+                } else if (rowParts.length) {
+                    const lv = lvPrefix || pendingLv;
+                    pendingLv = '';
+                    effects.push(lv ? `${lv}　${rowParts.join('　')}` : rowParts.join('　'));
                 }
             });
             return effects;
         }
 
-        // Strategy 1: h2/h3/h4/p 見出し → 直後のテーブル
+        // Strategy 1: h2/h3/h4/p 見出し → 直後のテーブル（DIV内のテーブルも対応）
         Array.from(doc.querySelectorAll('h2, h3, h4, p')).forEach(h => {
             const hText = scrapeCleanText(h.textContent);
             if (!SKILL_HEAD_RE.test(hText) || hText.length > 20) return;
             let sib = h.nextElementSibling, hops = 0;
-            while (sib && sib.tagName !== 'TABLE' && hops < 5) { sib = sib.nextElementSibling; hops++; }
+            while (sib && hops < 5) {
+                if (sib.tagName === 'TABLE') break;
+                const inner = sib.querySelector('table');
+                if (inner) { sib = inner; break; }
+                sib = sib.nextElementSibling;
+                hops++;
+            }
             if (!sib || sib.tagName !== 'TABLE') return;
             const lines = extractCells(sib);
             if (lines.length) items.push(`【${namePrefix}】【${hText}】 効果：\n${lines.join('\n')}`);
@@ -1718,6 +1730,7 @@
         Array.from(doc.querySelectorAll('table')).forEach(table => {
             let curSection = '';
             const bySection = {};
+            const pendingLvMap = {};
             Array.from(table.querySelectorAll('tr')).forEach(row => {
                 if (isMetaRow(row)) return;
                 const cells = Array.from(row.querySelectorAll('th, td'));
@@ -1734,12 +1747,16 @@
                     const t = scrapeCleanText(cell.textContent);
                     if (!t) return;
                     if (/^Lv\d/.test(t)) { lvPrefix = t; return; }
-                    if (BOILERPLATE_RE.test(t) || SKILL_HEAD_RE.test(t) || t.length < 4) return;
+                    if (BOILERPLATE_RE.test(t) || (SKILL_HEAD_RE.test(t) && t.length <= 15) || t.length < 4) return;
                     if (!seen.has(t)) { seen.add(t); rowParts.push(t); }
                 });
-                if (rowParts.length) {
+                if (lvPrefix && !rowParts.length) {
+                    pendingLvMap[curSection] = lvPrefix;
+                } else if (rowParts.length) {
+                    const lv = lvPrefix || pendingLvMap[curSection] || '';
+                    pendingLvMap[curSection] = '';
                     if (!bySection[curSection]) bySection[curSection] = [];
-                    bySection[curSection].push(lvPrefix ? `${lvPrefix}　${rowParts.join('　')}` : rowParts.join('　'));
+                    bySection[curSection].push(lv ? `${lv}　${rowParts.join('　')}` : rowParts.join('　'));
                 }
             });
             Object.entries(bySection).forEach(([sec, effects]) => {
@@ -1829,7 +1846,7 @@
             const gamerchList = host.includes('gamerch.com') ? detectGamerchCharaList(doc, url) : null;
             const wikiruList = host.includes('wikiru.jp') ? detectWikiruSkillList(doc, url) : null;
             if (gamerchList) {
-                const BATCH_LIMIT = 200;
+                const BATCH_LIMIT = 500;
                 const CONCURRENCY = 4;
                 const targets = gamerchList.slice(0, BATCH_LIMIT);
                 const total = targets.length;
@@ -1926,7 +1943,7 @@
                     return;
                 }
             } else if (cardList) {
-                const BATCH_LIMIT = 200;
+                const BATCH_LIMIT = 500;
                 const CONCURRENCY = 8;
                 const targets = cardList.slice(0, BATCH_LIMIT);
                 const total = targets.length;
