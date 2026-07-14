@@ -1,52 +1,13 @@
 [
   {
     "date": "2026-07-14",
-<<<<<<< HEAD
-    "total": 228598,
-=======
-    "total": 227923,
->>>>>>> 948cf04 (chore: update changelog and counts after data cleanup)
+    "total": 227929,
     "changes": [
       {
         "source": "⚔️技能/web_scraped_skills.jsonl",
-        "prev": 0,
-<<<<<<< HEAD
-        "curr": 1161,
-        "delta": 1161
-=======
-        "curr": 486,
-        "delta": 486
->>>>>>> 948cf04 (chore: update changelog and counts after data cleanup)
-      }
-    ]
-  },
-  {
-    "date": "2026-07-13",
-    "total": 227437,
-    "changes": [
-      {
-        "source": "⚔️技能/granblue_skills.jsonl",
-        "prev": 563,
-        "curr": 5716,
-        "delta": 5153
-      },
-      {
-        "source": "⚔️技能/shadowverse_skills.jsonl",
-        "prev": 0,
-        "curr": 5916,
-        "delta": 5916
-      },
-      {
-        "source": "⚔️技能/utaware_lostflag_skills.jsonl",
-        "prev": 417,
-        "curr": 0,
-        "delta": -417
-      },
-      {
-        "source": "⚔️技能/web_scraped_skills.jsonl",
-        "prev": 5916,
-        "curr": 0,
-        "delta": -5916
+        "prev": 489,
+        "curr": 492,
+        "delta": 3
       }
     ]
   }
