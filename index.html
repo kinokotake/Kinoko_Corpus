@@ -1597,13 +1597,33 @@
         } catch (e) { return null; }
     }
 
-    /* wikiru.jp: 単体スキルページから効果テキストを抽出 */
+    /* wikiru.jp: 単体スキルページ / キャラページからEXスキル等を抽出 */
     function parseWikiruSkillPage(doc, skillName, gameName) {
         const namePrefix = gameName && skillName ? `${gameName}：${skillName}` : (skillName || gameName || '');
-        // wikiru.jp (PukiWiki) のコンテンツ領域を特定（body へのフォールバック禁止 — ノイズが多すぎる）
         const contentEl = doc.querySelector('#article, #body, .body, div[id="article"], div[id="body"]');
         if (!contentEl) return [];
         const seen = new Set();
+        const SKILL_HDR_CELLS = new Set(['効果', '準備時間', '再発動', '初回', '名称', 'スキル名', '条件', '備考', 'コスト', '再使用']);
+
+        // 1. EXスキル/専用スキル見出し → 直後テーブルからスキル名+効果を抽出
+        const exItems = [];
+        Array.from(contentEl.querySelectorAll('h1, h2, h3, h4')).forEach(heading => {
+            if (!/EXスキル|専用スキル/.test(scrapeCleanText(heading.textContent))) return;
+            let sib = heading.nextElementSibling, hops = 0;
+            while (sib && hops < 8) {
+                if (/^H[1-4]$/.test(sib.tagName)) break;
+                const tbl = sib.tagName === 'TABLE' ? sib : sib.querySelector('table');
+                if (tbl) {
+                    const entry = extractWikiruExSkill(tbl, namePrefix, SKILL_HDR_CELLS, seen);
+                    if (entry) exItems.push(entry);
+                    break;
+                }
+                sib = sib.nextElementSibling; hops++;
+            }
+        });
+        if (exItems.length) return exItems;
+
+        // 2. フォールバック: 全テーブル行の汎用抽出（単体スキルページ用）
         const allEffects = [];
         contentEl.querySelectorAll('table tr').forEach(row => {
             const cells = Array.from(row.querySelectorAll('td, th'));
@@ -1620,9 +1640,47 @@
                 allEffects.push(lvPrefix ? `${lvPrefix}　${rowParts.join('　')}` : rowParts.join('　'));
             }
         });
-        // p/li のフォールバックは使わない — ナビやスクリプトを拾いすぎるため
         if (!allEffects.length) return [];
         return [`【${namePrefix}】 効果：\n${allEffects.join('\n')}`];
+    }
+
+    /* EXスキルテーブル1枚から「スキル名+効果+準備時間」を1エントリとして返す */
+    function extractWikiruExSkill(table, namePrefix, SKILL_HDR_CELLS, seen) {
+        const rows = Array.from(table.querySelectorAll('tr'));
+        if (!rows.length) return null;
+        let skillName = '';
+        const effectParts = [];
+        const timingParts = [];
+        rows.forEach(row => {
+            const cells = Array.from(row.querySelectorAll('td, th'));
+            if (!cells.length) return;
+            const firstCell = cells[0];
+            const firstText = scrapeCleanText(firstCell.textContent);
+            // マージセル（colspan≥2）または単独セル → スキル名行
+            if ((firstCell.colSpan >= 2 || cells.length === 1) && !SKILL_HDR_CELLS.has(firstText) && firstText && firstText.length >= 2) {
+                if (!skillName) skillName = firstText;
+                return;
+            }
+            const texts = cells.map(c => scrapeCleanText(c.textContent));
+            // ヘッダ行（効果/準備時間 など）はスキップ
+            if (texts.some(t => SKILL_HDR_CELLS.has(t))) return;
+            // データ行: 第1セル=効果テキスト、それ以外で「数字秒」=準備時間
+            texts.forEach((t, i) => {
+                if (!t) return;
+                if (i === 0 && t.length >= 4) {
+                    const raw = (cells[0].textContent || '').split('\n').map(l => l.trim()).filter(l => l.length >= 2);
+                    raw.forEach(l => { if (!seen.has(l)) { seen.add(l); effectParts.push(l); } });
+                } else if (/^\d+秒$/.test(t)) {
+                    timingParts.push(t);
+                }
+            });
+        });
+        if (!effectParts.length) return null;
+        const allLines = [...effectParts];
+        if (timingParts.length) allLines.push(timingParts.length >= 2
+            ? `再発動：${timingParts[0]}／初回：${timingParts[1]}` : `準備時間：${timingParts[0]}`);
+        const bracket = skillName ? `【${namePrefix}】【${skillName}】` : `【${namePrefix}】`;
+        return `${bracket} 効果：\n${allLines.join('\n')}`;
     }
 
     /* wikiru.jp: h3+pre 構造の一覧ページを直接解析（子ページバッチ不要）
@@ -1661,6 +1719,29 @@
             }
         });
         flush();
+
+        // TABLE形式フォールバック（番号付きスキルリスト等、h3+pre構造がない場合）
+        if (!items.length) {
+            const HDR_NAMES = new Set(['名称', '名前', 'スキル名', '技名', 'スキル']);
+            const HDR_EFFS  = new Set(['効果', '説明', '効果/説明', '効果・説明']);
+            bodyEl.querySelectorAll('table').forEach(table => {
+                const headerRow = table.querySelector('tr');
+                if (!headerRow) return;
+                const headers = Array.from(headerRow.querySelectorAll('th, td')).map(c => scrapeCleanText(c.textContent));
+                const nameIdx = headers.findIndex(h => HDR_NAMES.has(h));
+                const effIdx  = headers.findIndex(h => HDR_EFFS.has(h));
+                if (nameIdx < 0 || effIdx < 0) return;
+                Array.from(table.querySelectorAll('tr')).slice(1).forEach(row => {
+                    const cells = Array.from(row.querySelectorAll('td, th'));
+                    const name   = scrapeCleanText(cells[nameIdx]?.textContent || '');
+                    const effect = scrapeCleanText(cells[effIdx]?.textContent  || '');
+                    if (!name || !effect || name.length < 2 || effect.length < 4) return;
+                    const namePrefix = gameName ? `${gameName}：${name}` : name;
+                    items.push(`【${namePrefix}】 効果：\n${effect}`);
+                });
+            });
+        }
+
         return items;
     }
 
@@ -1964,8 +2045,16 @@
                     scrapeResults = wAllItems.filter(it => { if (wSeen3.has(it.text)) return false; wSeen3.add(it.text); return true; });
                     statusEl.textContent = `✅ 识别出 ${scrapeResults.length} 条技能文本（共抓取 ${wTotal} 个页面），请人工核查后再添加/导出：`;
                 } else {
-                    statusEl.textContent = '⚠️ 未能识别出技能文本（#body 未找到或结构不支持）。';
-                    return;
+                    // 最終フォールバック: 現在ページをキャラページとして解析（EXスキル等）
+                    const rawPage = extractPageName(doc) || '';
+                    const pageName = rawPage.replace(/^.*\//, '').trim();
+                    const pageItems = parseWikiruSkillPage(doc, pageName, wGameName);
+                    if (!pageItems.length) { statusEl.textContent = '⚠️ 未能识别出技能文本（#body 未找到或结构不支持）。'; return; }
+                    const wSeen4 = new Set();
+                    scrapeResults = pageItems
+                        .filter(t => { if (wSeen4.has(t)) return false; wSeen4.add(t); return true; })
+                        .map(text => ({ source: `${host}（网页抓取）`, text, type: 'skill_desc', meta: '' }));
+                    statusEl.textContent = `✅ 识别出 ${scrapeResults.length} 条技能文本，请人工核查后再添加/导出：`;
                 }
             } else if (cardList) {
                 const BATCH_LIMIT = 500;
