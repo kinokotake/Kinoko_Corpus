@@ -1720,27 +1720,29 @@
         });
         flush();
 
-        // TABLE形式フォールバック（番号付きスキルリスト等、h3+pre構造がない場合）
-        if (!items.length) {
-            const HDR_NAMES = new Set(['名称', '名前', 'スキル名', '技名', 'スキル']);
-            const HDR_EFFS  = new Set(['効果', '説明', '効果/説明', '効果・説明']);
-            bodyEl.querySelectorAll('table').forEach(table => {
-                const headerRow = table.querySelector('tr');
-                if (!headerRow) return;
-                const headers = Array.from(headerRow.querySelectorAll('th, td')).map(c => scrapeCleanText(c.textContent));
-                const nameIdx = headers.findIndex(h => HDR_NAMES.has(h));
-                const effIdx  = headers.findIndex(h => HDR_EFFS.has(h));
-                if (nameIdx < 0 || effIdx < 0) return;
-                Array.from(table.querySelectorAll('tr')).slice(1).forEach(row => {
-                    const cells = Array.from(row.querySelectorAll('td, th'));
-                    const name   = scrapeCleanText(cells[nameIdx]?.textContent || '');
-                    const effect = scrapeCleanText(cells[effIdx]?.textContent  || '');
-                    if (!name || !effect || name.length < 2 || effect.length < 4) return;
-                    const namePrefix = gameName ? `${gameName}：${name}` : name;
-                    items.push(`【${namePrefix}】 効果：\n${effect}`);
-                });
+        // TABLE形式パーシング（h3+pre と共存する場合も常時実行）
+        const HDR_NAMES = new Set(['名称', '名前', 'スキル名', '技名', 'スキル']);
+        const HDR_EFFS  = new Set(['効果', '説明', '効果/説明', '効果・説明']);
+        const tblSeen   = new Set(items.map(i => i.split('\n')[0])); // h3+pre で取得済みのタイトル行
+        bodyEl.querySelectorAll('table').forEach(table => {
+            const headerRow = table.querySelector('tr');
+            if (!headerRow) return;
+            const headers = Array.from(headerRow.querySelectorAll('th, td')).map(c => scrapeCleanText(c.textContent));
+            const nameIdx = headers.findIndex(h => HDR_NAMES.has(h));
+            const effIdx  = headers.findIndex(h => HDR_EFFS.has(h));
+            if (nameIdx < 0 || effIdx < 0) return;
+            Array.from(table.querySelectorAll('tr')).slice(1).forEach(row => {
+                const cells = Array.from(row.querySelectorAll('td, th'));
+                const name   = scrapeCleanText(cells[nameIdx]?.textContent || '');
+                const effect = scrapeCleanText(cells[effIdx]?.textContent  || '');
+                if (!name || !effect || name.length < 2 || effect.length < 4) return;
+                const namePrefix = gameName ? `${gameName}：${name}` : name;
+                const title = `【${namePrefix}】 効果：`;
+                if (tblSeen.has(title)) return; // h3+pre で既取得のスキルは重複スキップ
+                tblSeen.add(title);
+                items.push(`${title}\n${effect}`);
             });
-        }
+        });
 
         return items;
     }
