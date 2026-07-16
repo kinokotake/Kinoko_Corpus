@@ -1736,8 +1736,10 @@
             if (nameIdx < 0 || effIdx < 0) return;
             Array.from(table.querySelectorAll('tr')).slice(1).forEach(row => {
                 const cells = Array.from(row.querySelectorAll('td, th'));
-                const name   = scrapeCleanText(cells[nameIdx]?.textContent || '');
-                const effect = scrapeCleanText(cells[effIdx]?.textContent  || '');
+                // セル内の【XX】プレフィックス（カテゴリバッジ）をスキル名から除去
+                const rawName = scrapeCleanText(cells[nameIdx]?.textContent || '');
+                const name    = rawName.replace(/^【[^】]{1,8}】\s*/, '').trim() || rawName;
+                const effect  = scrapeCleanText(cells[effIdx]?.textContent  || '');
                 if (!name || !effect || name.length < 2 || effect.length < 4) return;
                 const namePrefix = gameName ? `${gameName}：${name}` : name;
                 const title = `【${namePrefix}】 効果：`;

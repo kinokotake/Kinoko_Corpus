@@ -1,5 +1,17 @@
 [
   {
+    "date": "2026-07-16",
+    "total": 228128,
+    "changes": [
+      {
+        "source": "⚔️技能/web_scraped_skills.jsonl",
+        "prev": 1430,
+        "curr": 691,
+        "delta": -739
+      }
+    ]
+  },
+  {
     "date": "2026-07-14",
     "total": 228867,
     "changes": [
