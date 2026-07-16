@@ -2016,18 +2016,12 @@
                 wGameName = (window.prompt(`ゲーム名を入力してください（例：モンスター娘TD）\n自動検出：${wGameName || '未検出'}\n（正しければそのままOK、修正する場合は書き換えてください）`, wGameName) || wGameName || host).trim() || host;
 
                 const directItems = parseWikiruListPage(doc, wGameName);
-                if (directItems.length) {
-                    const wSeen2 = new Set();
-                    scrapeResults = directItems
-                        .filter(text => { if (wSeen2.has(text)) return false; wSeen2.add(text); return true; })
-                        .map(text => ({ source: `${host}（网页抓取）`, text, type: 'skill_desc', meta: '' }));
-                    statusEl.textContent = `✅ 识别出 ${scrapeResults.length} 条技能文本，请人工核查后再添加/导出：`;
-                } else if (wikiruList) {
-                    // フォールバック: サブページバッチ（子ページに実コンテンツがある場合）
+                // 一覧ページとサブページバッチを両方実行（EXスキルはサブページにある場合が多い）
+                const wAllItems = directItems.map(text => ({ source: `${host}（网页抓取）`, text, type: 'skill_desc', meta: '' }));
+                if (wikiruList) {
                     const wTargets = wikiruList.slice(0, 300);
                     const wTotal = wTargets.length;
-                    statusEl.textContent = `⏳ 子ページをバッチ抓取中... ${wTotal} 件`;
-                    const wAllItems = [];
+                    statusEl.textContent = `⏳ サブページをバッチ抓取中... ${wTotal} 件（一覧: ${directItems.length} 件取得済み）`;
                     for (let i = 0; i < wTargets.length; i += 4) {
                         const batchResults = await Promise.allSettled(
                             wTargets.slice(i, i + 4).map(async ({ url: skillUrl, name: initName }) => {
@@ -2041,11 +2035,16 @@
                         batchResults.forEach(r => {
                             if (r.status === 'fulfilled') r.value.forEach(text => wAllItems.push({ source: `${host}（网页抓取）`, text, type: 'skill_desc', meta: '' }));
                         });
+                        if (i % 20 === 0) statusEl.textContent = `⏳ サブページをバッチ抓取中... ${Math.min(i + 4, wTotal)}/${wTotal}`;
                     }
                     if (!wAllItems.length) { statusEl.textContent = '⚠️ 未能识别出技能文本。'; return; }
                     const wSeen3 = new Set();
                     scrapeResults = wAllItems.filter(it => { if (wSeen3.has(it.text)) return false; wSeen3.add(it.text); return true; });
-                    statusEl.textContent = `✅ 识别出 ${scrapeResults.length} 条技能文本（共抓取 ${wTotal} 个页面），请人工核查后再添加/导出：`;
+                    statusEl.textContent = `✅ 识别出 ${scrapeResults.length} 条技能文本（一覧: ${directItems.length} + サブページ ${wTotal} 件），请人工核查后再添加/导出：`;
+                } else if (directItems.length) {
+                    const wSeen2 = new Set();
+                    scrapeResults = wAllItems.filter(it => { if (wSeen2.has(it.text)) return false; wSeen2.add(it.text); return true; });
+                    statusEl.textContent = `✅ 识别出 ${scrapeResults.length} 条技能文本，请人工核查后再添加/导出：`;
                 } else {
                     // 最終フォールバック: 現在ページをキャラページとして解析（EXスキル等）
                     const rawPage = extractPageName(doc) || '';
