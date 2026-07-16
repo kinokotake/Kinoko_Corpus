@@ -17,7 +17,8 @@
         /* ── 游戏分类筛选栏（技能库专属）── */
         #gameFilter { display: none; justify-content: center; gap: 8px; margin-bottom: 16px; flex-wrap: wrap; }
         .gf-btn { padding: 5px 18px; font-size: 14px; border: 1.5px solid #0d6efd; border-radius: 20px; background: transparent; color: #0d6efd; cursor: pointer; transition: all 0.2s; white-space: nowrap; }
-        .gf-btn.active { background: #0d6efd; color: white; box-shadow: 0 2px 6px rgba(13,110,253,0.3); }
+        .gf-btn.active { background: #1a4fc4; color: #fff; box-shadow: 0 2px 8px rgba(13,110,253,0.45); font-weight: 600; }
+        .gf-btn.active .gf-count { opacity: 1; color: #c9d9ff; }
         .gf-btn.has-kw-match { background: rgba(13,110,253,0.1); border-width: 2.5px; font-weight: 600; }
         .gf-btn:hover { transform: translateY(-1px); }
         .gf-btn-dynamic { border-style: dashed; }
@@ -1713,7 +1714,8 @@
             } else if (curName) {
                 if (tag === 'pre') {
                     // pre は改行を保持（scrapeCleanText では折りたたまれるため直接分割）
-                    const lines = (el.textContent || '').split('\n').map(l => l.trim()).filter(Boolean);
+                    const lines = (el.textContent || '').split('\n').map(l => l.trim())
+                        .filter(l => l && !l.startsWith('window.') && !l.startsWith('(function') && l.length < 200);
                     curLines.push(...lines);
                 } else if (tag === 'p') {
                     const t = scrapeCleanText(el.textContent);
