@@ -1610,18 +1610,23 @@
         const seen = new Set();
         const SKILL_HDR_CELLS = new Set(['効果', '準備時間', '再発動', '初回', '名称', 'スキル名', '条件', '備考', 'コスト', '再使用']);
 
-        // 1. EXスキル/専用スキル見出し → 直後テーブルからスキル名+効果を抽出
+        // 1. EXスキル/専用スキル/スキル2-4 見出し → 直後のテーブル群からスキル名+効果を抽出
+        //    （アイコン+名前だけの1行テーブルと Lv/効果 データテーブルが別々の兄弟要素になっているケースに対応：
+        //     最初のテーブルで entry が取れなくても name だけ拾って次のテーブルまで探索を続ける）
         const exItems = [];
         Array.from(contentEl.querySelectorAll('h1, h2, h3, h4')).forEach(heading => {
-            if (!/EXスキル|専用スキル/.test(scrapeCleanText(heading.textContent))) return;
+            if (heading.closest('.rgn-content')) return; // 折りたたみ式のルール説明などのボイラープレートは除外
+            const headText = scrapeCleanText(heading.textContent);
+            if (!/EXスキル|専用スキル|^スキル\d/.test(headText)) return;
             let sib = heading.nextElementSibling, hops = 0;
+            let pendingName = '';
             while (sib && hops < 8) {
                 if (/^H[1-4]$/.test(sib.tagName)) break;
                 const tbl = sib.tagName === 'TABLE' ? sib : sib.querySelector('table');
                 if (tbl) {
-                    const entry = extractWikiruExSkill(tbl, namePrefix, SKILL_HDR_CELLS, seen);
-                    if (entry) exItems.push(entry);
-                    break;
+                    const { entry, name } = extractWikiruExSkill(tbl, namePrefix, SKILL_HDR_CELLS, seen, pendingName);
+                    if (name) pendingName = name;
+                    if (entry) { exItems.push(entry); break; }
                 }
                 sib = sib.nextElementSibling; hops++;
             }
@@ -1631,6 +1636,7 @@
         // 2. フォールバック: 全テーブル行の汎用抽出（単体スキルページ用）
         const allEffects = [];
         contentEl.querySelectorAll('table tr').forEach(row => {
+            if (row.closest('.rgn-content')) return;
             const cells = Array.from(row.querySelectorAll('td, th'));
             let lvPrefix = '';
             const rowParts = [];
@@ -1649,43 +1655,54 @@
         return [`【${namePrefix}】 効果：\n${allEffects.join('\n')}`];
     }
 
-    /* EXスキルテーブル1枚から「スキル名+効果+準備時間」を1エントリとして返す */
-    function extractWikiruExSkill(table, namePrefix, SKILL_HDR_CELLS, seen) {
+    /* EXスキルテーブル1枚から「スキル名+効果+準備時間」を抽出。
+       - スキル名だけのテーブル（アイコン+名前の1行2セル、片方が空）の場合は entry:null, name:検出した名前 を返す
+       - セルの並び順（Lv→効果 / 効果→Lv）は問わず、行内でいちばん長いテキストを効果として扱う
+       - pendingName: 直前の兄弟テーブルで拾ったスキル名（このテーブル自体に名前がない場合に使う） */
+    function extractWikiruExSkill(table, namePrefix, SKILL_HDR_CELLS, seen, pendingName) {
         const rows = Array.from(table.querySelectorAll('tr'));
-        if (!rows.length) return null;
+        if (!rows.length) return { entry: null, name: '' };
         let skillName = '';
         const effectParts = [];
         const timingParts = [];
         rows.forEach(row => {
             const cells = Array.from(row.querySelectorAll('td, th'));
             if (!cells.length) return;
+            const texts = cells.map(c => scrapeCleanText(c.textContent));
             const firstCell = cells[0];
-            const firstText = scrapeCleanText(firstCell.textContent);
+            const firstText = texts[0];
             // マージセル（colspan≥2）または単独セル → スキル名行
             if ((firstCell.colSpan >= 2 || cells.length === 1) && !SKILL_HDR_CELLS.has(firstText) && firstText && firstText.length >= 2) {
                 if (!skillName) skillName = firstText;
                 return;
             }
-            const texts = cells.map(c => scrapeCleanText(c.textContent));
-            // ヘッダ行（効果/準備時間 など）はスキップ
-            if (texts.some(t => SKILL_HDR_CELLS.has(t))) return;
-            // データ行: 第1セル=効果テキスト、それ以外で「数字秒」=準備時間
-            texts.forEach((t, i) => {
+            // アイコン+名前だけの2セル行（片方が空セル、もう片方が短めの名前）→ スキル名行
+            if (cells.length === 2 && texts.some(t => !t) && texts.some(t => t && t.length >= 2 && t.length < 20)) {
+                if (!skillName) skillName = texts.find(t => t) || '';
+                return;
+            }
+            if (texts.some(t => SKILL_HDR_CELLS.has(t))) return; // ヘッダ行（Lv/効果など）はスキップ
+            // データ行: 数字/Lv表記のセルは Lv 扱い、それ以外でいちばん長いセルを効果テキストとする
+            let lv = '';
+            let effectText = '';
+            texts.forEach(t => {
                 if (!t) return;
-                if (i === 0 && t.length >= 4) {
-                    const raw = (cells[0].textContent || '').split('\n').map(l => l.trim()).filter(l => l.length >= 2);
-                    raw.forEach(l => { if (!seen.has(l)) { seen.add(l); effectParts.push(l); } });
-                } else if (/^\d+秒$/.test(t)) {
-                    timingParts.push(t);
-                }
+                if (/^\d+秒$/.test(t)) { timingParts.push(t); return; }
+                if (/^(Lv)?\d+$/.test(t)) { if (!lv) lv = t; return; }
+                if (t.length > effectText.length) effectText = t;
             });
+            if (effectText && effectText.length >= 4 && !seen.has(effectText)) {
+                seen.add(effectText);
+                effectParts.push(lv ? `Lv${lv.replace(/^Lv/, '')}：${effectText}` : effectText);
+            }
         });
-        if (!effectParts.length) return null;
+        if (!effectParts.length) return { entry: null, name: skillName };
         const allLines = [...effectParts];
         if (timingParts.length) allLines.push(timingParts.length >= 2
             ? `再発動：${timingParts[0]}／初回：${timingParts[1]}` : `準備時間：${timingParts[0]}`);
-        const bracket = skillName ? `【${namePrefix}】【${skillName}】` : `【${namePrefix}】`;
-        return `${bracket} 効果：\n${allLines.join('\n')}`;
+        const finalName = skillName || pendingName;
+        const bracket = finalName ? `【${namePrefix}】【${finalName}】` : `【${namePrefix}】`;
+        return { entry: `${bracket} 効果：\n${allLines.join('\n')}`, name: skillName };
     }
 
     /* wikiru.jp: h3+pre 構造の一覧ページを直接解析（子ページバッチ不要）
@@ -1697,16 +1714,18 @@
         const items = [];
         let curName = '';
         let curLines = [];
+        let sawPre = false; // p は pre の補足説明としてのみ採用する（p 単独のキャラページ雑談セクションを技能と誤認しないため）
 
         function flush() {
             if (curName && curLines.length) {
                 const namePrefix = gameName ? `${gameName}：${curName}` : curName;
                 items.push(`【${namePrefix}】 効果：\n${curLines.join('\n')}`);
             }
-            curName = ''; curLines = [];
+            curName = ''; curLines = []; sawPre = false;
         }
 
         bodyEl.querySelectorAll('h2, h3, pre, p').forEach(el => {
+            if (el.closest('.rgn-content, .rgn-description')) return; // 折りたたみ式のコメント欄ルール等は除外（h3+p構造で技能一覧と誤認されやすい）
             const tag = el.tagName.toLowerCase();
             if (tag === 'h2' || tag === 'h3') {
                 flush();
@@ -1717,8 +1736,9 @@
                     // pre は改行を保持（scrapeCleanText では折りたたまれるため直接分割）
                     const lines = (el.textContent || '').split('\n').map(l => l.trim())
                         .filter(l => l && !l.startsWith('window.') && !l.startsWith('(function') && l.length < 200);
-                    curLines.push(...lines);
-                } else if (tag === 'p') {
+                    if (lines.length) { curLines.push(...lines); sawPre = true; }
+                } else if (tag === 'p' && sawPre) {
+                    // pre による効果テキストが既にある場合のみ、p を補足説明として追加する
                     const t = scrapeCleanText(el.textContent);
                     if (t && t.length > 6) curLines.push(t);
                 }
@@ -1731,6 +1751,7 @@
         const HDR_EFFS  = new Set(['効果', '説明', '効果/説明', '効果・説明']);
         const tblSeen   = new Set(items.map(i => i.split('\n')[0])); // h3+pre で取得済みのタイトル行
         bodyEl.querySelectorAll('table').forEach(table => {
+            if (table.closest('.rgn-content')) return;
             const headerRow = table.querySelector('tr');
             if (!headerRow) return;
             const headers = Array.from(headerRow.querySelectorAll('th, td')).map(c => scrapeCleanText(c.textContent));
