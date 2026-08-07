@@ -1609,8 +1609,12 @@
         } catch (e) { return null; }
     }
 
-    /* wikiru.jp: 単体スキルページ / キャラページからEXスキル等を抽出 */
-    function parseWikiruSkillPage(doc, skillName, gameName) {
+    /* wikiru.jp: 単体スキルページ / キャラページからEXスキル等を抽出
+       strict=true の場合、「スキル」見出しが1つも見つからなければ空配列を返す（全テーブル行ダンプのフォールバックを使わない）。
+       一覧ページからの一括バッチ抓取では、キャラ一覧に混ざるSSR/SR/未登場キャラ等の非キャラページを
+       素通しでテーブル丸ごとダンプしてしまうのを防ぐため strict を使う。単発URL貼り付け時は人間が
+       チェックリストを見て取捨選択するのでフォールバックを許容する。 */
+    function parseWikiruSkillPage(doc, skillName, gameName, strict) {
         const namePrefix = gameName && skillName ? `${gameName}：${skillName}` : (skillName || gameName || '');
         const contentEl = doc.querySelector('#article, #body, .body, div[id="article"], div[id="body"]');
         if (!contentEl) return [];
@@ -1640,6 +1644,7 @@
             }
         });
         if (exItems.length) return exItems;
+        if (strict) return [];
 
         // 2. フォールバック: 全テーブル行の汎用抽出（単体スキルページ用）
         const allEffects = [];
@@ -2074,7 +2079,7 @@
                                 const skillDoc = new DOMParser().parseFromString(skillHtml, 'text/html');
                                 const rawName = extractPageName(skillDoc) || initName;
                                 const skillName = rawName.replace(/^.*\//, '').trim() || initName;
-                                return parseWikiruSkillPage(skillDoc, skillName, wGameName);
+                                return parseWikiruSkillPage(skillDoc, skillName, wGameName, true);
                             })
                         );
                         batchResults.forEach(r => {
