@@ -1583,11 +1583,18 @@
             contentEl.querySelectorAll('a[href]').forEach(a => {
                 const href = a.getAttribute('href') || '';
                 if (SKIP_RE.test(href)) return;
+                // 別ホスト（姉妹wiki等）へのリンクは対象外。絶対URLの場合はここでホストを確認する
+                if (/^https?:\/\//i.test(href)) {
+                    try { if (new URL(href).hostname !== baseUrl.hostname) return; } catch (e) { return; }
+                }
                 let rawPath = '';
-                if (href.startsWith('?') && !href.includes('=')) rawPath = href.slice(1);
+                if (href.startsWith('./?') && !href.includes('=')) rawPath = href.slice(3);
+                else if (href.startsWith('?') && !href.includes('=')) rawPath = href.slice(1);
                 else if (/index\.php\?[^=]/.test(href)) rawPath = href.split('index.php?')[1];
                 else return;
-                const subPath = decodeURIComponent(rawPath);
+                rawPath = rawPath.split('#')[0]; // 同一ページ内アンカー（#xxxx）を除去
+                let subPath;
+                try { subPath = decodeURIComponent(rawPath); } catch (e) { return; } // 他wikiの旧エンコーディング等でデコード失敗した行だけ読み飛ばす
                 if (subPath.includes('=')) return; // action=edit 等
                 // 同名前空間 OR ルート直下（名前空間なし）のページも対象
                 if (parentNs && !subPath.startsWith(parentNs) && subPath.includes('/')) return;
@@ -1617,7 +1624,8 @@
         Array.from(contentEl.querySelectorAll('h1, h2, h3, h4')).forEach(heading => {
             if (heading.closest('.rgn-content')) return; // 折りたたみ式のルール説明などのボイラープレートは除外
             const headText = scrapeCleanText(heading.textContent);
-            if (!/EXスキル|専用スキル|^スキル\d/.test(headText)) return;
+            // EXスキル/スキル2-4 以外に 専用装備スキル/家具スキル/LR衣装スキル 等も同じテーブル構造なので対象にする
+            if (!/スキル/.test(headText)) return;
             let sib = heading.nextElementSibling, hops = 0;
             let pendingName = '';
             while (sib && hops < 8) {
@@ -1676,12 +1684,20 @@
                 if (!skillName) skillName = firstText;
                 return;
             }
-            // アイコン+名前だけの2セル行（片方が空セル、もう片方が短めの名前）→ スキル名行
-            if (cells.length === 2 && texts.some(t => !t) && texts.some(t => t && t.length >= 2 && t.length < 20)) {
-                if (!skillName) skillName = texts.find(t => t) || '';
-                return;
-            }
             if (texts.some(t => SKILL_HDR_CELLS.has(t))) return; // ヘッダ行（Lv/効果など）はスキップ
+            // アイコン+名前だけの2セル行 → スキル名行
+            // 「短い側」が空 or 純粋な数字でない短文（[添付]等のプレースホルダ）で、「長い側」が名前らしい長さなら名前行とみなす
+            // （Lv数字＋効果文のデータ行は「短い側」が必ず純粋な数字になるので誤判定しない。ヘッダ行は上ですでに除外済み）
+            if (cells.length === 2) {
+                const shortIdx = texts[0].length <= texts[1].length ? 0 : 1;
+                const shortText = texts[shortIdx];
+                const longText = texts[1 - shortIdx];
+                const shortIsPlaceholder = !shortText || (!/^\d+$/.test(shortText) && shortText.length < 10);
+                if (shortIsPlaceholder && longText && longText.length >= 2 && longText.length < 20 && !/^\d+$/.test(longText)) {
+                    if (!skillName) skillName = longText;
+                    return;
+                }
+            }
             // データ行: 数字/Lv表記のセルは Lv 扱い、それ以外でいちばん長いセルを効果テキストとする
             let lv = '';
             let effectText = '';
