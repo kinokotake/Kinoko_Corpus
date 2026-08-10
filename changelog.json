@@ -1,5 +1,23 @@
 [
   {
+    "date": "2026-08-10",
+    "total": 224577,
+    "changes": [
+      {
+        "source": "⚔️技能/web_scraped_skills.jsonl",
+        "prev": 7650,
+        "curr": 1734,
+        "delta": -5916
+      },
+      {
+        "source": "⚔️技能/another_eden_skills.jsonl",
+        "prev": 0,
+        "curr": 1669,
+        "delta": 1669
+      }
+    ]
+  },
+  {
     "date": "2026-07-16",
     "total": 228128,
     "changes": [
