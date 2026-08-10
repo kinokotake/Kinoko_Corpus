@@ -6,6 +6,7 @@ Skill pattern: table cell col[0] in {スキル, 宝具, スキル1, スキル2, 
 """
 import requests, json, re, time
 from bs4 import BeautifulSoup
+from scrape_utils import safe_write_jsonl
 from urllib.parse import urljoin
 
 BASE = "https://kamigame.jp"
@@ -89,10 +90,8 @@ def main():
         all_skills.extend(skills)
         time.sleep(DELAY)
     print(f"\nTotal: {len(all_skills)}")
-    with open(OUTPUT, "w", encoding="utf-8") as f:
-        for text in all_skills:
-            f.write(json.dumps({"source": SOURCE, "type": "skill_desc", "text": text}, ensure_ascii=False) + "\n")
-    print("Saved to", OUTPUT)
+    if safe_write_jsonl(OUTPUT, SOURCE, all_skills):
+        print("Saved to", OUTPUT)
 
 if __name__ == "__main__":
     main()

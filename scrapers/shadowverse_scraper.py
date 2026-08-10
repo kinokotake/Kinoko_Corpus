@@ -5,9 +5,14 @@ Structure: articles with tables [カード名 | 能力]
 """
 import requests, json, re, time
 from bs4 import BeautifulSoup
+from scrape_utils import safe_write_jsonl
 
 BASE    = "https://shadowverse.gamewith.jp"
-OUTPUT  = "../⚔️技能/web_scraped_skills.jsonl"
+# 注意：必须写专属文件，不能用 web_scraped_skills.jsonl —— 那个文件是给手动
+# URL 抓取功能用的通用文件，index.html 的 getGame() 只按文件名识别游戏，写进
+# web_scraped_skills.jsonl 会导致内容被当成"未知游戏"重新分组，生成第二个重复的
+# シャドウバース 筛选按钮（曾经发生过，2026-08-10 修复）。
+OUTPUT  = "../⚔️技能/shadowverse_skills.jsonl"
 SOURCE  = "シャドウバース"
 HEADERS = {"User-Agent": "Mozilla/5.0", "Accept-Language": "ja"}
 DELAY   = 1.0
@@ -129,24 +134,8 @@ def main():
 
     print(f"\nTotal: {len(all_entries)} entries")
 
-    # Read existing シャドウバース entries to merge
-    try:
-        existing = [json.loads(l) for l in open(OUTPUT, encoding="utf-8") if l.strip()]
-        existing_sv = [e for e in existing if "シャドウバース" in e.get("text","")]
-        other = [e for e in existing if "シャドウバース" not in e.get("text","")]
-        print(f"Existing シャドウバース: {len(existing_sv)}, other: {len(other)}")
-    except FileNotFoundError:
-        other = []
-
-    with open(OUTPUT, "w", encoding="utf-8") as f:
-        # Write non-シャドウバース entries first
-        for e in other:
-            f.write(json.dumps(e, ensure_ascii=False) + "\n")
-        # Write new entries
-        for text in all_entries:
-            f.write(json.dumps({"source": SOURCE, "type": "skill_desc", "text": text}, ensure_ascii=False) + "\n")
-
-    print(f"Saved: {len(other)} other + {len(all_entries)} シャドウバース = {len(other)+len(all_entries)} total")
+    if safe_write_jsonl(OUTPUT, SOURCE, all_entries):
+        print(f"Saved: {len(all_entries)} シャドウバース entries -> {OUTPUT}")
 
 
 if __name__ == "__main__":

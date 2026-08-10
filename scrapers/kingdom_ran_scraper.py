@@ -5,6 +5,7 @@ table[1]: スキル名 | 効果 | 国 | 兵種 | 所属
 """
 import requests, json, re, sys
 from bs4 import BeautifulSoup
+from scrape_utils import safe_write_jsonl
 
 URL = "https://game8.jp/kingdomran/780604"
 OUTPUT = "../⚔️技能/kingdom_ran_skills.jsonl"
@@ -59,10 +60,8 @@ def main():
         skills.append(" ".join(parts))
 
     print(f"Extracted {len(skills)} skills")
-    with open(OUTPUT, "w", encoding="utf-8") as f:
-        for text in skills:
-            f.write(json.dumps({"source": SOURCE, "type": "skill_desc", "text": text}, ensure_ascii=False) + "\n")
-    print("Saved to", OUTPUT)
+    if safe_write_jsonl(OUTPUT, SOURCE, skills):
+        print("Saved to", OUTPUT)
 
 if __name__ == "__main__":
     main()

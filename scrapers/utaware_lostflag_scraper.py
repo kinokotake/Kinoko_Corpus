@@ -9,6 +9,7 @@ Skill tables per page:
 """
 import requests, json, re, time
 from bs4 import BeautifulSoup
+from scrape_utils import safe_write_jsonl
 
 BASE      = "https://appmedia.jp"
 LIST_URL  = f"{BASE}/utaware-lostflag/4664383"
@@ -166,10 +167,8 @@ def main():
         time.sleep(DELAY)
 
     print(f"\nTotal: {len(all_skills)} entries from {found_chars} characters")
-    with open(OUTPUT, "w", encoding="utf-8") as f:
-        for text in all_skills:
-            f.write(json.dumps({"source": SOURCE, "type": "skill_desc", "text": text}, ensure_ascii=False) + "\n")
-    print("Saved OK")
+    if safe_write_jsonl(OUTPUT, SOURCE, all_skills):
+        print("Saved OK")
 
 
 if __name__ == "__main__":

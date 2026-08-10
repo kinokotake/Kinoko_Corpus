@@ -7,6 +7,7 @@ Skill tables: rows where col[0] in SKILL_LABELS → col[1] = name, row[1] = desc
 import requests, json, re, time, warnings
 warnings.filterwarnings("ignore")
 from bs4 import BeautifulSoup
+from scrape_utils import safe_write_jsonl
 
 LIST_URL = "https://gamerch.com/jojo-ss/548706"
 OUTPUT = "../⚔️技能/jojo_ss_skills.jsonl"
@@ -99,10 +100,8 @@ def main():
         time.sleep(DELAY)
 
     print(f"\nTotal: {len(all_skills)} skill entries")
-    with open(OUTPUT, "w", encoding="utf-8") as f:
-        for text in all_skills:
-            f.write(json.dumps({"source": SOURCE, "type": "skill_desc", "text": text}, ensure_ascii=False) + "\n")
-    print("Saved to", OUTPUT)
+    if safe_write_jsonl(OUTPUT, SOURCE, all_skills):
+        print("Saved to", OUTPUT)
 
 
 if __name__ == "__main__":

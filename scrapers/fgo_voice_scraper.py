@@ -6,6 +6,7 @@ Output: ../台词/fgo_voice.jsonl
 """
 import requests, json, re, time
 from bs4 import BeautifulSoup
+from scrape_utils import safe_write_jsonl
 
 BASE = "https://kamigame.jp"
 INDEX_URL = (BASE + "/fgo/%E3%82%B5%E3%83%BC%E3%83%B4%E3%82%A1%E3%83%B3%E3%83%88"
@@ -133,14 +134,11 @@ def main():
         time.sleep(DELAY)
 
     print(f"\nTotal: {len(all_lines)} voice lines")
-    with open(OUTPUT, "w", encoding="utf-8") as f:
-        for text in all_lines:
-            f.write(json.dumps({"source": SOURCE, "type": "", "text": text},
-                               ensure_ascii=False) + "\n")
-    try:
-        print("Saved to", OUTPUT)
-    except Exception:
-        print("Saved OK")
+    if safe_write_jsonl(OUTPUT, SOURCE, all_lines, type_=""):
+        try:
+            print("Saved to", OUTPUT)
+        except Exception:
+            print("Saved OK")
 
 
 if __name__ == "__main__":

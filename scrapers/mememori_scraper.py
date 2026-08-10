@@ -6,6 +6,7 @@ Skill table header: ["スキル", "効果"]
 """
 import requests, json, re, time
 from bs4 import BeautifulSoup
+from scrape_utils import safe_write_jsonl
 
 BASE = "https://altema.jp"
 LIST_URL = f"{BASE}/mememori/charalist"
@@ -88,10 +89,8 @@ def main():
         time.sleep(DELAY)
 
     print(f"\nTotal: {len(all_skills)} skill entries")
-    with open(OUTPUT, "w", encoding="utf-8") as f:
-        for text in all_skills:
-            f.write(json.dumps({"source": SOURCE, "type": "skill_desc", "text": text}, ensure_ascii=False) + "\n")
-    print("Saved to", OUTPUT)
+    if safe_write_jsonl(OUTPUT, SOURCE, all_skills):
+        print("Saved to", OUTPUT)
 
 if __name__ == "__main__":
     main()

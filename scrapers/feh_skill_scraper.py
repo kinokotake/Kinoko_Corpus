@@ -7,6 +7,7 @@ Output: ⚔️技能/feh_skills.jsonl  (JSONL, replaces legacy CSV)
 """
 import requests, json, re, time
 from bs4 import BeautifulSoup
+from scrape_utils import safe_write_jsonl
 
 OUTPUT = "../⚔️技能/feh_skills.jsonl"
 SOURCE = "ファイアーエムブレム ヒーローズ"
@@ -86,11 +87,8 @@ def main():
         time.sleep(DELAY)
 
     print(f"\nTotal: {len(all_entries)} entries")
-    with open(OUTPUT, "w", encoding="utf-8") as f:
-        for text in all_entries:
-            f.write(json.dumps({"source": SOURCE, "type": "skill_desc", "text": text},
-                               ensure_ascii=False) + "\n")
-    print(f"Saved to {OUTPUT}")
+    if safe_write_jsonl(OUTPUT, SOURCE, all_entries):
+        print(f"Saved to {OUTPUT}")
 
 
 if __name__ == "__main__":

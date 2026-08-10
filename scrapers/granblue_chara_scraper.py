@@ -7,6 +7,7 @@ Output format: 【キャラ名：スキル名】種別：X 効果：Y
 import requests, json, re, time
 from urllib.parse import unquote
 from bs4 import BeautifulSoup
+from scrape_utils import safe_write_jsonl
 
 BASE    = "https://kamigame.jp"
 INDEX   = f"{BASE}/%E3%82%B0%E3%83%A9%E3%83%96%E3%83%AB/%E3%82%AD%E3%83%A3%E3%83%A9%E3%82%AF%E3%82%BF%E3%83%BC/"
@@ -156,10 +157,8 @@ def main():
         time.sleep(DELAY)
 
     print(f"\nTotal: {len(all_entries)} entries")
-    with open(OUTPUT, "w", encoding="utf-8") as f:
-        for text in all_entries:
-            f.write(json.dumps({"source": SOURCE, "type": "skill_desc", "text": text}, ensure_ascii=False) + "\n")
-    print(f"Saved to {OUTPUT}")
+    if safe_write_jsonl(OUTPUT, SOURCE, all_entries):
+        print(f"Saved to {OUTPUT}")
 
 if __name__ == "__main__":
     main()

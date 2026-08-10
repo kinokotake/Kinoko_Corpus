@@ -7,6 +7,7 @@ Skill structure: div.skill-table-wrap > div.skill-table-header (name+CT)
 """
 import requests, json, re, time
 from bs4 import BeautifulSoup
+from scrape_utils import safe_write_jsonl
 from urllib.parse import urljoin
 
 BASE = "https://kamigame.jp"
@@ -129,13 +130,11 @@ def main():
         time.sleep(DELAY)
 
     print(f"\nTotal: {len(all_skills)}")
-    with open(OUTPUT, "w", encoding="utf-8") as f:
-        for text in all_skills:
-            f.write(json.dumps({"source": SOURCE, "type": "skill_desc", "text": text}, ensure_ascii=False) + "\n")
-    try:
-        print("Saved to", OUTPUT)
-    except Exception:
-        print("Saved OK")
+    if safe_write_jsonl(OUTPUT, SOURCE, all_skills):
+        try:
+            print("Saved to", OUTPUT)
+        except Exception:
+            print("Saved OK")
 
 
 if __name__ == "__main__":

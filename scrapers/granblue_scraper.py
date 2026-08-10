@@ -6,6 +6,7 @@ Each h3/h4 heading + following paragraph = one entry
 """
 import requests, json, re, time
 from bs4 import BeautifulSoup
+from scrape_utils import safe_write_jsonl
 
 BASE = "https://kamigame.jp"
 OUTPUT = "../⚔️技能/granblue_skills.jsonl"
@@ -129,10 +130,8 @@ def main():
         all_entries.extend(entries)
         time.sleep(DELAY)
     print(f"\nTotal: {len(all_entries)}")
-    with open(OUTPUT, "w", encoding="utf-8") as f:
-        for text in all_entries:
-            f.write(json.dumps({"source": SOURCE, "type": "skill_desc", "text": text}, ensure_ascii=False) + "\n")
-    print("Saved")
+    if safe_write_jsonl(OUTPUT, SOURCE, all_entries):
+        print("Saved")
 
 if __name__ == "__main__":
     main()
