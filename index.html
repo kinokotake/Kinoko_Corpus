@@ -1627,9 +1627,12 @@
         const exItems = [];
         Array.from(contentEl.querySelectorAll('h1, h2, h3, h4')).forEach(heading => {
             if (heading.closest('.rgn-content')) return; // 折りたたみ式のルール説明などのボイラープレートは除外
-            const headText = scrapeCleanText(heading.textContent);
+            // pukiwiki系の見出し末尾には編集アンカー「†」が付くため、末尾一致判定の前に取り除く
+            const headText = scrapeCleanText(heading.textContent).replace(/\s*†\s*$/, '');
             // EXスキル/スキル2-4 以外に 専用装備スキル/家具スキル/LR衣装スキル 等も同じテーブル構造なので対象にする
-            if (!/スキル/.test(headText)) return;
+            // 神器効果/パッシブ効果/使用アビリティ等（末尾が「スキル/効果/アビリティ」）も同じLv進行テーブル構造で
+            // 主動・被動・武器技能を持つため対象にする（末尾一致にして「補足事項」等の無関係見出しを除外）
+            if (!/(スキル|効果|アビリティ)$/.test(headText)) return;
             let sib = heading.nextElementSibling, hops = 0;
             let pendingName = '';
             while (sib && hops < 8) {
@@ -1639,6 +1642,10 @@
                     const { entry, name } = extractWikiruExSkill(tbl, namePrefix, SKILL_HDR_CELLS, seen, pendingName);
                     if (name) pendingName = name;
                     if (entry) { exItems.push(entry); break; }
+                    // Lv進行テーブルでない場合（例: パッシブ効果のような「単セルTH名+単セルTD効果」を
+                    // 複数回繰り返す一覧テーブル）向けのフォールバック抽出
+                    const namedList = extractWikiruNamedList(tbl, namePrefix, seen, SKILL_HDR_CELLS);
+                    if (namedList.length) { exItems.push(...namedList); break; }
                 }
                 sib = sib.nextElementSibling; hops++;
             }
@@ -1676,6 +1683,7 @@
         const rows = Array.from(table.querySelectorAll('tr'));
         if (!rows.length) return { entry: null, name: '' };
         let skillName = '';
+        const metaParts = [];
         const effectParts = [];
         const timingParts = [];
         rows.forEach(row => {
@@ -1687,6 +1695,12 @@
             // マージセル（colspan≥2）または単独セル → スキル名行
             if ((firstCell.colSpan >= 2 || cells.length === 1) && !SKILL_HDR_CELLS.has(firstText) && firstText && firstText.length >= 2) {
                 if (!skillName) skillName = firstText;
+                return;
+            }
+            // TH/TD/TH/TD の4セル行 → ラベル:値ペア2組（召喚効果/召喚時間/最大コンボ数/ダメージ倍率 等の性能メタ情報）
+            if (cells.length === 4 && cells[0].tagName === 'TH' && cells[2].tagName === 'TH') {
+                if (texts[0] && texts[1]) metaParts.push(`${texts[0]}：${texts[1]}`);
+                if (texts[2] && texts[3]) metaParts.push(`${texts[2]}：${texts[3]}`);
                 return;
             }
             if (texts.some(t => SKILL_HDR_CELLS.has(t))) return; // ヘッダ行（Lv/効果など）はスキップ
@@ -1718,12 +1732,38 @@
             }
         });
         if (!effectParts.length) return { entry: null, name: skillName };
-        const allLines = [...effectParts];
+        const allLines = [...metaParts, ...effectParts];
         if (timingParts.length) allLines.push(timingParts.length >= 2
             ? `再発動：${timingParts[0]}／初回：${timingParts[1]}` : `準備時間：${timingParts[0]}`);
         const finalName = skillName || pendingName;
         const bracket = finalName ? `【${namePrefix}】【${finalName}】` : `【${namePrefix}】`;
         return { entry: `${bracket} 効果：\n${allLines.join('\n')}`, name: skillName };
+    }
+
+    /* パッシブ効果一覧のような「単セルTH（名前）＋単セルTD（効果）」のペアを複数回繰り返すテーブルから、
+       各エントリを個別のスキルとして抽出する（extractWikiruExSkill は1テーブル=1スキル前提のため対象外）。
+       名前行の直後に空セル等の区切り行が挟まっても次の名前行までスキップして対応する。 */
+    function extractWikiruNamedList(table, namePrefix, seen, hdrCells) {
+        const rows = Array.from(table.querySelectorAll('tr'));
+        const items = [];
+        let curName = '';
+        rows.forEach(row => {
+            const cells = Array.from(row.querySelectorAll('td, th'));
+            if (cells.length !== 1) return;
+            const cell = cells[0];
+            const text = scrapeCleanText(cell.textContent);
+            if (cell.tagName === 'TH') {
+                // 「効果」「スキル名」等の列見出しの使い回し（colspan行）は名前として採用しない
+                curName = (text && text.length >= 2 && !(hdrCells && hdrCells.has(text))) ? text : '';
+                return;
+            }
+            if (text && text.length >= 4 && !seen.has(text)) {
+                seen.add(text);
+                items.push(curName ? `【${namePrefix}】【${curName}】 効果：${text}` : `【${namePrefix}】 効果：${text}`);
+                curName = '';
+            }
+        });
+        return items;
     }
 
     /* wikiru.jp: h3+pre 構造の一覧ページを直接解析（子ページバッチ不要）
