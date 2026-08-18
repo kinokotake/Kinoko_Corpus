@@ -1281,6 +1281,10 @@
 
     function scrapeCleanText(t) { return (t || '').replace(/\s+/g, ' ').trim(); }
 
+    /* 日本語の説明文（ひらがな/カタカナ/漢字）を1文字も含まないか判定。
+       「20～49」「500%」等の純粋な数値/記号セルを効果テキストから除外するために使う。 */
+    const JP_TEXT_RE = /[぀-ヿ一-鿿]/;
+
     function extractPageName(doc) {
         const h1 = doc.querySelector('h1');
         if (!h1) return '';
@@ -1632,12 +1636,16 @@
             // EXスキル/スキル2-4 以外に 専用装備スキル/家具スキル/LR衣装スキル 等も同じテーブル構造なので対象にする
             // 神器効果/パッシブ効果/使用アビリティ等（末尾が「スキル/効果/アビリティ」）も同じLv進行テーブル構造で
             // 主動・被動・武器技能を持つため対象にする（末尾一致にして「補足事項」等の無関係見出しを除外）
-            if (!/(スキル|効果|アビリティ)$/.test(headText)) return;
+            // 神器EXCEED（末尾がEXCEED）と 限界突破Lv.N（5凸時の強化後アビリティ）も同じテーブル構造を持つため対象にする
+            if (!/(スキル|効果|アビリティ|EXCEED)$/.test(headText) && !/^限界突破/.test(headText)) return;
             let sib = heading.nextElementSibling, hops = 0;
             let pendingName = '';
             while (sib && hops < 8) {
                 if (/^H[1-4]$/.test(sib.tagName)) break;
-                const tbl = sib.tagName === 'TABLE' ? sib : sib.querySelector('table');
+                // rgn-content内の折りたたみテーブル（「スキル発動条件」のコンボ数早見表等）はスキル効果ではなく
+                // 参考早見表なので対象外（querySelectorは折りたたみ内も探索してしまうため明示的に除外）
+                const foundTbl = sib.tagName === 'TABLE' ? sib : sib.querySelector('table');
+                const tbl = foundTbl && !foundTbl.closest('.rgn-content') ? foundTbl : null;
                 if (tbl) {
                     const { entry, name } = extractWikiruExSkill(tbl, namePrefix, SKILL_HDR_CELLS, seen, pendingName);
                     if (name) pendingName = name;
@@ -1683,6 +1691,13 @@
         const rows = Array.from(table.querySelectorAll('tr'));
         if (!rows.length) return { entry: null, name: '' };
         let skillName = '';
+        let isMultiEntryList = false; // 単セルTH名が複数回現れた場合、パッシブ効果一覧のような
+                                       // 「名前+効果」の繰り返しテーブルと判断し、最終的にnullを返す
+                                       // （extractWikiruNamedList による個別エントリ抽出に委ねる）
+        // 判定失敗（isMultiEntryList/effectParts空）時に共有seenを汚染してしまうと、
+        // フォールバック先の extractWikiruNamedList が「既出」と誤判定して取りこぼすため、
+        // 成功が確定するまでは専用のローカルSetでのみ重複判定する
+        const localSeen = new Set();
         const metaParts = [];
         const effectParts = [];
         const timingParts = [];
@@ -1692,9 +1707,31 @@
             const texts = cells.map(c => scrapeCleanText(c.textContent));
             const firstCell = cells[0];
             const firstText = texts[0];
-            // マージセル（colspan≥2）または単独セル → スキル名行
-            if ((firstCell.colSpan >= 2 || cells.length === 1) && !SKILL_HDR_CELLS.has(firstText) && firstText && firstText.length >= 2) {
-                if (!skillName) skillName = firstText;
+            // 「スキル名/名称/技名」ラベルがどこかのセルにある行 → その直後（またはアイコン列を挟んだ最後）のセルを名前として採用
+            // （アイコン用のrowspanセルが先頭に挟まり「スキル名」が2番目のセルになるケースがあるため、先頭セル固定にしない）
+            const labelIdx = texts.findIndex(t => t === 'スキル名' || t === '名称' || t === '技名');
+            if (labelIdx >= 0) {
+                const nameVal = texts[labelIdx + 1] || texts[texts.length - 1];
+                if (nameVal && !SKILL_HDR_CELLS.has(nameVal) && nameVal.length >= 2 && nameVal.length < 20) {
+                    // 同一テーブル内に「スキル名」ラベル行が複数回（=名前が異なる形で複数）出てくる場合は
+                    // 使用アビリティ一覧のような「複数アビリティ同居テーブル」なので一覧テーブル扱いにする
+                    if (!skillName) skillName = nameVal;
+                    else if (nameVal !== skillName) isMultiEntryList = true;
+                }
+                return;
+            }
+            // マージセル（colspan≥2）または単独セル
+            if (firstCell.colSpan >= 2 || cells.length === 1) {
+                if (SKILL_HDR_CELLS.has(firstText)) return; // 「効果」等の純ヘッダーラベル行はスキップ
+                if (firstText && firstText.length >= 2 && firstText.length < 20) {
+                    // 短文 → スキル名行。2つ目以降の異なる名前が出てきたら一覧テーブルとみなす
+                    if (!skillName) skillName = firstText;
+                    else if (firstText !== skillName) isMultiEntryList = true;
+                } else if (firstText && firstText.length >= 4 && JP_TEXT_RE.test(firstText) && !localSeen.has(firstText)) {
+                    // 長文（colspan効果セル等）→ Lv番号のない単発スキルの効果本文として直接採用
+                    localSeen.add(firstText);
+                    effectParts.push(firstText);
+                }
                 return;
             }
             // TH/TD/TH/TD の4セル行 → ラベル:値ペア2組（召喚効果/召喚時間/最大コンボ数/ダメージ倍率 等の性能メタ情報）
@@ -1726,12 +1763,16 @@
                 if (/^(Lv)?\d+$/.test(t)) { if (!lv) lv = t; return; }
                 if (t.length > effectText.length) effectText = t;
             });
-            if (effectText && effectText.length >= 4 && !seen.has(effectText)) {
-                seen.add(effectText);
+            // 「20～49」「500%」等、日本語の説明文を一切含まない純粋な数値/範囲セルは
+            // スキル効果ではなく仕様参照表（発動条件のコンボ数早見表等）の値なので除外する
+            if (effectText && effectText.length >= 4 && JP_TEXT_RE.test(effectText) && !localSeen.has(effectText)) {
+                localSeen.add(effectText);
                 effectParts.push(lv ? `Lv${lv.replace(/^Lv/, '')}：${effectText}` : effectText);
             }
         });
+        if (isMultiEntryList) return { entry: null, name: '' };
         if (!effectParts.length) return { entry: null, name: skillName };
+        localSeen.forEach(t => seen.add(t)); // 抽出確定時のみ共有seenへ反映（早期return時は汚染しない）
         const allLines = [...metaParts, ...effectParts];
         if (timingParts.length) allLines.push(timingParts.length >= 2
             ? `再発動：${timingParts[0]}／初回：${timingParts[1]}` : `準備時間：${timingParts[0]}`);
@@ -1747,20 +1788,32 @@
         const rows = Array.from(table.querySelectorAll('tr'));
         const items = [];
         let curName = '';
+        let explicitName = ''; // 「スキル名」等の明示ラベル行から得た名前（アイコン列を挟む3セル行等、セル数を問わず拾う）
         rows.forEach(row => {
             const cells = Array.from(row.querySelectorAll('td, th'));
+            const texts = cells.map(c => scrapeCleanText(c.textContent));
+            const labelIdx = texts.findIndex(t => t === 'スキル名' || t === '名称' || t === '技名');
+            if (labelIdx >= 0) {
+                const nameVal = texts[labelIdx + 1] || texts[texts.length - 1];
+                if (nameVal && !(hdrCells && hdrCells.has(nameVal)) && nameVal.length >= 2 && nameVal.length < 20) {
+                    explicitName = nameVal;
+                }
+                return;
+            }
             if (cells.length !== 1) return;
             const cell = cells[0];
-            const text = scrapeCleanText(cell.textContent);
+            const text = texts[0];
             if (cell.tagName === 'TH') {
-                // 「効果」「スキル名」等の列見出しの使い回し（colspan行）は名前として採用しない
+                // 「効果」等の列見出しの使い回し（colspan行）は名前として採用しない
                 curName = (text && text.length >= 2 && !(hdrCells && hdrCells.has(text))) ? text : '';
                 return;
             }
             if (text && text.length >= 4 && !seen.has(text)) {
                 seen.add(text);
-                items.push(curName ? `【${namePrefix}】【${curName}】 効果：${text}` : `【${namePrefix}】 効果：${text}`);
+                const name = explicitName || curName;
+                items.push(name ? `【${namePrefix}】【${name}】 効果：${text}` : `【${namePrefix}】 効果：${text}`);
                 curName = '';
+                explicitName = '';
             }
         });
         return items;
