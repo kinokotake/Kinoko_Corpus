@@ -142,6 +142,14 @@
         .skill-lv-block + .skill-lv-block { margin-top: 10px; padding-top: 10px; border-top: 1px dashed #ebebeb; }
         .release-lv { font-size: 11px; color: #aaa; font-style: italic; margin-right: 3px; }
 
+        /* Lv1~N が同一テンプレートの場合に1行へ圧縮表示（変動値のみハイライト） */
+        .skill-lv-compact { border: 1px solid #e0e7ef; border-radius: 6px; overflow: hidden; margin-top: 4px; }
+        .skill-lv-compact-row { display: grid; grid-template-columns: 4.5rem 1fr; border-bottom: 1px solid #f0f4f8; }
+        .skill-lv-compact-row:last-child { border-bottom: none; }
+        .lv-range-badge { background: #edf2fb; color: #1a56db; font-weight: bold; font-size: 12px; display: flex; align-items: flex-start; justify-content: center; padding: 9px 4px; text-align: center; }
+        .lv-body { padding: 8px 12px; font-size: 14px; line-height: 1.65; color: #222; }
+        .lv-var-vals { color: #b8390e; font-weight: bold; background: #fff2ec; padding: 0 3px; border-radius: 3px; }
+
         /* 单行效果 / 链接技能 */
         .skill-effect-row { padding: 6px 0; font-size: 15px; line-height: 1.65; color: #222; }
         .skill-info-row { display: flex; align-items: baseline; gap: 8px; margin-top: 6px; font-size: 14px; color: #555; }
@@ -2470,6 +2478,80 @@
         return blocks.length > 1 ? blocks : null;
     }
 
+    /* Lv1：xxx100%yyy\nLv2：xxx110%yyy\n... のように、数値以外の文言（テンプレート）が
+       全レベル共通の場合、1行に圧縮して変動する数値だけをハイライト表示する。
+       最終レベルだけ追加効果が付いて文言が変わるケース（神器効果の6凸強化等）にも対応するため、
+       末尾1行を除いた圧縮を試すフォールバックも用意する。圧縮できない場合は null を返し、
+       呼び出し側は従来通り1行ずつの表示にフォールバックする。 */
+    function compressLvBlock(lvLines, regex) {
+        const NUM_RE = /(\d+(?:\.\d+)?)/;
+        const splitNum = s => s.split(NUM_RE);
+        const skeletonKey = parts => parts.filter((_, i) => i % 2 === 0).join(' ');
+
+        function buildRow(group) {
+            const parts = group.map(l => splitNum(l.body));
+            const base = parts[0];
+            let html = '';
+            for (let i = 0; i < base.length; i++) {
+                if (i % 2 === 0) {
+                    html += hl(base[i], regex);
+                } else {
+                    const vals = parts.map(p => p[i]);
+                    const uniq = [...new Set(vals)];
+                    html += uniq.length === 1
+                        ? hl(uniq[0], regex)
+                        : `<span class="lv-var-vals">${vals.map(v => hl(v, regex)).join('/')}</span>`;
+                }
+            }
+            const range = group.length > 1 ? `Lv${group[0].lv}~${group[group.length - 1].lv}` : `Lv${group[0].lv}`;
+            return `<div class="skill-lv-compact-row"><span class="lv-range-badge">${range}</span><span class="lv-body">${html}</span></div>`;
+        }
+
+        function sameSkeleton(group) {
+            if (group.length < 2) return false;
+            const parts = group.map(l => splitNum(l.body));
+            const key = skeletonKey(parts[0]);
+            return parts.every(p => p.length === parts[0].length && skeletonKey(p) === key);
+        }
+
+        if (sameSkeleton(lvLines)) return `<div class="skill-lv-compact">${buildRow(lvLines)}</div>`;
+
+        // 最終レベルのみ文言が異なる場合、それ以外を圧縮し最終レベルだけ別行にする
+        if (lvLines.length > 2 && sameSkeleton(lvLines.slice(0, -1))) {
+            const head = lvLines.slice(0, -1);
+            const tail = lvLines[lvLines.length - 1];
+            return `<div class="skill-lv-compact">${buildRow(head)}${buildRow([tail])}</div>`;
+        }
+        return null;
+    }
+
+    /* 効果テキストの中の「Lv1：xxx\nLv2：xxx...」ブロックだけを検出し圧縮表示に置き換える。
+       Lv行以外（召喚効果：1回 等のメタ情報行）はそのまま個別行として残す。 */
+    function renderMultilineEffect(text, regex) {
+        const lines = text.split('\n').map(l => l.trim()).filter(Boolean);
+        const parsed = lines.map(l => {
+            const m = l.match(/^Lv(\d+)：([\s\S]+)$/);
+            return m ? { lv: m[1], body: m[2] } : { plain: l };
+        });
+
+        const rows = [];
+        let i = 0;
+        while (i < parsed.length) {
+            if (parsed[i].lv !== undefined) {
+                let j = i;
+                const block = [];
+                while (j < parsed.length && parsed[j].lv !== undefined) { block.push(parsed[j]); j++; }
+                const compressed = block.length >= 2 ? compressLvBlock(block, regex) : null;
+                rows.push(compressed || block.map(l => `<div>Lv${l.lv}：${fmtEffect(hl(l.body, regex))}</div>`).join(''));
+                i = j;
+            } else {
+                rows.push(`<div>${fmtEffect(hl(parsed[i].plain, regex))}</div>`);
+                i++;
+            }
+        }
+        return rows.join('');
+    }
+
     /* ── 解析技能文本 ── */
     function parseSkill(text, source) {
         const game = getGame(source);
@@ -2618,6 +2700,9 @@
                         `<div class="skill-lv-block">${fmtEffect(hl(b, regex))}</div>`
                     ).join('');
                     bodyHtml += `<div class="skill-effect-row">${rows}</div>`;
+                } else if (p.effect.includes('\n') && /^Lv\d+：/m.test(p.effect)) {
+                    // Lv1：xxx / Lv2：xxx... 形式（wikiru抓取データ等）は共通テンプレートなら1行に圧縮
+                    bodyHtml += `<div class="skill-effect-row">${renderMultilineEffect(p.effect, regex)}</div>`;
                 } else {
                     const ctBlocks = splitFgoSkills(p.effect);
                     if (ctBlocks) {
