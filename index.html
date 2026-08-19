@@ -148,7 +148,7 @@
         .skill-lv-compact-summary::-webkit-details-marker { display: none; }
         .skill-lv-compact-summary:hover .lv-body { color: #0d6efd; }
         .lv-expand-hint { font-size: 11px; color: #999; white-space: nowrap; padding-top: 2px; }
-        .skill-lv-compact[open] .lv-expand-hint::before { content: '収起 ▲'; }
+        .skill-lv-compact[open] .lv-expand-hint::before { content: '收起 ▲'; }
         .skill-lv-compact:not([open]) .lv-expand-hint::before { content: '展开各级 ▼'; }
         .skill-lv-compact-detail { border-top: 1px solid #f0f4f8; }
         .skill-lv-compact-row { display: grid; grid-template-columns: 4.5rem 1fr; border-bottom: 1px solid #f0f4f8; }
@@ -2508,7 +2508,8 @@
         else if (lvLines.length > 2 && sameSkeleton(lvLines.slice(0, -1))) summaryGroup = lvLines.slice(0, -1);
         else return null;
 
-        // 要約: 変動する数値は「最小~最大」の範囲だけ見せて簡潔にする（全値羅列はクリック後の詳細に譲る）
+        // 要約: Lv1自身の文言をそのまま見せ、レベルごとに変動する数値だけをハイライトする
+        // （全レベル分の値や範囲は出さず、詳細はクリックして展開したときだけ見せる）
         const parts = summaryGroup.map(l => splitNum(l.body));
         const base = parts[0];
         let summaryHtml = '';
@@ -2516,22 +2517,18 @@
             if (i % 2 === 0) {
                 summaryHtml += hl(base[i], regex);
             } else {
-                const vals = parts.map(p => p[i]);
-                const uniq = [...new Set(vals)];
-                summaryHtml += uniq.length === 1
-                    ? hl(uniq[0], regex)
-                    : `<span class="lv-var-vals">${hl(vals[0], regex)}~${hl(vals[vals.length - 1], regex)}</span>`;
+                const uniq = new Set(parts.map(p => p[i]));
+                summaryHtml += uniq.size === 1 ? hl(base[i], regex) : `<span class="lv-var-vals">${hl(base[i], regex)}</span>`;
             }
         }
 
         const detailRows = lvLines.map(l =>
             `<div class="skill-lv-compact-row"><span class="lv-range-badge">Lv${l.lv}</span><span class="lv-body">${fmtEffect(hl(l.body, regex))}</span></div>`
         ).join('');
-        const range = `Lv${lvLines[0].lv}~${lvLines[lvLines.length - 1].lv}`;
 
         return `<details class="skill-lv-compact">
             <summary class="skill-lv-compact-summary">
-                <span class="lv-range-badge">${range}</span>
+                <span class="lv-range-badge">Lv${lvLines[0].lv}</span>
                 <span class="lv-body">${summaryHtml}</span>
                 <span class="lv-expand-hint"></span>
             </summary>
