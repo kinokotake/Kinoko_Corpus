@@ -142,12 +142,19 @@
         .skill-lv-block + .skill-lv-block { margin-top: 10px; padding-top: 10px; border-top: 1px dashed #ebebeb; }
         .release-lv { font-size: 11px; color: #aaa; font-style: italic; margin-right: 3px; }
 
-        /* Lv1~N が同一テンプレートの場合に1行へ圧縮表示（変動値のみハイライト） */
-        .skill-lv-compact { border: 1px solid #e0e7ef; border-radius: 6px; overflow: hidden; margin-top: 4px; }
+        /* Lv1~N が同一テンプレートの場合、要約1行のみ表示し、クリックで各レベルの詳細を展開する */
+        .skill-lv-compact { border: 1px solid #e0e7ef; border-radius: 6px; margin-top: 4px; }
+        .skill-lv-compact-summary { display: grid; grid-template-columns: 4.5rem 1fr auto; align-items: start; cursor: pointer; padding: 9px 12px 9px 0; outline: none; user-select: none; list-style: none; }
+        .skill-lv-compact-summary::-webkit-details-marker { display: none; }
+        .skill-lv-compact-summary:hover .lv-body { color: #0d6efd; }
+        .lv-expand-hint { font-size: 11px; color: #999; white-space: nowrap; padding-top: 2px; }
+        .skill-lv-compact[open] .lv-expand-hint::before { content: '収起 ▲'; }
+        .skill-lv-compact:not([open]) .lv-expand-hint::before { content: '展开各级 ▼'; }
+        .skill-lv-compact-detail { border-top: 1px solid #f0f4f8; }
         .skill-lv-compact-row { display: grid; grid-template-columns: 4.5rem 1fr; border-bottom: 1px solid #f0f4f8; }
         .skill-lv-compact-row:last-child { border-bottom: none; }
         .lv-range-badge { background: #edf2fb; color: #1a56db; font-weight: bold; font-size: 12px; display: flex; align-items: flex-start; justify-content: center; padding: 9px 4px; text-align: center; }
-        .lv-body { padding: 8px 12px; font-size: 14px; line-height: 1.65; color: #222; }
+        .lv-body { padding: 8px 12px; font-size: 14px; line-height: 1.65; color: #222; transition: color 0.15s; }
         .lv-var-vals { color: #b8390e; font-weight: bold; background: #fff2ec; padding: 0 3px; border-radius: 3px; }
 
         /* 单行效果 / 链接技能 */
@@ -2479,33 +2486,15 @@
     }
 
     /* Lv1：xxx100%yyy\nLv2：xxx110%yyy\n... のように、数値以外の文言（テンプレート）が
-       全レベル共通の場合、1行に圧縮して変動する数値だけをハイライト表示する。
-       最終レベルだけ追加効果が付いて文言が変わるケース（神器効果の6凸強化等）にも対応するため、
-       末尾1行を除いた圧縮を試すフォールバックも用意する。圧縮できない場合は null を返し、
-       呼び出し側は従来通り1行ずつの表示にフォールバックする。 */
+       全レベル共通の場合、要約1行（変動する数値は「最小~最大」で簡潔に表示）だけを見せ、
+       クリックすると各レベルの完全な文言を展開できる折りたたみパネルにする。
+       最終レベルだけ追加効果が付いて文言が変わるケース（神器効果の6凸強化等）は、
+       要約はLv1〜(N-1)の共通テンプレートから作り、展開すれば最終レベルの全文も見える。
+       圧縮できない場合は null を返し、呼び出し側は従来通り1行ずつの表示にフォールバックする。 */
     function compressLvBlock(lvLines, regex) {
         const NUM_RE = /(\d+(?:\.\d+)?)/;
         const splitNum = s => s.split(NUM_RE);
-        const skeletonKey = parts => parts.filter((_, i) => i % 2 === 0).join(' ');
-
-        function buildRow(group) {
-            const parts = group.map(l => splitNum(l.body));
-            const base = parts[0];
-            let html = '';
-            for (let i = 0; i < base.length; i++) {
-                if (i % 2 === 0) {
-                    html += hl(base[i], regex);
-                } else {
-                    const vals = parts.map(p => p[i]);
-                    const uniq = [...new Set(vals)];
-                    html += uniq.length === 1
-                        ? hl(uniq[0], regex)
-                        : `<span class="lv-var-vals">${vals.map(v => hl(v, regex)).join('/')}</span>`;
-                }
-            }
-            const range = group.length > 1 ? `Lv${group[0].lv}~${group[group.length - 1].lv}` : `Lv${group[0].lv}`;
-            return `<div class="skill-lv-compact-row"><span class="lv-range-badge">${range}</span><span class="lv-body">${html}</span></div>`;
-        }
+        const skeletonKey = parts => parts.filter((_, i) => i % 2 === 0).join('#');
 
         function sameSkeleton(group) {
             if (group.length < 2) return false;
@@ -2514,15 +2503,40 @@
             return parts.every(p => p.length === parts[0].length && skeletonKey(p) === key);
         }
 
-        if (sameSkeleton(lvLines)) return `<div class="skill-lv-compact">${buildRow(lvLines)}</div>`;
+        let summaryGroup;
+        if (sameSkeleton(lvLines)) summaryGroup = lvLines;
+        else if (lvLines.length > 2 && sameSkeleton(lvLines.slice(0, -1))) summaryGroup = lvLines.slice(0, -1);
+        else return null;
 
-        // 最終レベルのみ文言が異なる場合、それ以外を圧縮し最終レベルだけ別行にする
-        if (lvLines.length > 2 && sameSkeleton(lvLines.slice(0, -1))) {
-            const head = lvLines.slice(0, -1);
-            const tail = lvLines[lvLines.length - 1];
-            return `<div class="skill-lv-compact">${buildRow(head)}${buildRow([tail])}</div>`;
+        // 要約: 変動する数値は「最小~最大」の範囲だけ見せて簡潔にする（全値羅列はクリック後の詳細に譲る）
+        const parts = summaryGroup.map(l => splitNum(l.body));
+        const base = parts[0];
+        let summaryHtml = '';
+        for (let i = 0; i < base.length; i++) {
+            if (i % 2 === 0) {
+                summaryHtml += hl(base[i], regex);
+            } else {
+                const vals = parts.map(p => p[i]);
+                const uniq = [...new Set(vals)];
+                summaryHtml += uniq.length === 1
+                    ? hl(uniq[0], regex)
+                    : `<span class="lv-var-vals">${hl(vals[0], regex)}~${hl(vals[vals.length - 1], regex)}</span>`;
+            }
         }
-        return null;
+
+        const detailRows = lvLines.map(l =>
+            `<div class="skill-lv-compact-row"><span class="lv-range-badge">Lv${l.lv}</span><span class="lv-body">${fmtEffect(hl(l.body, regex))}</span></div>`
+        ).join('');
+        const range = `Lv${lvLines[0].lv}~${lvLines[lvLines.length - 1].lv}`;
+
+        return `<details class="skill-lv-compact">
+            <summary class="skill-lv-compact-summary">
+                <span class="lv-range-badge">${range}</span>
+                <span class="lv-body">${summaryHtml}</span>
+                <span class="lv-expand-hint"></span>
+            </summary>
+            <div class="skill-lv-compact-detail">${detailRows}</div>
+        </details>`;
     }
 
     /* 効果テキストの中の「Lv1：xxx\nLv2：xxx...」ブロックだけを検出し圧縮表示に置き換える。
