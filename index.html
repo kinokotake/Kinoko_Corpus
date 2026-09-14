@@ -2141,6 +2141,62 @@
         return items;
     }
 
+    /* altema.jp: キャラ一覧ページ（例: /<ゲームスラッグ>/charalist）のランキング表から
+       /<ゲームスラッグ>/chara/<数字ID> 形式のキャラ詳細ページリンクだけを検出する */
+    function detectAltemaCharaList(doc, url) {
+        try {
+            const baseUrl = new URL(url);
+            const m = baseUrl.pathname.match(/^\/([^/]+)\//);
+            if (!m) return null;
+            const gameSlug = m[1];
+            const charaRe = new RegExp('^/' + gameSlug + '/chara/\\d+/?$');
+            const seen = new Set();
+            const links = [];
+            doc.querySelectorAll('table a[href]').forEach(a => {
+                const href = a.getAttribute('href') || '';
+                let fullUrl;
+                try { fullUrl = href.startsWith('http') ? href : new URL(href, url).href; } catch (_) { return; }
+                let linkPath;
+                try { linkPath = new URL(fullUrl).pathname; } catch (_) { return; }
+                if (!charaRe.test(linkPath)) return;
+                const name = scrapeCleanText(a.textContent);
+                if (!seen.has(fullUrl)) { seen.add(fullUrl); links.push({ url: fullUrl, name }); }
+            });
+            return links.length >= 3 ? links : null;
+        } catch (e) { return null; }
+    }
+
+    /* altema.jp キャラ詳細ページ：特技/超必殺技/個性は全て <table class="th-center"> の
+       1行1セル（td）に「【スキル名】効果文...」の形式で入っている（テンプレート共通）。
+       「能力解放一覧」の段階別素材テーブルも同じ th-center クラスを使うが、セル先頭が
+       【】で始まらない（"初期段階"等のラベル）ため、このパターンマッチで自然に除外される。 */
+    function parseAltemaCharaPage(doc, charaName, gameName) {
+        const namePrefix = gameName && charaName ? `${gameName}：${charaName}` : (charaName || gameName || '');
+        const items = [];
+        const seen = new Set();
+        doc.querySelectorAll('table.th-center').forEach(table => {
+            table.querySelectorAll('tr').forEach(row => {
+                const td = row.querySelector('td');
+                if (!td) return;
+                const clone = td.cloneNode(true);
+                // モーションGIFの折りたたみ(acMenu)・能力解放の素材表・箇条書きの習得条件は対象外
+                clone.querySelectorAll('dl.acMenu, table, ul').forEach(n => n.remove());
+                clone.querySelectorAll('br').forEach(br => br.replaceWith('\n'));
+                const lines = (clone.textContent || '').split('\n').map(scrapeCleanText).filter(Boolean);
+                if (!lines.length) return;
+                const m = lines[0].match(/^【([^】]{1,30})】\s*(.*)$/);
+                if (!m) return;
+                const skillName = m[1];
+                const rest = [m[2], ...lines.slice(1)].filter(Boolean);
+                const effect = rest.join('\n');
+                if (!effect || effect.length < 4 || seen.has(effect)) return;
+                seen.add(effect);
+                items.push(`【${namePrefix}】【${skillName}】 効果：\n${effect}`);
+            });
+        });
+        return items;
+    }
+
     function parseSkillsFromHtml(html, url) {
         const doc = new DOMParser().parseFromString(html, 'text/html');
         const pageName = extractPageName(doc);
@@ -2199,7 +2255,53 @@
             const gamerchList = host.includes('gamerch.com') ? detectGamerchCharaList(doc, url) : null;
             const wikiruList = host.includes('wikiru.jp') ? detectWikiruSkillList(doc, url) : null;
             const appmediaList = host.includes('appmedia.jp') ? detectAppmediaCharaList(doc, url) : null;
-            if (appmediaList) {
+            const altemaList = host.includes('altema.jp') ? detectAltemaCharaList(doc, url) : null;
+            if (altemaList) {
+                const BATCH_LIMIT = 500;
+                const CONCURRENCY = 4;
+                const targets = altemaList.slice(0, BATCH_LIMIT);
+                const total = targets.length;
+                const gameName = extractGame8GameName(doc) || '';
+                statusEl.textContent = `検出：${gameName || host} キャラ一覧 ${total} 件（最大${BATCH_LIMIT}件まで並列抓取中）`;
+                const allItems = [];
+                for (let i = 0; i < targets.length; i += CONCURRENCY) {
+                    const batchEnd = Math.min(i + CONCURRENCY, total);
+                    statusEl.textContent = `⏳ 抓取中 ${i + 1}–${batchEnd} / ${total}`;
+                    const batchResults = await Promise.allSettled(
+                        targets.slice(i, batchEnd).map(async ({ url: charaUrl, name: initName }) => {
+                            const charaHtml = await fetchHtmlViaProxy(charaUrl);
+                            const charaDoc = new DOMParser().parseFromString(charaHtml, 'text/html');
+                            const charName = extractPageName(charaDoc) || initName || charaUrl;
+                            const dedicated = parseAltemaCharaPage(charaDoc, charName, gameName);
+                            return dedicated.length ? dedicated : parseTablesGeneric(charaDoc, gameName ? `${gameName}：${charName}` : charName, false);
+                        })
+                    );
+                    batchResults.forEach(r => {
+                        if (r.status === 'fulfilled') {
+                            r.value.forEach(text => allItems.push({ source: `${host}（网页抓取）`, text, type: 'skill_desc', meta: '' }));
+                        }
+                    });
+                }
+                if (!allItems.length) {
+                    statusEl.textContent = '⚠️ 未能从角色详情页提取技能文本。请直接粘贴单个角色页面的URL重试。';
+                    return;
+                }
+                const seen = new Set();
+                scrapeResults = allItems.filter(it => { if (seen.has(it.text)) return false; seen.add(it.text); return true; });
+                statusEl.textContent = `✅ 识别出 ${scrapeResults.length} 条技能文本（共抓取 ${total} 个角色页面），请人工核查后再添加/导出：`;
+            } else if (host.includes('altema.jp')) {
+                // 単体キャラ詳細ページ：専用パーサ→汎用フォールバック
+                const charName = extractPageName(doc);
+                const gameName = extractGame8GameName(doc) || '';
+                const dedicated = parseAltemaCharaPage(doc, charName, gameName);
+                const charaItems = dedicated.length ? dedicated : parseTablesGeneric(doc, gameName && charName ? `${gameName}：${charName}` : charName, false);
+                if (!charaItems.length) {
+                    statusEl.textContent = '⚠️ 未能识别出技能文本，该网页结构暂不支持。';
+                    return;
+                }
+                scrapeResults = charaItems.map(text => ({ source: `${host}（网页抓取）`, text, type: 'skill_desc', meta: '' }));
+                statusEl.textContent = `✅ 识别出 ${scrapeResults.length} 条技能文本，请人工核查后再添加/导出：`;
+            } else if (appmediaList) {
                 const BATCH_LIMIT = 500;
                 const CONCURRENCY = 4;
                 const targets = appmediaList.slice(0, BATCH_LIMIT);
