@@ -2054,6 +2054,91 @@
         return [];
     }
 
+    /* appmedia.jp: 攻略Wiki トップページの「キャラクター情報」セクションから
+       キャラ詳細ページのリンクだけを検出する（トップページには攻略記事/ニュース等の
+       無関係なリンクも大量にあるため、見出しセクション内に限定して誤検出を防ぐ） */
+    function detectAppmediaCharaList(doc, url) {
+        try {
+            const baseUrl = new URL(url);
+            const parts = baseUrl.pathname.split('/').filter(Boolean);
+            if (!parts.length) return null;
+            const basePath = '/' + parts[0] + '/';
+            const selfPath = baseUrl.pathname;
+            const heading = Array.from(doc.querySelectorAll('h2, h3'))
+                .find(h => /キャラクター(情報|一覧)|キャラ一覧/.test(h.textContent));
+            if (!heading) return null;
+            const seen = new Set();
+            const links = [];
+            let el = heading.nextElementSibling, hops = 0;
+            while (el && hops < 60 && !['H1', 'H2'].includes(el.tagName)) {
+                el.querySelectorAll('a[href]').forEach(a => {
+                    const href = a.getAttribute('href') || '';
+                    let fullUrl;
+                    try { fullUrl = href.startsWith('http') ? href : new URL(href, url).href; } catch (_) { return; }
+                    let linkPath;
+                    try { linkPath = new URL(fullUrl).pathname; } catch (_) { return; }
+                    if (!linkPath.startsWith(basePath) || linkPath === selfPath) return;
+                    const rest = linkPath.slice(basePath.length);
+                    if (!rest || rest.includes('/')) return; // 同一階層（数字ID等のリーフページ）のみ対象
+                    const name = scrapeCleanText(a.textContent);
+                    if (!seen.has(fullUrl)) { seen.add(fullUrl); links.push({ url: fullUrl, name }); }
+                });
+                el = el.nextElementSibling;
+                hops++;
+            }
+            return links.length >= 3 ? links : null;
+        } catch (e) { return null; }
+    }
+
+    /* H1「【ゲーム名】キャラ名の覚えるデッキスキルと...」からキャラ名を取り出す（appmedia.jp専用） */
+    function extractAppmediaCharaName(doc) {
+        const h1 = doc.querySelector('h1');
+        let raw = h1 ? scrapeCleanText(h1.textContent) : '';
+        raw = raw.replace(/^【[^】]*】\s*/, '');
+        raw = raw.replace(/の(覚える)?(デッキ)?スキル.*$/, '').trim();
+        return raw || extractPageName(doc);
+    }
+
+    /* appmedia.jp キャラ詳細ページ：見出し（スキル名）直後の「獲得方法／スキル情報」2列テーブルから
+       スキル名+効果テキストを抽出する。該当テーブルが1件も無ければ空配列を返し、
+       呼び出し側で parseTablesGeneric 等の汎用フォールバックに委ねる。 */
+    function parseAppmediaSkillPage(doc, charaName, gameName) {
+        const namePrefix = gameName && charaName ? `${gameName}：${charaName}` : (charaName || gameName || '');
+        const items = [];
+        const seen = new Set();
+        doc.querySelectorAll('h3, h4').forEach(heading => {
+            const skillName = scrapeCleanText(heading.textContent);
+            if (!skillName || skillName.length > 30) return;
+            let sib = heading.nextElementSibling, hops = 0;
+            while (sib && hops < 3) {
+                if (/^H[1-4]$/.test(sib.tagName)) break;
+                const tbl = sib.tagName === 'TABLE' ? sib : sib.querySelector('table');
+                if (tbl) {
+                    const headerTexts = Array.from(tbl.querySelectorAll('tr:first-child th'))
+                        .map(th => scrapeCleanText(th.textContent));
+                    if (headerTexts.includes('スキル情報')) {
+                        Array.from(tbl.querySelectorAll('tr')).slice(1).forEach(row => {
+                            const cells = Array.from(row.querySelectorAll('td'));
+                            if (cells.length < 2) return;
+                            const method = scrapeCleanText(cells[0].textContent);
+                            const desc = scrapeCleanText(cells[cells.length - 1].textContent);
+                            if (!desc || desc.length < 4 || seen.has(desc)) return;
+                            seen.add(desc);
+                            const parts = [];
+                            if (method) parts.push(`獲得方法：${method}`);
+                            parts.push(`効果：${desc}`);
+                            items.push(`【${namePrefix}】【${skillName}】 ${parts.join(' ')}`);
+                        });
+                    }
+                    break;
+                }
+                sib = sib.nextElementSibling;
+                hops++;
+            }
+        });
+        return items;
+    }
+
     function parseSkillsFromHtml(html, url) {
         const doc = new DOMParser().parseFromString(html, 'text/html');
         const pageName = extractPageName(doc);
@@ -2111,7 +2196,54 @@
             const cardList = host.includes('gamewith.jp') ? detectGamewithCardList(doc, url) : null;
             const gamerchList = host.includes('gamerch.com') ? detectGamerchCharaList(doc, url) : null;
             const wikiruList = host.includes('wikiru.jp') ? detectWikiruSkillList(doc, url) : null;
-            if (gamerchList) {
+            const appmediaList = host.includes('appmedia.jp') ? detectAppmediaCharaList(doc, url) : null;
+            if (appmediaList) {
+                const BATCH_LIMIT = 500;
+                const CONCURRENCY = 4;
+                const targets = appmediaList.slice(0, BATCH_LIMIT);
+                const total = targets.length;
+                let gameName = scrapeCleanText(doc.querySelector('h1')?.textContent || '').replace(/攻略(まとめ)?Wiki.*$/, '').trim();
+                gameName = (window.prompt(`ゲーム名を入力してください（例：遊戯王デュエルリンクス）\n自動検出：${gameName || '未検出'}`, gameName) || gameName || host).trim() || host;
+                statusEl.textContent = `検出：${gameName} キャラ一覧 ${total} 件（最大${BATCH_LIMIT}件まで並列抓取中）`;
+                const allItems = [];
+                for (let i = 0; i < targets.length; i += CONCURRENCY) {
+                    const batchEnd = Math.min(i + CONCURRENCY, total);
+                    statusEl.textContent = `⏳ 抓取中 ${i + 1}–${batchEnd} / ${total}`;
+                    const batchResults = await Promise.allSettled(
+                        targets.slice(i, batchEnd).map(async ({ url: charaUrl, name: initName }) => {
+                            const charaHtml = await fetchHtmlViaProxy(charaUrl);
+                            const charaDoc = new DOMParser().parseFromString(charaHtml, 'text/html');
+                            const charName = extractAppmediaCharaName(charaDoc) || initName || charaUrl;
+                            const dedicated = parseAppmediaSkillPage(charaDoc, charName, gameName);
+                            return dedicated.length ? dedicated : parseTablesGeneric(charaDoc, `${gameName}：${charName}`, false);
+                        })
+                    );
+                    batchResults.forEach(r => {
+                        if (r.status === 'fulfilled') {
+                            r.value.forEach(text => allItems.push({ source: `${host}（网页抓取）`, text, type: 'skill_desc', meta: '' }));
+                        }
+                    });
+                }
+                if (!allItems.length) {
+                    statusEl.textContent = '⚠️ 未能从角色详情页提取技能文本。请直接粘贴单个角色页面的URL重试。';
+                    return;
+                }
+                const seen = new Set();
+                scrapeResults = allItems.filter(it => { if (seen.has(it.text)) return false; seen.add(it.text); return true; });
+                statusEl.textContent = `✅ 识别出 ${scrapeResults.length} 条技能文本（共抓取 ${total} 个角色页面），请人工核查后再添加/导出：`;
+            } else if (host.includes('appmedia.jp')) {
+                // 単体キャラ詳細ページ：専用パーサ→汎用フォールバック
+                const charName = extractAppmediaCharaName(doc);
+                const gameName = (extractGame8GameName(doc) || '').trim();
+                const dedicated = parseAppmediaSkillPage(doc, charName, gameName);
+                const charaItems = dedicated.length ? dedicated : parseTablesGeneric(doc, gameName && charName ? `${gameName}：${charName}` : charName, false);
+                if (!charaItems.length) {
+                    statusEl.textContent = '⚠️ 未能识别出技能文本，该网页结构暂不支持。';
+                    return;
+                }
+                scrapeResults = charaItems.map(text => ({ source: `${host}（网页抓取）`, text, type: 'skill_desc', meta: '' }));
+                statusEl.textContent = `✅ 识别出 ${scrapeResults.length} 条技能文本，请人工核查后再添加/导出：`;
+            } else if (gamerchList) {
                 const BATCH_LIMIT = 500;
                 const CONCURRENCY = 4;
                 const targets = gamerchList.slice(0, BATCH_LIMIT);
