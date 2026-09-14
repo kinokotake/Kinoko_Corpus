@@ -1270,7 +1270,9 @@
         const custom = (localStorage.getItem(PROXY_STORAGE_KEY) || '').trim();
         if (custom) builders.push(u => buildCustomProxyUrl(custom, u));
         builders.push(u => `https://api.allorigins.win/raw?url=${encodeURIComponent(u)}`);
-        builders.push(u => `https://corsproxy.io/?url=${encodeURIComponent(u)}`);
+        // corsproxy.io は2026年より全リクエストに有料APIキーが必須になり無料代理として機能しなくなったため、
+        // 無料で使える api.codetabs.com に差し替え（フォールバック用途、安定性は保証されない）
+        builders.push(u => `https://api.codetabs.com/v1/proxy?quest=${encodeURIComponent(u)}`);
         return builders;
     }
 
