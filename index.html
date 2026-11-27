@@ -1476,6 +1476,130 @@
         return seen.size >= 5 ? Array.from(seen).map(url => ({ name: '', url })) : null;
     }
 
+    /* ── gamewith.jp キャラ攻略ページ（汎用）──────────────────────────
+       技能説明はほぼ表(table)に入っている：
+         ・同じ行に「th=ラベル / td=本文」（例：船長効果｜…、限界突破1｜…）
+         ・th だけの行の下に td だけの行（例：必殺技：名前 → 発動ターン → 本文）
+       ラベル自体が技能名っぽいか、所属タブ/h4見出しが技能カテゴリの場合だけ採用する。
+       同じ技能が「性能表」と「ステータス表」に重複するので本文で重複排除し、
+       「必殺技：サンダーブリード」のように固有名が付いている方を優先する。 */
+    const GW_SKILL_RE = /必殺技|船長効果|船員効果|共闘|アクション|サポート|スキル|アビリティ|奥義|特性|特技|限界突破|リーダー|パッシブ|アクティブ|覚醒|宝具|固有|効果/;
+    const GW_SKIP_LABEL_RE = /^(画像|タイプ|入手方法|入手|コスト|コンボ|体力|攻撃|回復|HP|能力スロット|キャラタグ|対象|能力|習得する効果|ステータス|属性|最大Lv|レアリティ|評価|点数|声優|CV)/;
+    const GW_TURN_LINE_RE = /^(発動ターン|ターン数|必要ターン|CT|クールタイム)\s*[：:]/;
+
+    function gwCellText(cell) {
+        const clone = cell.cloneNode(true);
+        clone.querySelectorAll('br, hr').forEach(n => n.replaceWith('\n'));
+        clone.querySelectorAll('script, style, img').forEach(n => n.remove());
+        return (clone.textContent || '').split('\n').map(scrapeCleanText)
+            .filter(l => l && !GW_TURN_LINE_RE.test(l)).join('\n');
+    }
+
+    function parseGamewithCharaPage(doc, charName, gameName) {
+        const root = doc.querySelector('#article-body') || doc.body;
+        if (!root) return [];
+        const namePrefix = gameName && charName ? `${gameName}：${charName}` : (charName || gameName || '');
+        const byEffect = new Map();
+
+        const add = (cat, label, effect) => {
+            label = scrapeCleanText(label).replace(/\s*\/\s*CT\s*[：:]\s*\d+.*$/, '');
+            if (GW_SKIP_LABEL_RE.test(label)) return;
+            let name;
+            if (label === '効果' && cat) name = cat; // 「超化｜効果」「サポート｜効果」等はタブ名で呼ぶ
+            else if (label.includes('：') || (GW_SKILL_RE.test(label) && !GW_SKILL_RE.test(cat))) name = label;
+            else if (GW_SKILL_RE.test(cat)) name = label && label !== cat ? `${cat}（${label}）` : cat;
+            else return;
+            // 本文は仮名/漢字が6文字以上あるものだけ（「21→16ターン」「-」等の数値を除外）
+            if (!effect || (effect.match(/[぀-ヿ一-鿿]/g) || []).length < 6) return;
+            const prev = byEffect.get(effect);
+            if (!prev || (name.includes('：') && !prev.includes('：'))) byEffect.set(effect, name);
+        };
+
+        let cat = '';
+        root.querySelectorAll('h2, h3, h4, label.tab-label, table').forEach(el => {
+            const tag = el.tagName;
+            if (tag === 'H2' || tag === 'H3') { cat = ''; return; }
+            if (tag === 'H4' || tag === 'LABEL') { cat = scrapeCleanText(el.textContent); return; }
+            if (el.parentElement && el.parentElement.closest('table')) return; // 入れ子の表は外側で処理
+            // 関連記事リンク集の表は対象外
+            if (el.querySelectorAll('a').length >= 3) return;
+
+            let pending = null; // th だけの行のラベル
+            let pendingLines = [];
+            const flush = () => {
+                if (pending !== null) add(cat, pending, pendingLines.join('\n'));
+                pending = null; pendingLines = [];
+            };
+            el.querySelectorAll('tr').forEach(tr => {
+                const cells = Array.from(tr.children).filter(c => c.tagName === 'TH' || c.tagName === 'TD');
+                const ths = cells.filter(c => c.tagName === 'TH');
+                const tds = cells.filter(c => c.tagName === 'TD');
+                if (ths.length && tds.length) {
+                    flush();
+                    // 「th td th td」のように対になっている行
+                    cells.forEach((c, i) => {
+                        if (c.tagName === 'TH' && cells[i + 1] && cells[i + 1].tagName === 'TD') {
+                            add(cat, gwCellText(c), gwCellText(cells[i + 1]));
+                        }
+                    });
+                } else if (ths.length === 1) {
+                    flush();
+                    pending = gwCellText(ths[0]);
+                } else if (ths.length > 1) {
+                    flush(); // 見出しが複数並ぶ行（評価表など）は対象外
+                } else if (tds.length && pending !== null) {
+                    tds.forEach(td => { const t = gwCellText(td); if (t) pendingLines.push(t); });
+                }
+            });
+            flush();
+        });
+
+        return Array.from(byEffect, ([effect, name]) => `【${namePrefix}】【${name}】 効果：\n${effect}`);
+    }
+
+    /* gamewith.jp キャラ一覧：一覧はJSで描画され、データは gamewith-tool の S3 上の
+       *_chara_datas*.js（{n:'キャラ名', a:'記事ID', ...} の配列）にある。
+       ゲームのトップ等から貼られた場合は「キャラ一覧」リンクを辿ってから探す。 */
+    function findGamewithCharaDataScripts(html) {
+        const urls = html.match(/https?:\/\/gamewith-tool\.s3[^"'\s<>]*?\.js/g) || [];
+        return [...new Set(urls)].filter(u => /chara/i.test(u) && /data/i.test(u));
+    }
+
+    function parseGamewithCharaData(js, origin) {
+        const list = [];
+        const seen = new Set();
+        (js.match(/\{[^{}]*\}/g) || []).forEach(obj => {
+            const a = obj.match(/\ba\s*:\s*['"](\d+)['"]/);
+            if (!a || seen.has(a[1])) return;
+            seen.add(a[1]);
+            const n = obj.match(/\bn\s*:\s*(['"`])(.*?)\1/);
+            list.push({ name: n ? n[2] : '', url: `${origin}/article/show/${a[1]}` });
+        });
+        return list;
+    }
+
+    async function detectGamewithCharaIndex(doc, html, url) {
+        let origin;
+        try { origin = new URL(url).origin; } catch (_) { return null; }
+        let scripts = findGamewithCharaDataScripts(html);
+        if (!scripts.length) {
+            const link = Array.from(doc.querySelectorAll('a[href]')).find(a =>
+                /^(全)?キャラ(クター)?一覧/.test(scrapeCleanText(a.textContent)) &&
+                /\/article\/show\/\d+/.test(a.getAttribute('href') || ''));
+            if (!link) return null;
+            const listUrl = new URL(link.getAttribute('href'), url).href;
+            if (listUrl === url) return null;
+            scripts = findGamewithCharaDataScripts(await fetchHtmlViaProxy(listUrl));
+        }
+        for (const s of scripts) {
+            try {
+                const list = parseGamewithCharaData(await fetchHtmlViaProxy(s), origin);
+                if (list.length >= 5) return list;
+            } catch (_) {}
+        }
+        return null;
+    }
+
     /* gamewith.jp シャドバカード詳細ページから進化前/進化後の効果テキストを抽出 */
     function parseGamewithShadowverseCard(doc, cardName) {
         const CARD_META_RE = /声優|レアリティ|入手方法|カードパック|収録パック/;
@@ -2263,7 +2387,70 @@
             const wikiruList = host.includes('wikiru.jp') ? detectWikiruSkillList(doc, url) : null;
             const appmediaList = host.includes('appmedia.jp') ? detectAppmediaCharaList(doc, url) : null;
             const altemaList = host.includes('altema.jp') ? detectAltemaCharaList(doc, url) : null;
-            if (altemaList) {
+
+            // gamewith.jp キャラ攻略：①このページ自体がキャラページ → 単体解析
+            //                        ②一覧/トップ → キャラデータJSから全キャラページを一括抓取
+            let gwSingle = [], gwCharaList = null;
+            if (host.includes('gamewith.jp')) {
+                const h1 = scrapeCleanText(doc.querySelector('h1')?.textContent || '');
+                const isList = h1.includes('一覧');
+                // シャドバのカードページ（進化前/進化後）は従来の専用処理に任せる
+                const isSvCard = !isList && parseGamewithShadowverseCard(doc, '').length > 0;
+                if (!isList && !isSvCard) {
+                    gwSingle = parseGamewithCharaPage(doc, extractPageName(doc), extractGame8GameName(doc));
+                }
+                if (!isSvCard && gwSingle.length < 2) {
+                    gwSingle = [];
+                    statusEl.textContent = '⏳ 正在查找角色一覧数据...';
+                    // 一覧ページはそのページのデータJSだけを見る（「キャラ一覧」リンク辿りはトップ等のみ）
+                    gwCharaList = isList
+                        ? (findGamewithCharaDataScripts(html).length ? await detectGamewithCharaIndex(doc, html, url) : null)
+                        : await detectGamewithCharaIndex(doc, html, url);
+                }
+            }
+
+            if (gwSingle.length) {
+                scrapeResults = gwSingle.map(text => ({ source: `${host}（网页抓取）`, text, type: 'skill_desc', meta: '' }));
+                statusEl.textContent = `✅ 识别出 ${scrapeResults.length} 条技能文本，请人工核查后再添加/导出：`;
+            } else if (gwCharaList) {
+                const total0 = gwCharaList.length;
+                const estMin = Math.max(1, Math.round(total0 / 4 * 1.5 / 60));
+                const ans = window.prompt(
+                    `检测到 ${total0} 个角色页面（全部抓取约需 ${estMin} 分钟，期间请不要关闭页面）。\n` +
+                    `要抓取多少个？从最新实装的角色开始算，填数字或直接确定全部抓取：`, String(total0));
+                if (ans === null) { statusEl.textContent = '已取消。'; return; }
+                const want = Math.max(1, Math.min(total0, parseInt(ans, 10) || total0));
+                // データは古い順に並んでいるので、新しい方から取る
+                const targets = gwCharaList.slice(-want).reverse();
+                const total = targets.length;
+                const CONCURRENCY = 4;
+                const allItems = [];
+                let failed = 0;
+                for (let i = 0; i < total; i += CONCURRENCY) {
+                    const batchEnd = Math.min(i + CONCURRENCY, total);
+                    statusEl.textContent = `⏳ 抓取中 ${i + 1}–${batchEnd} / ${total}（已识别 ${allItems.length} 条）`;
+                    const batchResults = await Promise.allSettled(
+                        targets.slice(i, batchEnd).map(async ({ url: charaUrl, name: initName }) => {
+                            const charaHtml = await fetchHtmlViaProxy(charaUrl);
+                            const charaDoc = new DOMParser().parseFromString(charaHtml, 'text/html');
+                            const charName = extractPageName(charaDoc) || initName || charaUrl;
+                            return parseGamewithCharaPage(charaDoc, charName, extractGame8GameName(charaDoc));
+                        })
+                    );
+                    batchResults.forEach(r => {
+                        if (r.status === 'fulfilled') {
+                            r.value.forEach(text => allItems.push({ source: `${host}（网页抓取）`, text, type: 'skill_desc', meta: '' }));
+                        } else failed++;
+                    });
+                }
+                if (!allItems.length) {
+                    statusEl.textContent = '⚠️ 未能从角色页面提取技能文本。请直接粘贴单个角色页面的URL重试。';
+                    return;
+                }
+                const seen = new Set();
+                scrapeResults = allItems.filter(it => { if (seen.has(it.text)) return false; seen.add(it.text); return true; });
+                statusEl.textContent = `✅ 识别出 ${scrapeResults.length} 条技能文本（共抓取 ${total} 个角色页面${failed ? `，${failed} 个失败` : ''}），请人工核查后再添加/导出：`;
+            } else if (altemaList) {
                 const BATCH_LIMIT = 500;
                 const CONCURRENCY = 4;
                 const targets = altemaList.slice(0, BATCH_LIMIT);
