@@ -1269,6 +1269,8 @@
         const builders = [];
         const custom = (localStorage.getItem(PROXY_STORAGE_KEY) || '').trim();
         if (custom) builders.push(u => buildCustomProxyUrl(custom, u));
+        // 自建 Worker（登录用的同一个），比公共代理稳定，作为默认首选
+        if (KINOKO_WORKER_URL) builders.push(u => `${KINOKO_WORKER_URL}/?url=${encodeURIComponent(u)}`);
         builders.push(u => `https://api.allorigins.win/raw?url=${encodeURIComponent(u)}`);
         // corsproxy.io は2026年より全リクエストに有料APIキーが必須になり無料代理として機能しなくなったため、
         // 無料で使える api.codetabs.com に差し替え（フォールバック用途、安定性は保証されない）
@@ -1281,10 +1283,15 @@
         for (const build of getProxyBuilders()) {
             try {
                 const resp = await fetch(build(url));
+                if (resp.status === 403) throw new Error('目标网站拒绝程序访问（403），该网站无法自动抓取，请换个来源网站');
                 if (!resp.ok) throw new Error('HTTP ' + resp.status);
                 const html = await resp.text();
                 if (html && html.length > 200) return html;
-            } catch (e) { lastErr = e; }
+            } catch (e) {
+                lastErr = e;
+                // 目标站本身拒绝访问时，换代理也没用，直接报错
+                if (/403/.test(e.message)) throw e;
+            }
         }
         throw lastErr || new Error('所有跨域代理均请求失败');
     }
