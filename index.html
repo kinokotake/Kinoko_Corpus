@@ -2414,7 +2414,7 @@
                 statusEl.textContent = `✅ 识别出 ${scrapeResults.length} 条技能文本，请人工核查后再添加/导出：`;
             } else if (gwCharaList) {
                 const total0 = gwCharaList.length;
-                const estMin = Math.max(1, Math.round(total0 / 4 * 1.5 / 60));
+                const estMin = Math.max(1, Math.round(total0 / 2 * 1.8 / 60));
                 const ans = window.prompt(
                     `检测到 ${total0} 个角色页面（全部抓取约需 ${estMin} 分钟，期间请不要关闭页面）。\n` +
                     `要抓取多少个？从最新实装的角色开始算，填数字或直接确定全部抓取：`, String(total0));
@@ -2423,26 +2423,45 @@
                 // データは古い順に並んでいるので、新しい方から取る
                 const targets = gwCharaList.slice(-want).reverse();
                 const total = targets.length;
-                const CONCURRENCY = 4;
+                // gamewith は短時間に大量アクセスすると一時的に 403（メンテ画面）を返すため、
+                // 同時2件＋間隔を空けて取得し、失敗分は時間を置いて最大2回まで再試行する
+                const CONCURRENCY = 2;
+                const sleep = ms => new Promise(r => setTimeout(r, ms));
                 const allItems = [];
-                let failed = 0;
-                for (let i = 0; i < total; i += CONCURRENCY) {
-                    const batchEnd = Math.min(i + CONCURRENCY, total);
-                    statusEl.textContent = `⏳ 抓取中 ${i + 1}–${batchEnd} / ${total}（已识别 ${allItems.length} 条）`;
-                    const batchResults = await Promise.allSettled(
-                        targets.slice(i, batchEnd).map(async ({ url: charaUrl, name: initName }) => {
-                            const charaHtml = await fetchHtmlViaProxy(charaUrl);
-                            const charaDoc = new DOMParser().parseFromString(charaHtml, 'text/html');
-                            const charName = extractPageName(charaDoc) || initName || charaUrl;
-                            return parseGamewithCharaPage(charaDoc, charName, extractGame8GameName(charaDoc));
-                        })
-                    );
-                    batchResults.forEach(r => {
-                        if (r.status === 'fulfilled') {
-                            r.value.forEach(text => allItems.push({ source: `${host}（网页抓取）`, text, type: 'skill_desc', meta: '' }));
-                        } else failed++;
-                    });
+                const scrapeOne = async ({ url: charaUrl, name: initName }) => {
+                    const charaHtml = await fetchHtmlViaProxy(charaUrl);
+                    const charaDoc = new DOMParser().parseFromString(charaHtml, 'text/html');
+                    const charName = extractPageName(charaDoc) || initName || charaUrl;
+                    return parseGamewithCharaPage(charaDoc, charName, extractGame8GameName(charaDoc));
+                };
+                let queue = targets;
+                for (let round = 0; round < 3 && queue.length; round++) {
+                    const failedTargets = [];
+                    if (round > 0) {
+                        statusEl.textContent = `⏳ ${queue.length} 个页面被网站限流，等待 30 秒后重试（第 ${round} 次）…`;
+                        await sleep(30000);
+                    }
+                    for (let i = 0; i < queue.length; i += CONCURRENCY) {
+                        const batch = queue.slice(i, i + CONCURRENCY);
+                        statusEl.textContent = round === 0
+                            ? `⏳ 抓取中 ${i + 1}–${i + batch.length} / ${total}（已识别 ${allItems.length} 条）`
+                            : `⏳ 重试中 ${i + 1}–${i + batch.length} / ${queue.length}（第 ${round} 次，已识别 ${allItems.length} 条）`;
+                        const batchResults = await Promise.allSettled(batch.map(scrapeOne));
+                        let limited = false;
+                        batchResults.forEach((r, k) => {
+                            if (r.status === 'fulfilled') {
+                                r.value.forEach(text => allItems.push({ source: `${host}（网页抓取）`, text, type: 'skill_desc', meta: '' }));
+                            } else {
+                                failedTargets.push(batch[k]);
+                                if (/403|429/.test(r.reason && r.reason.message)) limited = true;
+                            }
+                        });
+                        // 限流を検知したら少し長めに休む
+                        await sleep(limited ? 5000 : 400);
+                    }
+                    queue = failedTargets;
                 }
+                const failed = queue.length;
                 if (!allItems.length) {
                     statusEl.textContent = '⚠️ 未能从角色页面提取技能文本。请直接粘贴单个角色页面的URL重试。';
                     return;
